@@ -25,6 +25,19 @@ spec:
            —containerPort: 8080
 ---
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: repo-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadMany
+  hostPath:
+    path: /mnt/code
+
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: local-path-pvc
