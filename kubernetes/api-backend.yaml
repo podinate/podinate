@@ -18,12 +18,12 @@ spec:
         app: api-backend
     spec:
       containers:
-        — name: backend
+        - name: backend
           image: cosmtrek/air
-          // workingDir: /go/src/github.com/johncave/podinate/
+          workingDir: /go/src/github.com/johncave/podinate/api-backend
           ports:
-            — containerPort: 8080
-  ---
+            - containerPort: 8080
+---
 apiVersion: v1
 kind: Service
 metadata:

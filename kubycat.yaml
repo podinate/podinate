@@ -1,0 +1,21 @@
+kubycat:
+  config: /home/johndoe/.kube/config
+  context: minikube
+  namespace: default
+  interval: 1000
+  sync: 
+    - name: code
+      namespace: api
+      pod-label: app=api-backend
+      enabled: true
+      notify: true
+      shell: /bin/sh
+      config: ~/.kube/config
+      context: k3d-podinate-dev
+      base: /home/john/Code/podinate
+      from:
+        - api-backend
+        - go.mod
+        - go.sum
+      to: /go/src/github.com/johncave/podinate/
+

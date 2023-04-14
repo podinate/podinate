@@ -23,9 +23,10 @@ import (
 )
 
 func main() {
+	log.Printf("L")
 	log.Printf("Starting server on port 8080...")
 
 	router := sw.NewRouter()
 
-	log.Fatal(router.Run(":8080"))
+	log.Fatal(router.Run(":3000"))
 }

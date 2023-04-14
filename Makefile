@@ -10,3 +10,5 @@ install-dependencies:
 	sudo install skaffold /usr/local/bin/
 	rm skaffold
 	
+dev-code-api:
+	./api-backend/scripts/initial-code-upload.sh
