@@ -19,11 +19,11 @@ import (
 	//
 	//sw "github.com/GIT_USER_ID/GIT_REPO_ID/go"
 	//
-	sw "./go"
+	sw "github.com/johncave/podinate/api-backend/go"
 )
 
 func main() {
-	log.Printf("Server started")
+	log.Printf("Starting server on port 8080...")
 
 	router := sw.NewRouter()
 
