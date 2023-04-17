@@ -11,22 +11,20 @@ package main
 
 import (
 	"log"
+	"net/http"
 
-	// WARNING!
-	// Change this to a fully-qualified import path
-	// once you place this file into your project.
-	// For example,
-	//
-	//sw "github.com/GIT_USER_ID/GIT_REPO_ID/go"
-	//
-	sw "github.com/johncave/podinate/api-backend/go"
+	api "github.com/johncave/podinate/api-backend/go"
 )
 
 func main() {
-	log.Printf("L")
-	log.Printf("Starting server on port 8080...")
+	log.Printf("Server started")
 
-	router := sw.NewRouter()
+	//DefaultApiService := api.NewDefaultApiService()
 
-	log.Fatal(router.Run(":3000"))
+	DefaultApiService := NewAPIService()
+	DefaultApiController := api.NewDefaultApiController(DefaultApiService)
+
+	router := api.NewRouter(DefaultApiController)
+
+	log.Fatal(http.ListenAndServe(":3000", router))
 }

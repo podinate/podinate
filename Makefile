@@ -1,7 +1,8 @@
 dev-cluster:
 	k3d cluster create podinate-dev --agents 2 -v "$PWD":/mnt/code/@agent:*
-	alias k=kubectl
-	k cluster-info
+	# Install the cockroach operator and crds 
+	kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/v2.10.0/install/crds.yaml
+	kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/v2.10.0/install/operator.yaml
 
 install-dependencies:
 	paru -S rancher-k3d-bin

@@ -1,17 +1,14 @@
-FROM golang:1.20.3 AS build
-WORKDIR /go/src/github.com/johncave/podinate/api-backend
-COPY ./api-backend/ ./
-COPY ./go.* /go/src/github.com/johncave/podinate/
-# RUN ls -lah /go/src/github.com/johncave/podinate
-# RUN ls -lah
+FROM golang:1.10 AS build
+WORKDIR /go/src
+COPY go ./go
+COPY main.go .
 
 ENV CGO_ENABLED=0
-RUN go get
+RUN go get -d -v ./...
 
-RUN go build -a -installsuffix cgo -o restapi .
+RUN go build -a -installsuffix cgo -o api .
 
 FROM scratch AS runtime
-ENV GIN_MODE=release
-COPY --from=build /go/src/github.com/johncave/podinate/api-backend/restapi ./
+COPY --from=build /go/src/api ./
 EXPOSE 8080/tcp
-ENTRYPOINT ["./restapi"]
+ENTRYPOINT ["./api"]

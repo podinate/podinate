@@ -1,157 +1,224 @@
 openapi: 3.0.0
 info:
-  title: Podinate API
   description: The API for the simple containerisation solution Podinate
+  title: Podinate API
   version: 0.0.1
 servers:
-  - url: https://api.podinate.com/v0
-    description: Main (production) server
-  - url: http://staging-api.example.com
-    description: Internal staging server for testing
+- description: Main (production) server
+  url: https://api.podinate.com/v0
+- description: Internal staging server for testing
+  url: http://staging-api.example.com
 paths:
   /project:
     get:
-      summary: Returns a list of projects.
-      description: Returns all of the projects within the user's account. 
+      description: Returns all of the projects within the user's account.
       parameters:
-       - $ref: '#/components/parameters/account'
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
-        '200':    # status code
-          description: A JSON array of apps
-          content:
-            application/json:
-              schema: 
-                $ref: '#/components/schemas/App'
-        '500':
-          description: An internal server error
+        "200":
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error_code:
-                    type: number
-                    description: The error code for this error
-                    example: 500
-                
+                $ref: '#/components/schemas/App'
+          description: A JSON array of apps
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_project_get_500_response'
+          description: An internal server error
+      summary: Returns a list of projects.
     post:
-      summary: Create a new project
       description: Creating a new project
       parameters:
-        - $ref: '#/components/parameters/account'
-      requestBody:
-        description: A JSON object containing the information needed to create a new project
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
         required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
         content:
           application/json:
-            schema: 
+            schema:
               $ref: '#/components/schemas/App'
+        description: A JSON object containing the information needed to create a new
+          project
+        required: true
       responses:
-        '201':
-          description: The project was created successfully
-          content:
-            application/json:
-              schema: 
-                $ref: '#/components/schemas/App'
-          
-        '400':
-          $ref: "#/components/responses/400Error"
-          
-  /project/{id}:
-    patch:
-      summary: Update an existing project
-      description: Allows you to update or edit an existing project. For example, you can update the tag to deploy when you have made and pushed a new build, or change the image to run entirely.
-      parameters:
-        - $ref: "#/components/parameters/project_id"
-        - $ref: '#/components/parameters/account'
-      responses:
-        '200':
-          description: The was updated successfully, and returned the updated project information
+        "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/App"
-        '400':
-          $ref: "#/components/responses/400Error"
+                $ref: '#/components/schemas/App'
+          description: The project was created successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+      summary: Create a new project
+  /project/{id}:
     get:
-      summary: Get an existing project given by ID 
       description: Allows you to see an existing project's configuration
       parameters:
-        - $ref: "#/components/parameters/project_id"
-        - $ref: '#/components/parameters/account'
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
-        '200':
-          description: The was updated successfully, and returned the updated project information
+        "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/App"
-        '400':
-          $ref: "#/components/responses/400Error"
-          
-    
-    
+                $ref: '#/components/schemas/App'
+          description: "The was updated successfully, and returned the updated project\
+            \ information"
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+      summary: Get an existing project given by ID
+    patch:
+      description: "Allows you to update or edit an existing project. For example,\
+        \ you can update the tag to deploy when you have made and pushed a new build,\
+        \ or change the image to run entirely."
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+          description: "The was updated successfully, and returned the updated project\
+            \ information"
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+      summary: Update an existing project
 components:
   parameters:
     account:
-      name: account
-      in: header
-      required: true
       description: The account to use for the request
-      schema:
-        type: string
       example: my-account
-    project_id:
-      name: id
-      in: path
+      explode: false
+      in: header
+      name: account
       required: true
       schema:
         type: string
+      style: simple
+    project_id:
+      explode: false
+      in: path
+      name: id
+      required: true
+      schema:
         description: The project to look at
         example: hello-world
-  
+        type: string
+      style: simple
   responses:
-    400Error:
-      description: "Request issued incorrectly, for example missing parameters or wrong endpoint"
-      content: 
+    "400Error":
+      content:
         application/json:
           schema:
-            $ref: "#/components/schemas/400Error"
-            
-  
-  # requestBodies:
-  
+            $ref: '#/components/schemas/400Error'
+      description: "Request issued incorrectly, for example missing parameters or\
+        \ wrong endpoint"
   schemas:
     App:
-      type: object
+      example:
+        image: wordpress
+        name: Hello World
+        id: hello-world
+        tag: "6.0"
       properties:
-        id: 
-          type: string 
+        id:
           description: The short name (slug/url) of the project
           example: hello-world
-        name:
           type: string
+        name:
           description: The name of the app
           example: Hello World
+          type: string
         image:
-          type: string 
-          description: The container image to run for this app 
-          example: "wordpress"
+          description: The container image to run for this app
+          example: wordpress
+          type: string
         tag:
-          type: string 
           description: The image tag to run for this app
           example: "6.0"
-          
-    400Error:
+          type: string
       type: object
+    "400Error":
       properties:
         error_code:
-          type: number
+          default: 400
           description: The code of the error message (400)
           example: 400
-          default: 400
+          type: number
         error_message:
-          type: string
           description: The human-readable description of what went wrong
           example: Missing required parameter 'account'
-      
+          type: string
+      type: object
+    _project_get_500_response:
+      properties:
+        error_code:
+          description: The error code for this error
+          example: 500
+          type: number
+      type: object

@@ -20,9 +20,14 @@ spec:
       containers:
         - name: backend
           image: cosmtrek/air
+          imagePullPolicy: Always
+          command: ["/go/bin/air", "-d"]
           workingDir: /go/src/github.com/johncave/podinate/api-backend
           ports:
-            - containerPort: 8080
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: api-backend-env
 ---
 apiVersion: v1
 kind: Service
@@ -33,7 +38,15 @@ metadata:
 spec:
   clusterIP: None
   ports:
-    - port: 8080
+    - port: 3000
       name: api-backend
   selector:
     app: api-backend
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-backend-env
+data:
+  PORT: "3000"
