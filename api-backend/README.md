@@ -1,4 +1,4 @@
-# Go API Server for api
+# Go API Server for openapi
 
 The API for the simple containerisation solution Podinate
 
@@ -13,7 +13,7 @@ To see how to make this your own, look here:
 [README](https://openapi-generator.tech)
 
 - API version: 0.0.1
-- Build date: 2023-04-17T01:42:04.987785Z[Etc/UTC]
+- Build date: 2023-04-21T01:46:52.285585Z[Etc/UTC]
 
 
 ### Running the server
@@ -25,10 +25,10 @@ go run main.go
 
 To run the server in a docker container
 ```
-docker build --network=host -t api .
+docker build --network=host -t openapi .
 ```
 
 Once image is built use
 ```
-docker run --rm -it api
+docker run --rm -it openapi
 ```

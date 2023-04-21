@@ -33,7 +33,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_project_get_500_response'
+                $ref: '#/components/schemas/500Error'
           description: An internal server error
       summary: Returns a list of projects.
     post:
@@ -70,6 +70,12 @@ paths:
                 $ref: '#/components/schemas/400Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500Error'
+          description: An internal server error
       summary: Create a new project
   /project/{id}:
     get:
@@ -108,6 +114,12 @@ paths:
                 $ref: '#/components/schemas/400Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500Error'
+          description: An internal server error
       summary: Get an existing project given by ID
     patch:
       description: "Allows you to update or edit an existing project. For example,\
@@ -215,10 +227,14 @@ components:
           example: Missing required parameter 'account'
           type: string
       type: object
-    _project_get_500_response:
+    "500Error":
       properties:
-        error_code:
+        code:
           description: The error code for this error
           example: 500
           type: number
+        message:
+          description: Friendly human readable description of the error
+          example: There was an error creating your pod due to account limits
+          type: string
       type: object

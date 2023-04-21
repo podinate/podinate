@@ -13,9 +13,7 @@ import (
 // ProjectGet - Returns a list of projects.
 func (s *APIService) ProjectGet(ctx context.Context, account string) (api.ImplResponse, error) {
 	// TODO - update ProjectGet with the required logic for this service method.
-
 	out, _ := json.Marshal(api.App{Id: "podinate-blog", Name: "Podinate Blog", Image: "wordpress", Tag: "latest"})
-
 	return api.Response(http.StatusNotImplemented, string(out)), nil
 }
 
@@ -39,13 +37,15 @@ func (s *APIService) ProjectPost(ctx context.Context, account string, app api.Ap
 	log.Printf("ProjectPost: %v", app)
 	err := createKubesNamespace("project-" + app.Id)
 	if err != nil {
-		out := api.ProjectPost500Response{ErrorCode: http.StatusInternalServerError, ErrorMessage: err.Error()}
-		
+		out := api.Model500Error{Code: http.StatusInternalServerError, Message: err.Error()}
 		return api.Response(http.StatusInternalServerError, out), err
 	}
 
 	err = createKubesDeployment("project-"+app.Id, app.Image, app.Tag)
+	if err != nil {
+		out := api.Model500Error{Code: http.StatusInternalServerError, Message: err.Error()}
+		return api.Response(http.StatusInternalServerError, out), err
+	}
 
-	out, _ := json.Marshal(api.App{Id: "elephant", Name: "test", Image: "test", Tag: "latest"})
-	return api.Response(http.StatusNotImplemented, out), errors.New("ProjectPost method not implemented")
+	return api.Response(http.StatusCreated, app), nil
 }
