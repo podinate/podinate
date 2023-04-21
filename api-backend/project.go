@@ -15,7 +15,7 @@ func (s *APIService) ProjectGet(ctx context.Context, account string) (api.ImplRe
 	// TODO - update ProjectGet with the required logic for this service method.
 
 	out, _ := json.Marshal(api.App{Id: "podinate-blog", Name: "Podinate Blog", Image: "wordpress", Tag: "latest"})
-	log.Println("Fuck you")
+
 	return api.Response(http.StatusNotImplemented, string(out)), nil
 }
 
@@ -35,6 +35,16 @@ func (s *APIService) ProjectIdPatch(ctx context.Context, id string, account stri
 
 func (s *APIService) ProjectPost(ctx context.Context, account string, app api.App) (api.ImplResponse, error) {
 	// TODO - update ProjectPost with the required logic for this service method.
+
+	log.Printf("ProjectPost: %v", app)
+	err := createKubesNamespace("project-" + app.Id)
+	if err != nil {
+		out := api.ProjectPost500Response{ErrorCode: http.StatusInternalServerError, ErrorMessage: err.Error()}
+		
+		return api.Response(http.StatusInternalServerError, out), err
+	}
+
+	err = createKubesDeployment("project-"+app.Id, app.Image, app.Tag)
 
 	out, _ := json.Marshal(api.App{Id: "elephant", Name: "test", Image: "test", Tag: "latest"})
 	return api.Response(http.StatusNotImplemented, out), errors.New("ProjectPost method not implemented")

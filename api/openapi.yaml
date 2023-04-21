@@ -11,6 +11,7 @@ servers:
 paths:
   /project:
     get:
+      summary: Returns a list of projects.
       description: Returns all of the projects within the user's account.
       parameters:
       - description: The account to use for the request
@@ -33,10 +34,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_project_get_500_response'
+                $ref: '#/components/schemas/500Error'
           description: An internal server error
-      summary: Returns a list of projects.
+      
     post:
+      summary: Create a new project
       description: Creating a new project
       parameters:
       - description: The account to use for the request
@@ -70,9 +72,15 @@ paths:
                 $ref: '#/components/schemas/400Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
-      summary: Create a new project
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500Error'
+          description: An internal server error
   /project/{id}:
     get:
+      summary: Get an existing project given by ID
       description: Allows you to see an existing project's configuration
       parameters:
       - explode: false
@@ -108,8 +116,14 @@ paths:
                 $ref: '#/components/schemas/400Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
-      summary: Get an existing project given by ID
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500Error'
+          description: An internal server error
     patch:
+      summary: Update an existing project
       description: "Allows you to update or edit an existing project. For example,\
         \ you can update the tag to deploy when you have made and pushed a new build,\
         \ or change the image to run entirely."
@@ -147,7 +161,7 @@ paths:
                 $ref: '#/components/schemas/400Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
-      summary: Update an existing project
+      
 components:
   parameters:
     account:
@@ -215,10 +229,15 @@ components:
           example: Missing required parameter 'account'
           type: string
       type: object
-    _project_get_500_response:
+    "500Error":
       properties:
-        error_code:
+        code:
           description: The error code for this error
           example: 500
           type: number
+        message:
+          description: Friendly human readable description of the error
+          example: There was an error creating your pod due to account limits
+          type: string
       type: object
+  
