@@ -18,17 +18,17 @@ use podinate;
 -- DROP TABLE IF EXISTS project CASCADE;
 CREATE TABLE project (
 	id uuid NOT NULL,
-	slug smallint,
+	slug text,
 	name text,
 	account_id uuid,
 	CONSTRAINT project_pk PRIMARY KEY (id)
 );
 -- ddl-end --
-COMMENT ON COLUMN project.slug IS E'The unique identifier for the project within the account, for example "corp-blog"';
+COMMENT ON COLUMN project.slug IS E'Unique identifier for the project within the user''s account';
 -- ddl-end --
-COMMENT ON COLUMN project.name IS E'Human-readable / display name for the project eg "My Super Cool Blog"';
+COMMENT ON COLUMN project.name IS E'Human readable / display name for the project';
 -- ddl-end --
-
+ALTER TABLE project OWNER TO postgres;
 -- ddl-end --
 
 -- object: account | type: TABLE --
@@ -37,39 +37,38 @@ CREATE TABLE account (
 	id uuid NOT NULL,
 	slug text,
 	name text,
+	CONSTRAINT unique_account_slug UNIQUE (slug),
 	CONSTRAINT account_pk PRIMARY KEY (id)
 );
 -- ddl-end --
-COMMENT ON COLUMN account.slug IS E'The slug is the unique identifier for the account, for example "my-prod-account"';
+COMMENT ON COLUMN account.slug IS E'The unique identifier for the account within the system.';
 -- ddl-end --
-COMMENT ON COLUMN account.name IS E'The friendly / display name of the account';
+COMMENT ON COLUMN account.name IS E'The human readable / display name of the account';
 -- ddl-end --
-
+ALTER TABLE account OWNER TO postgres;
 -- ddl-end --
 
 -- object: project_pods | type: TABLE --
 -- DROP TABLE IF EXISTS project_pods CASCADE;
 CREATE TABLE project_pods (
-	id uuid,
+	id uuid NOT NULL,
 	slug text,
 	name text,
 	image text,
 	tag text,
-	project_id uuid
-
+	project_id uuid,
+	CONSTRAINT project_pods_pk PRIMARY KEY (id)
 );
 -- ddl-end --
-COMMENT ON TABLE project_pods IS E'Holds the pods for each project - under the hood a pod = a kubernetes deployment';
+COMMENT ON COLUMN project_pods.slug IS E'The unique name for the deployment in kubernetes, used as the kuberenetes name.';
 -- ddl-end --
-COMMENT ON COLUMN project_pods.slug IS E'Used as the kubernetes pod name eg "wordpress-backend", the human readable name will be separate';
+COMMENT ON COLUMN project_pods.name IS E'Human readable / display name for the pod';
 -- ddl-end --
-COMMENT ON COLUMN project_pods.name IS E'Human readable name for the pod, for example "Wordpress Backend"';
+COMMENT ON COLUMN project_pods.image IS E'The OCI image for the pod to run';
 -- ddl-end --
-COMMENT ON COLUMN project_pods.image IS E'The docker image to run for the pod eg "registry.podinate.com/myaccount/cool-project" or "wordpress"';
+COMMENT ON COLUMN project_pods.tag IS E'The image tag to run';
 -- ddl-end --
-COMMENT ON COLUMN project_pods.tag IS E'The image tag to run eg "latest" / "5.0"';
--- ddl-end --
-
+ALTER TABLE project_pods OWNER TO postgres;
 -- ddl-end --
 
 -- object: account_fk | type: CONSTRAINT --
@@ -84,6 +83,11 @@ ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE project_pods ADD CONSTRAINT project_fk FOREIGN KEY (project_id)
 REFERENCES project (id) MATCH FULL
 ON DELETE SET NULL ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: unique_project_slug_per_account | type: CONSTRAINT --
+-- ALTER TABLE project DROP CONSTRAINT IF EXISTS unique_project_slug_per_account CASCADE;
+ALTER TABLE project ADD CONSTRAINT unique_project_slug_per_account UNIQUE (account_id,slug);
 -- ddl-end --
 
 

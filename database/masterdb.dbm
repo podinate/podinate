@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+ Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="1.0.2" use-changelog="false" last-position="0,155" last-zoom="1" max-obj-count="4"
+	 default-schema="public" default-owner="postgres"
+	 layers="Default layer"
+	 active-layers="0"
+	 layer-name-colors="#000000"
+	 layer-rect-colors="#b4b4b4"
+	 show-layer-names="false" show-layer-rects="false">
+<database name="podinate" is-template="false" allow-conns="true">
+</database>
+
+<schema name="public" layers="0" fill-color="#e1e1e1" sql-disabled="true">
+</schema>
+
+<table name="project" layers="0" collapse-mode="2" max-obj-count="4" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="790" y="531"/>
+	<column name="id" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="slug">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[Unique identifier for the project within the user's account]]> </comment>
+	</column>
+	<column name="name">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[Human readable / display name for the project]]> </comment>
+	</column>
+	<constraint name="project_pk" type="pk-constr" table="public.project">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="account_id" index="3"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="account_fk" index="1"/>
+	</customidxs>
+</table>
+
+<table name="account" layers="0" collapse-mode="2" max-obj-count="3" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="340" y="180"/>
+	<column name="id" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="slug">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The unique identifier for the account within the system.]]> </comment>
+	</column>
+	<column name="name">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The human readable / display name of the account]]> </comment>
+	</column>
+	<constraint name="unique_account_slug" type="uq-constr" table="public.account">
+		<columns names="slug" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="account_pk" type="pk-constr" table="public.account">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="project_pods" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1120" y="280"/>
+	<column name="id" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="slug">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The unique name for the deployment in kubernetes, used as the kuberenetes name.]]> </comment>
+	</column>
+	<column name="name">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[Human readable / display name for the pod]]> </comment>
+	</column>
+	<column name="image">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The OCI image for the pod to run]]> </comment>
+	</column>
+	<column name="tag">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The image tag to run]]> </comment>
+	</column>
+	<constraint name="project_pods_pk" type="pk-constr" table="public.project_pods">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<relationship name="account_has_many_project" type="rel1n" layers="0"
+	 src-col-pattern="{st}_{sc}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#36ab33"
+	 src-table="public.account"
+	 dst-table="public.project"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="project_has_many_project_pods" type="rel1n" layers="0"
+	 src-col-pattern="{st}_{sc}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#e31f19"
+	 src-table="public.project"
+	 dst-table="public.project_pods"
+	 src-required="false" dst-required="false"/>
+
+<constraint name="unique_project_slug_per_account" type="uq-constr" table="public.project">
+	<columns names="account_id,slug" ref-type="src-columns"/>
+</constraint>
+
+</dbmodel>

@@ -17,5 +17,5 @@ kubycat:
         - api-backend
         - go.mod
         - go.sum
-      to: /go/src/github.com/johncave/podinate/
+      to: /go/src/github.com/johncave/podinate
 
