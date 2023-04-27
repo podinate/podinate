@@ -28,6 +28,27 @@ spec:
           envFrom:
             - configMapRef:
                 name: api-backend-env
+          volumeMounts:
+          - name: cockroach-certs
+            mountPath: /cockroach/cockroach-certs/
+
+      volumes:
+      - name: cockroach-certs
+        projected:
+            sources:
+              - secret:
+                  name: masterdb-node
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+              - secret:
+                  name: masterdb-root
+                  items:
+                    - key: tls.crt
+                      path: client.root.crt
+                    - key: tls.key
+                      path: client.root.key
+            defaultMode: 256
 ---
 apiVersion: v1
 kind: Service

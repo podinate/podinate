@@ -10,14 +10,31 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+
+	_ "github.com/lib/pq"
 
 	api "github.com/johncave/podinate/api-backend/go"
 )
 
 func main() {
-	log.Printf("Server started")
+	log.Printf("Server starting...")
+
+	crdb := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=verify-full sslrootcert=/cockroach/cockroach-certs/ca.crt sslkey=/cockroach/cockroach-certs/client.root.key sslcert=/cockroach/cockroach-certs/client.root.crt", "masterdb-public", 26257, "podinate")
+	db, err := sql.Open("postgres", crdb)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	// ping the db to check the connection
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Connected to database")
 
 	//DefaultApiService := api.NewDefaultApiService()
 

@@ -1,6 +1,7 @@
 openapi: 3.0.0
 info:
-  description: The API for the simple containerisation solution Podinate
+  description: "The API for the simple containerisation solution Podinate. Login should\
+    \ be performed over oauth from [auth.podinate.com](https://auth.podinate.com)"
   title: Podinate API
   version: 0.0.1
 servers:
@@ -9,9 +10,12 @@ servers:
 - description: Internal staging server for testing
   url: http://staging-api.example.com
 paths:
-  /project:
+  /account:
     get:
-      description: Returns all of the projects within the user's account.
+      description: "Accounts are logically separate, distinct containers for different\
+        \ customers or teams. For example you might have an account for your marketing\
+        \ and product teams, or you might have an account for each client to separate\
+        \ their workloads. Accounts can have their own security settings applied."
       parameters:
       - description: The account to use for the request
         example: my-account
@@ -27,7 +31,98 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/App'
+                $ref: '#/components/schemas/Account'
+          description: Information about the given account
+      summary: Get information about the current account.
+    patch:
+      description: "Update an existing account, for example to change the display\
+        \ name"
+      parameters:
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: Account updated successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500Error'
+          description: An internal server error
+      summary: Update an existing account
+    post:
+      description: "Create a new logically separate account, for example for a given\
+        \ client or team."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: Account created successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500Error'
+          description: An internal server error
+      summary: Create a new account
+  /project:
+    get:
+      description: "Projects are a container for individual resources. For example\
+        \ the my-cool-blog project might contain a pod running a Wordpress image,\
+        \ a Postgres Neon database, and a bucket for storing uploads."
+      parameters:
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
           description: A JSON array of apps
         "500":
           content:
@@ -52,7 +147,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/App'
+              $ref: '#/components/schemas/Project'
         description: A JSON object containing the information needed to create a new
           project
         required: true
@@ -61,7 +156,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/App'
+                $ref: '#/components/schemas/Project'
           description: The project was created successfully
         "400":
           content:
@@ -104,7 +199,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/App'
+                $ref: '#/components/schemas/Project'
           description: "The was updated successfully, and returned the updated project\
             \ information"
         "400":
@@ -149,7 +244,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/App'
+                $ref: '#/components/schemas/Project'
           description: "The was updated successfully, and returned the updated project\
             \ information"
         "400":
@@ -191,7 +286,21 @@ components:
       description: "Request issued incorrectly, for example missing parameters or\
         \ wrong endpoint"
   schemas:
-    App:
+    Account:
+      example:
+        id: blog-prod
+        name: Company Blog - Prod
+      properties:
+        id:
+          description: The short name (slug/url) of the account. The account ID is
+            globally unique and cannot be changed.
+          example: blog-prod
+          type: string
+        name:
+          description: "The human readable name of the account, used for display purposes."
+          example: Tim's Widgets Company Blog - Prod
+          type: string
+    Project:
       example:
         image: wordpress
         name: Hello World
