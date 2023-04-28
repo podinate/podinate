@@ -86,15 +86,7 @@ paths:
       summary: Returns a list of projects.
       description: Projects are a container for individual resources. For example the my-cool-blog project might contain a pod running a Wordpress image, a Postgres Neon database, and a bucket for storing uploads.
       parameters:
-      - description: The account to use for the request
-        example: my-account
-        explode: false
-        in: header
-        name: account
-        required: true
-        schema:
-          type: string
-        style: simple
+        - $ref: '#/components/parameters/account'
       responses:
         "200":
           content:
@@ -113,15 +105,7 @@ paths:
       summary: Create a new project
       description: Creating a new project
       parameters:
-      - description: The account to use for the request
-        example: my-account
-        explode: false
-        in: header
-        name: account
-        required: true
-        schema:
-          type: string
-        style: simple
+        - $ref: '#/components/parameters/account'
       requestBody:
         content:
           application/json:
@@ -164,15 +148,7 @@ paths:
           example: hello-world
           type: string
         style: simple
-      - description: The account to use for the request
-        example: my-account
-        explode: false
-        in: header
-        name: account
-        required: true
-        schema:
-          type: string
-        style: simple
+      - $ref: '#/components/parameters/account'
       responses:
         "200":
           content:
@@ -209,15 +185,7 @@ paths:
           example: hello-world
           type: string
         style: simple
-      - description: The account to use for the request
-        example: my-account
-        explode: false
-        in: header
-        name: account
-        required: true
-        schema:
-          type: string
-        style: simple
+      - $ref: '#/components/parameters/account'
       responses:
         "200":
           content:

@@ -16,8 +16,7 @@ func Response(code int, body interface{}) api.ImplResponse {
 	case []byte:
 		return api.ImplResponse{Code: code, Body: string(body.([]byte))}
 	case string:
-		if code > http.StatusBadRequest {
-			//out, _ := json.MarshalIndent(api.Model500Error{Code: float32(code), Message: body.(string)}, "", "  ")
+		if code >= http.StatusBadRequest {
 			return api.ImplResponse{Code: code, Body: api.Model500Error{Code: float32(code), Message: body.(string)}}
 		}
 		return api.ImplResponse{Code: code, Body: body.(string)}
