@@ -43,8 +43,25 @@ func (s *APIService) AccountPost(ctx context.Context, requestedAccount api.Accou
 	err := newAcc.Register()
 	if err != nil {
 		// We can pass this error directly to the API response
-		return responder.Response(http.StatusConflict, err.Error()), nil
+		return responder.Response(err.Code, err.Error()), nil
 	}
 
 	return api.Response(http.StatusCreated, newAcc.ToAPIAccount()), nil
+}
+
+func (s *APIService) AccountDelete(ctx context.Context, requestedAccount string) (api.ImplResponse, error) {
+	// TODO - update AccountDelete with the required logic for this service method.
+	workAccount := account.Account{}
+	err := workAccount.GetByID(requestedAccount)
+	if err != nil {
+		// We can pass this error directly to the API response
+		return responder.Response(http.StatusNotFound, err.Error()), nil
+	}
+	err = workAccount.Delete()
+	if err != nil {
+		// We can pass this error directly to the API response
+		return responder.Response(http.StatusBadRequest, err.Error()), nil
+	}
+	return api.Response(http.StatusAccepted, workAccount.ToAPIAccount()), nil
+
 }

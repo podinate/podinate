@@ -26,6 +26,26 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
+// AccountDelete - Delete the account and all associated resources!
+func (s *DefaultApiService) AccountDelete(ctx context.Context, account string) (ImplResponse, error) {
+	// TODO - update AccountDelete with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(202, Account{}) or use other options such as http.Ok ...
+	//return Response(202, Account{}), nil
+
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(404, Error{}) or use other options such as http.Ok ...
+	//return Response(404, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("AccountDelete method not implemented")
+}
+
 // AccountGet - Get information about the current account.
 func (s *DefaultApiService) AccountGet(ctx context.Context, account string) (ImplResponse, error) {
 	// TODO - update AccountGet with the required logic for this service method.
@@ -33,6 +53,15 @@ func (s *DefaultApiService) AccountGet(ctx context.Context, account string) (Imp
 
 	//TODO: Uncomment the next line to return response Response(200, Account{}) or use other options such as http.Ok ...
 	//return Response(200, Account{}), nil
+
+	//TODO: Uncomment the next line to return response Response(404, Error{}) or use other options such as http.Ok ...
+	//return Response(404, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(409, Error{}) or use other options such as http.Ok ...
+	//return Response(409, Error{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("AccountGet method not implemented")
 }
@@ -45,11 +74,11 @@ func (s *DefaultApiService) AccountPatch(ctx context.Context, account string, ac
 	//TODO: Uncomment the next line to return response Response(200, Account{}) or use other options such as http.Ok ...
 	//return Response(200, Account{}), nil
 
-	//TODO: Uncomment the next line to return response Response(400, Model400Error{}) or use other options such as http.Ok ...
-	//return Response(400, Model400Error{}), nil
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
 
-	//TODO: Uncomment the next line to return response Response(500, Model500Error{}) or use other options such as http.Ok ...
-	//return Response(500, Model500Error{}), nil
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("AccountPatch method not implemented")
 }
@@ -62,11 +91,11 @@ func (s *DefaultApiService) AccountPost(ctx context.Context, account Account) (I
 	//TODO: Uncomment the next line to return response Response(201, Account{}) or use other options such as http.Ok ...
 	//return Response(201, Account{}), nil
 
-	//TODO: Uncomment the next line to return response Response(400, Model400Error{}) or use other options such as http.Ok ...
-	//return Response(400, Model400Error{}), nil
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
 
-	//TODO: Uncomment the next line to return response Response(500, Model500Error{}) or use other options such as http.Ok ...
-	//return Response(500, Model500Error{}), nil
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("AccountPost method not implemented")
 }
@@ -79,10 +108,30 @@ func (s *DefaultApiService) ProjectGet(ctx context.Context, account string) (Imp
 	//TODO: Uncomment the next line to return response Response(200, Project{}) or use other options such as http.Ok ...
 	//return Response(200, Project{}), nil
 
-	//TODO: Uncomment the next line to return response Response(500, Model500Error{}) or use other options such as http.Ok ...
-	//return Response(500, Model500Error{}), nil
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("ProjectGet method not implemented")
+}
+
+// ProjectIdDelete - Delete an existing project
+func (s *DefaultApiService) ProjectIdDelete(ctx context.Context, id string, account string) (ImplResponse, error) {
+	// TODO - update ProjectIdDelete with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(202, Project{}) or use other options such as http.Ok ...
+	//return Response(202, Project{}), nil
+
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(404, Error{}) or use other options such as http.Ok ...
+	//return Response(404, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("ProjectIdDelete method not implemented")
 }
 
 // ProjectIdGet - Get an existing project given by ID
@@ -93,11 +142,14 @@ func (s *DefaultApiService) ProjectIdGet(ctx context.Context, id string, account
 	//TODO: Uncomment the next line to return response Response(200, Project{}) or use other options such as http.Ok ...
 	//return Response(200, Project{}), nil
 
-	//TODO: Uncomment the next line to return response Response(400, Model400Error{}) or use other options such as http.Ok ...
-	//return Response(400, Model400Error{}), nil
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
 
-	//TODO: Uncomment the next line to return response Response(500, Model500Error{}) or use other options such as http.Ok ...
-	//return Response(500, Model500Error{}), nil
+	//TODO: Uncomment the next line to return response Response(404, Error{}) or use other options such as http.Ok ...
+	//return Response(404, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("ProjectIdGet method not implemented")
 }
@@ -110,8 +162,8 @@ func (s *DefaultApiService) ProjectIdPatch(ctx context.Context, id string, accou
 	//TODO: Uncomment the next line to return response Response(200, Project{}) or use other options such as http.Ok ...
 	//return Response(200, Project{}), nil
 
-	//TODO: Uncomment the next line to return response Response(400, Model400Error{}) or use other options such as http.Ok ...
-	//return Response(400, Model400Error{}), nil
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("ProjectIdPatch method not implemented")
 }
@@ -124,11 +176,11 @@ func (s *DefaultApiService) ProjectPost(ctx context.Context, account string, pro
 	//TODO: Uncomment the next line to return response Response(201, Project{}) or use other options such as http.Ok ...
 	//return Response(201, Project{}), nil
 
-	//TODO: Uncomment the next line to return response Response(400, Model400Error{}) or use other options such as http.Ok ...
-	//return Response(400, Model400Error{}), nil
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
 
-	//TODO: Uncomment the next line to return response Response(500, Model500Error{}) or use other options such as http.Ok ...
-	//return Response(500, Model500Error{}), nil
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("ProjectPost method not implemented")
 }

@@ -11,6 +11,48 @@ servers:
   url: http://staging-api.example.com
 paths:
   /account:
+    delete:
+      description: Deletes the account and all associated resources! This is irreversible
+        and may be used for example when a client project has finished or a migration
+        is complete.
+      parameters:
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: Podinate receieved your request to delete the account - it
+            will be processed in the background.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Delete the account and all associated resources!
     get:
       description: "Accounts are logically separate, distinct containers for different\
         \ customers or teams. For example you might have an account for your marketing\
@@ -33,6 +75,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Account'
           description: Information about the given account
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The request could not be completed due to a conflict with the
+            current state of the resource
       summary: Get information about the current account.
     patch:
       description: "Update an existing account, for example to change the display\
@@ -63,14 +124,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/400Error'
+                $ref: '#/components/schemas/Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/500Error'
+                $ref: '#/components/schemas/Error'
           description: An internal server error
       summary: Update an existing account
     post:
@@ -92,14 +153,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/400Error'
+                $ref: '#/components/schemas/Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/500Error'
+                $ref: '#/components/schemas/Error'
           description: An internal server error
       summary: Create a new account
   /project:
@@ -128,7 +189,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/500Error'
+                $ref: '#/components/schemas/Error'
           description: An internal server error
       summary: Returns a list of projects.
     post:
@@ -162,17 +223,67 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/400Error'
+                $ref: '#/components/schemas/Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/500Error'
+                $ref: '#/components/schemas/Error'
           description: An internal server error
       summary: Create a new project
   /project/{id}:
+    delete:
+      description: "Allows you to delete an existing project. This will delete all\
+        \ associated resources, and is irreversible. Use with caution!"
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+          description: "We received your request to delete the project, it will be\
+            \ processed in the background."
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Delete an existing project
     get:
       description: Allows you to see an existing project's configuration
       parameters:
@@ -206,14 +317,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/400Error'
+                $ref: '#/components/schemas/Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/500Error'
+                $ref: '#/components/schemas/Error'
           description: An internal server error
       summary: Get an existing project given by ID
     patch:
@@ -251,7 +368,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/400Error'
+                $ref: '#/components/schemas/Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
       summary: Update an existing project
@@ -282,9 +399,28 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/400Error'
+            $ref: '#/components/schemas/Error'
       description: "Request issued incorrectly, for example missing parameters or\
         \ wrong endpoint"
+    "404Error":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The requested resource was not found
+    "500Error":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: An internal server error
+    "409Error":
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: The request could not be completed due to a conflict with the current
+        state of the resource
   schemas:
     Account:
       example:
@@ -324,7 +460,7 @@ components:
           example: "6.0"
           type: string
       type: object
-    "400Error":
+    Error:
       properties:
         error_code:
           default: 400
@@ -334,16 +470,5 @@ components:
         error_message:
           description: The human-readable description of what went wrong
           example: Missing required parameter 'account'
-          type: string
-      type: object
-    "500Error":
-      properties:
-        code:
-          description: The error code for this error
-          example: 500
-          type: number
-        message:
-          description: Friendly human readable description of the error
-          example: There was an error creating your pod due to account limits
           type: string
       type: object

@@ -40,13 +40,16 @@ func main() {
 }
 
 // makeRequest - Make a request to the API, useful for testing
-func makeRequest(method, url string, body interface{}) *httptest.ResponseRecorder {
+func makeRequest(method, url string, body interface{}, headers map[string]string) *httptest.ResponseRecorder {
 	config.Init()
 	log.Println("Configurinated")
 
 	requestBody, _ := json.Marshal(body)
 	request, _ := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
 	request.Header.Set("Content-Type", "application/json")
+	for key, value := range headers {
+		request.Header.Set(key, value)
+	}
 	writer := httptest.NewRecorder()
 
 	DefaultApiService := NewAPIService()

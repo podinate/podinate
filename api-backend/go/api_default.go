@@ -51,6 +51,12 @@ func NewDefaultApiController(s DefaultApiServicer, opts ...DefaultApiOption) Rou
 func (c *DefaultApiController) Routes() Routes {
 	return Routes{ 
 		{
+			"AccountDelete",
+			strings.ToUpper("Delete"),
+			"/v0/account",
+			c.AccountDelete,
+		},
+		{
 			"AccountGet",
 			strings.ToUpper("Get"),
 			"/v0/account",
@@ -75,6 +81,12 @@ func (c *DefaultApiController) Routes() Routes {
 			c.ProjectGet,
 		},
 		{
+			"ProjectIdDelete",
+			strings.ToUpper("Delete"),
+			"/v0/project/{id}",
+			c.ProjectIdDelete,
+		},
+		{
 			"ProjectIdGet",
 			strings.ToUpper("Get"),
 			"/v0/project/{id}",
@@ -93,6 +105,20 @@ func (c *DefaultApiController) Routes() Routes {
 			c.ProjectPost,
 		},
 	}
+}
+
+// AccountDelete - Delete the account and all associated resources!
+func (c *DefaultApiController) AccountDelete(w http.ResponseWriter, r *http.Request) {
+	accountParam := r.Header.Get("account")
+	result, err := c.service.AccountDelete(r.Context(), accountParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
 }
 
 // AccountGet - Get information about the current account.
@@ -162,6 +188,22 @@ func (c *DefaultApiController) AccountPost(w http.ResponseWriter, r *http.Reques
 func (c *DefaultApiController) ProjectGet(w http.ResponseWriter, r *http.Request) {
 	accountParam := r.Header.Get("account")
 	result, err := c.service.ProjectGet(r.Context(), accountParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// ProjectIdDelete - Delete an existing project
+func (c *DefaultApiController) ProjectIdDelete(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	idParam := params["id"]
+	accountParam := r.Header.Get("account")
+	result, err := c.service.ProjectIdDelete(r.Context(), idParam, accountParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

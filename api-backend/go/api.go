@@ -20,10 +20,12 @@ import (
 // The DefaultApiRouter implementation should parse necessary information from the http request,
 // pass the data to a DefaultApiServicer to perform the required actions, then write the service results to the http response.
 type DefaultApiRouter interface { 
+	AccountDelete(http.ResponseWriter, *http.Request)
 	AccountGet(http.ResponseWriter, *http.Request)
 	AccountPatch(http.ResponseWriter, *http.Request)
 	AccountPost(http.ResponseWriter, *http.Request)
 	ProjectGet(http.ResponseWriter, *http.Request)
+	ProjectIdDelete(http.ResponseWriter, *http.Request)
 	ProjectIdGet(http.ResponseWriter, *http.Request)
 	ProjectIdPatch(http.ResponseWriter, *http.Request)
 	ProjectPost(http.ResponseWriter, *http.Request)
@@ -35,10 +37,12 @@ type DefaultApiRouter interface {
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type DefaultApiServicer interface { 
+	AccountDelete(context.Context, string) (ImplResponse, error)
 	AccountGet(context.Context, string) (ImplResponse, error)
 	AccountPatch(context.Context, string, Account) (ImplResponse, error)
 	AccountPost(context.Context, Account) (ImplResponse, error)
 	ProjectGet(context.Context, string) (ImplResponse, error)
+	ProjectIdDelete(context.Context, string, string) (ImplResponse, error)
 	ProjectIdGet(context.Context, string, string) (ImplResponse, error)
 	ProjectIdPatch(context.Context, string, string) (ImplResponse, error)
 	ProjectPost(context.Context, string, Project) (ImplResponse, error)
