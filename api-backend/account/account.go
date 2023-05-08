@@ -2,7 +2,9 @@ package account
 
 import (
 	"errors"
+	"net/http"
 
+	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
 )
@@ -14,27 +16,29 @@ type Account struct {
 }
 
 // Validate account checks that a user's desired account properties are allowed
-func (a *Account) ValidateNew() error {
+func (a *Account) ValidateNew() *apierror.ApiError {
 	// check the account id and name are not too long
-	if len(a.ID) > 50 {
-		return errors.New("Account ID too long")
+	if len(a.ID) > 30 {
+		return &apierror.ApiError{Code: http.StatusBadRequest, Message: "Account ID too long"}
 	}
 	if len(a.Name) > 64 {
-		return errors.New("Account name too long")
+		return &apierror.ApiError{Code: http.StatusBadRequest, Message: "Account name too long"}
 	}
 	return nil
 }
 
 // Register creates a new account in the database
-func (a *Account) Register() error {
+func (a *Account) Register() *apierror.ApiError {
 	err := a.ValidateNew()
 	if err != nil {
 		return err
+		//apierror.New(http.StatusBadRequest, err.Error())
 	}
-	_, err = config.DB.Exec("INSERT INTO account(uuid, id, name) VALUES(gen_random_uuid(), $1, $2)", a.ID, a.Name)
+	_, dberr := config.DB.Exec("INSERT INTO account(uuid, id, name) VALUES(gen_random_uuid(), $1, $2)", a.ID, a.Name)
 	// Check if insert was successful
-	if err != nil {
-		return errors.New("Account ID not available")
+	if dberr != nil {
+		return &apierror.ApiError{Code: http.StatusBadRequest, Message: err.Error()}
+
 	}
 	return nil
 
@@ -52,7 +56,7 @@ func (a *Account) Patch(requested api.Account) error {
 	// Update the database
 	_, err := config.DB.Exec("UPDATE account SET name = $1, id = $2 WHERE uuid = $3", a.Name, a.ID, a.Uuid)
 	if err != nil {
-		return errors.New("Could not update account")
+		return apierror.New(http.StatusInternalServerError, "Could not update account")
 	}
 	return nil
 }
