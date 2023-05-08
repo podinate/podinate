@@ -12,7 +12,7 @@ import (
 )
 
 // ProjectGet - Returns a list of projects.
-func (s *APIService) ProjectGet(ctx context.Context, account string) (api.ImplResponse, error) {
+func (s *APIService) ProjectGet(ctx context.Context, account string, page int32, limit int32) (api.ImplResponse, error) {
 	// TODO - update ProjectGet with the required logic for this service method.
 	out, _ := json.Marshal(api.Project{Id: "podinate-blog", Name: "Podinate Blog", Image: "wordpress", Tag: "latest"})
 	return api.Response(http.StatusNotImplemented, string(out)), nil
@@ -62,5 +62,5 @@ func (s *APIService) ProjectPost(ctx context.Context, account string, newProject
 	// 	return api.Response(http.StatusInternalServerError, out), err
 	// }
 
-	return api.Response(http.StatusCreated, project), nil
+	return api.Response(http.StatusCreated, created.ToAPI()), nil
 }

@@ -16,14 +16,19 @@ import (
 
 
 
-// DefaultApiRouter defines the required methods for binding the api requests to a responses for the DefaultApi
-// The DefaultApiRouter implementation should parse necessary information from the http request,
-// pass the data to a DefaultApiServicer to perform the required actions, then write the service results to the http response.
-type DefaultApiRouter interface { 
+// AccountApiRouter defines the required methods for binding the api requests to a responses for the AccountApi
+// The AccountApiRouter implementation should parse necessary information from the http request,
+// pass the data to a AccountApiServicer to perform the required actions, then write the service results to the http response.
+type AccountApiRouter interface { 
 	AccountDelete(http.ResponseWriter, *http.Request)
 	AccountGet(http.ResponseWriter, *http.Request)
 	AccountPatch(http.ResponseWriter, *http.Request)
 	AccountPost(http.ResponseWriter, *http.Request)
+}
+// ProjectApiRouter defines the required methods for binding the api requests to a responses for the ProjectApi
+// The ProjectApiRouter implementation should parse necessary information from the http request,
+// pass the data to a ProjectApiServicer to perform the required actions, then write the service results to the http response.
+type ProjectApiRouter interface { 
 	ProjectGet(http.ResponseWriter, *http.Request)
 	ProjectIdDelete(http.ResponseWriter, *http.Request)
 	ProjectIdGet(http.ResponseWriter, *http.Request)
@@ -32,16 +37,24 @@ type DefaultApiRouter interface {
 }
 
 
-// DefaultApiServicer defines the api actions for the DefaultApi service
+// AccountApiServicer defines the api actions for the AccountApi service
 // This interface intended to stay up to date with the openapi yaml used to generate it,
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
-type DefaultApiServicer interface { 
+type AccountApiServicer interface { 
 	AccountDelete(context.Context, string) (ImplResponse, error)
 	AccountGet(context.Context, string) (ImplResponse, error)
 	AccountPatch(context.Context, string, Account) (ImplResponse, error)
 	AccountPost(context.Context, Account) (ImplResponse, error)
-	ProjectGet(context.Context, string) (ImplResponse, error)
+}
+
+
+// ProjectApiServicer defines the api actions for the ProjectApi service
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can be ignored with the .openapi-generator-ignore file
+// and updated with the logic required for the API.
+type ProjectApiServicer interface { 
+	ProjectGet(context.Context, string, int32, int32) (ImplResponse, error)
 	ProjectIdDelete(context.Context, string, string) (ImplResponse, error)
 	ProjectIdGet(context.Context, string, string) (ImplResponse, error)
 	ProjectIdPatch(context.Context, string, string) (ImplResponse, error)

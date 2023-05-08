@@ -1,8 +1,10 @@
 README.md
 api/openapi.yaml
 go/api.go
-go/api_default.go
-go/api_default_service.go
+go/api_account.go
+go/api_account_service.go
+go/api_project.go
+go/api_project_service.go
 go/error.go
 go/helpers.go
 go/impl.go
