@@ -7,24 +7,39 @@ import (
 	"log"
 	"net/http"
 
+	account "github.com/johncave/podinate/api-backend/account"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/project"
 )
 
 // ProjectGet - Returns a list of projects.
-func (s *APIService) ProjectGet(ctx context.Context, account string, page int32, limit int32) (api.ImplResponse, error) {
-	// TODO - update ProjectGet with the required logic for this service method.
-	out, _ := json.Marshal(api.Project{Id: "podinate-blog", Name: "Podinate Blog", Image: "wordpress", Tag: "latest"})
-	return api.Response(http.StatusNotImplemented, string(out)), nil
+func (s *APIService) ProjectGet(ctx context.Context, requestedAccount string, page int32, limit int32) (api.ImplResponse, error) {
+	// Check the account exists
+
+	theAccount := account.Account{}
+	err := theAccount.GetByID(requestedAccount)
+	if err != nil {
+		return api.Response(http.StatusBadRequest, err.Error()), nil
+	}
+
+	projects, apiErr := theAccount.GetProjects(page, limit)
+	if apiErr.Code != http.StatusOK {
+		return api.Response(http.StatusInternalServerError, err.Error()), nil
+	}
+	// Assemble the output
+	var out []api.Project
+	for _, project := range projects {
+		out = append(out, project.ToAPI())
+	}
+	return api.Response(http.StatusOK, out), nil
+
 }
 
-func (s *APIService) ProjectIdGet(ctx context.Context, id string, account string) (api.ImplResponse, error) {
-	// TODO - update ProjectIdGet with the required logic for this service method.
-
-	// out, _ := json.Marshal(api.Project{Id: id, Name: "test", Image: "test", Tag: "latest"})
-	// return api.Response(http.StatusNotImplemented, out), errors.New("ProjectIdGet method not implemented")
+func (s *APIService) ProjectIdGet(ctx context.Context, id string, requestedAccount string) (api.ImplResponse, error) {
 	theProject := project.Project{}
-	err := theProject.GetByID(account, id)
+	theAccount := account.Account{}
+	theAccount.GetByID(requestedAccount)
+	err := theProject.GetByID(theAccount, id)
 	if err != nil {
 		// We can pass this error directly to the API response
 		return api.Response(http.StatusNotFound, err.Error()), nil
@@ -39,14 +54,19 @@ func (s *APIService) ProjectIdPatch(ctx context.Context, id string, account stri
 	return api.Response(http.StatusNotImplemented, out), errors.New("ProjectIdPatch method not implemented")
 }
 
-func (s *APIService) ProjectPost(ctx context.Context, account string, newProject api.Project) (api.ImplResponse, error) {
-	// TODO - update ProjectPost with the required logic for this service method.
+func (s *APIService) ProjectPost(ctx context.Context, requestedAccount string, newProject api.Project) (api.ImplResponse, error) {
+	// Check the account exists
+	theAccount := account.Account{}
+	err := theAccount.GetByID(requestedAccount)
+	if err != nil {
+		return api.Response(http.StatusBadRequest, err.Error()), nil
+	}
 
 	log.Printf("ProjectPost: %v", newProject)
 	var created project.Project
-	err := created.Create(newProject)
+	apiErr := created.Create(newProject, theAccount)
 	if err != nil {
-		return api.Response(err.Code, err.Error()), nil
+		return api.Response(apiErr.Code, apiErr.Error()), nil
 	}
 
 	/// Ignore the Kubes logic for now
