@@ -10,9 +10,11 @@
 package main
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/json"
 	"log"
 	"net/http"
+	"net/http/httptest"
 
 	_ "github.com/lib/pq"
 
@@ -23,12 +25,8 @@ import (
 func main() {
 	log.Printf("Server starting...")
 
-	crdb := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=verify-full sslrootcert=/cockroach/cockroach-certs/ca.crt sslkey=/cockroach/cockroach-certs/client.root.key sslcert=/cockroach/cockroach-certs/client.root.crt", "masterdb-public", 26257, "podinate")
-	err := config.ConnectDatabase(crdb)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Connected to database")
+	config.Init()
+	log.Println("Configurinated")
 
 	//DefaultApiService := api.NewDefaultApiService()
 
@@ -39,4 +37,22 @@ func main() {
 
 	log.Fatal(http.ListenAndServe(":3000", router))
 	config.Cleanup()
+}
+
+// makeRequest - Make a request to the API, useful for testing
+func makeRequest(method, url string, body interface{}) *httptest.ResponseRecorder {
+	config.Init()
+	log.Println("Configurinated")
+
+	requestBody, _ := json.Marshal(body)
+	request, _ := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
+	request.Header.Set("Content-Type", "application/json")
+	writer := httptest.NewRecorder()
+
+	DefaultApiService := NewAPIService()
+	DefaultApiController := api.NewDefaultApiController(DefaultApiService)
+
+	router := api.NewRouter(DefaultApiController)
+	router.ServeHTTP(writer, request)
+	return writer
 }

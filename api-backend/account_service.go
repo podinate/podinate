@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	account "github.com/johncave/podinate/api-backend/account"
-	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/responder"
 )
@@ -14,7 +12,7 @@ import (
 func (s *APIService) AccountGet(ctx context.Context, requestedAccount string) (api.ImplResponse, error) {
 	// Get the account information from the database
 	theAccount := account.Account{}
-	err := theAccount.GetBySlug(requestedAccount)
+	err := theAccount.GetByID(requestedAccount)
 	if err != nil {
 		// We can pass this error directly to the API response
 		return responder.Response(http.StatusNotFound, err.Error()), nil
@@ -25,24 +23,27 @@ func (s *APIService) AccountGet(ctx context.Context, requestedAccount string) (a
 
 func (s *APIService) AccountPatch(ctx context.Context, requestedAccount string, accountNew api.Account) (api.ImplResponse, error) {
 	// TODO - update AccountPatch with the required logic for this service method.
-
-	out, _ := json.Marshal(api.Account{Id: "test", Name: "test"})
-	return api.Response(http.StatusNotImplemented, string(out)), nil
-}
-
-func (s *APIService) AccountPost(ctx context.Context, requestedAccount api.Account) (api.ImplResponse, error) {
-	newAcc := account.Account{Slug: requestedAccount.Id, Name: requestedAccount.Name}
-	err := newAcc.ValidateNew()
+	workAccount := account.Account{}
+	err := workAccount.GetByID(requestedAccount)
+	if err != nil {
+		// We can pass this error directly to the API response
+		return responder.Response(http.StatusNotFound, err.Error()), nil
+	}
+	err = workAccount.Patch(accountNew)
 	if err != nil {
 		// We can pass this error directly to the API response
 		return responder.Response(http.StatusBadRequest, err.Error()), nil
 	}
+	return api.Response(http.StatusOK, workAccount.ToAPIAccount()), nil
 
-	_, err = config.DB.Exec("INSERT INTO account(id, slug, name) VALUES(gen_random_uuid(), $1, $2)", requestedAccount.Id, requestedAccount.Name)
-	// Check if insert was successful
+}
+
+func (s *APIService) AccountPost(ctx context.Context, requestedAccount api.Account) (api.ImplResponse, error) {
+	newAcc := account.Account{ID: requestedAccount.Id, Name: requestedAccount.Name}
+	err := newAcc.Register()
 	if err != nil {
-
-		return responder.Response(http.StatusBadRequest, "Account ID not available"), nil
+		// We can pass this error directly to the API response
+		return responder.Response(http.StatusConflict, err.Error()), nil
 	}
 
 	return api.Response(http.StatusCreated, newAcc.ToAPIAccount()), nil

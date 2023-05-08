@@ -2,6 +2,7 @@ package config
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 )
 
@@ -23,6 +24,19 @@ func ConnectDatabase(connectionString string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// Init - Initialize the service.
+func Init() error {
+	// TODO - read in the config file
+
+	crdb := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=verify-full sslrootcert=/cockroach/cockroach-certs/ca.crt sslkey=/cockroach/cockroach-certs/client.root.key sslcert=/cockroach/cockroach-certs/client.root.crt", "masterdb-public", 26257, "podinate")
+	err := ConnectDatabase(crdb)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Connected to database")
 	return nil
 }
 
