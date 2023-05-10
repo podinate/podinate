@@ -210,6 +210,11 @@ paths:
           type: string
         style: simple
       - $ref: '#/components/parameters/account'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
       responses:
         "200":
           content:

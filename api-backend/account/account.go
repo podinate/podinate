@@ -1,7 +1,6 @@
 package account
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/johncave/podinate/api-backend/apierror"
@@ -28,24 +27,29 @@ func (a *Account) ValidateNew() *apierror.ApiError {
 }
 
 // Register creates a new account in the database
-func (a *Account) Register() *apierror.ApiError {
+func Create(requestedAccount api.Account) (Account, *apierror.ApiError) {
+	// TODO: Make this take an api.Account instead of an account.Account
+	a := Account{ID: requestedAccount.Id, Name: requestedAccount.Name}
+
 	err := a.ValidateNew()
 	if err != nil {
-		return err
+		return Account{}, err
 		//apierror.New(http.StatusBadRequest, err.Error())
 	}
-	_, dberr := config.DB.Exec("INSERT INTO account(uuid, id, name) VALUES(gen_random_uuid(), $1, $2)", a.ID, a.Name)
+	//_, dberr := config.DB.Exec("INSERT INTO account(uuid, id, name) VALUES(gen_random_uuid(), $1, $2)", a.ID, a.Name).Scan(&a.Uuid)
+	dberr := config.DB.QueryRow("INSERT INTO account(uuid, id, name) VALUES(gen_random_uuid(), $1, $2) RETURNING uuid", a.ID, a.Name).Scan(&a.Uuid)
+
 	// Check if insert was successful
 	if dberr != nil {
-		return &apierror.ApiError{Code: http.StatusBadRequest, Message: err.Error()}
+		return Account{}, &apierror.ApiError{Code: http.StatusBadRequest, Message: err.Error()}
 
 	}
-	return nil
+	return a, nil
 
 }
 
 // Patch updates an account in the database
-func (a *Account) Patch(requested api.Account) error {
+func (a *Account) Patch(requested api.Account) *apierror.ApiError {
 	// Check which fields are actually being updated
 	if requested.Id != "" {
 		a.ID = requested.Id
@@ -58,18 +62,19 @@ func (a *Account) Patch(requested api.Account) error {
 	if err != nil {
 		return apierror.New(http.StatusInternalServerError, "Could not update account")
 	}
-	return nil
+	return apierror.New(http.StatusOK, "")
 }
 
 // GetBySlug retrieves an account from the database by its slug
-func (a *Account) GetByID(desired_id string) error {
+func GetByID(desired_id string) (Account, *apierror.ApiError) {
 	row := config.DB.QueryRow("SELECT uuid, id, name FROM account WHERE id = $1 LIMIT 1", desired_id)
 
+	var a Account
 	err := row.Scan(&a.Uuid, &a.ID, &a.Name)
 	if err != nil {
-		return errors.New("Could not find this account")
+		return Account{}, apierror.New(http.StatusNotFound, "Could not find account")
 	}
-	return nil
+	return a, nil
 }
 
 func (a *Account) ToAPIAccount() api.Account {
@@ -77,10 +82,11 @@ func (a *Account) ToAPIAccount() api.Account {
 }
 
 // Delete removes an account from the database
-func (a *Account) Delete() error {
+// Lol @ how complicated this function is gonna get
+func (a *Account) Delete() *apierror.ApiError {
 	_, err := config.DB.Exec("DELETE FROM account WHERE uuid = $1", a.Uuid)
 	if err != nil {
-		return errors.New("Could not delete account")
+		return apierror.New(http.StatusInternalServerError, "Could not delete account")
 	}
 	return nil
 }

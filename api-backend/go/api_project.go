@@ -145,7 +145,18 @@ func (c *ProjectApiController) ProjectIdPatch(w http.ResponseWriter, r *http.Req
 	params := mux.Vars(r)
 	idParam := params["id"]
 	accountParam := r.Header.Get("account")
-	result, err := c.service.ProjectIdPatch(r.Context(), idParam, accountParam)
+	projectParam := Project{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&projectParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertProjectRequired(projectParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.ProjectIdPatch(r.Context(), idParam, accountParam, projectParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

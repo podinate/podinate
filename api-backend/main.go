@@ -10,52 +10,22 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"log"
 	"net/http"
-	"net/http/httptest"
 
 	_ "github.com/lib/pq"
 
 	"github.com/johncave/podinate/api-backend/config"
-	api "github.com/johncave/podinate/api-backend/go"
+	"github.com/johncave/podinate/api-backend/router"
 )
 
 func main() {
-	log.Printf("Server starting...")
+	log.Printf("Server initialising...")
 
 	config.Init()
-	log.Println("Configurinated")
+	log.Println("Server configured...")
 
-	//DefaultApiService := api.NewDefaultApiService()
-
-	DefaultApiService := NewAPIService()
-	DefaultApiController := api.NewDefaultApiController(DefaultApiService)
-
-	router := api.NewRouter(DefaultApiController)
-
-	log.Fatal(http.ListenAndServe(":3000", router))
+	theRouter := router.GetRouter()
+	log.Fatal(http.ListenAndServe(":3000", theRouter))
 	config.Cleanup()
-}
-
-// makeRequest - Make a request to the API, useful for testing
-func makeRequest(method, url string, body interface{}, headers map[string]string) *httptest.ResponseRecorder {
-	config.Init()
-	log.Println("Configurinated")
-
-	requestBody, _ := json.Marshal(body)
-	request, _ := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
-	request.Header.Set("Content-Type", "application/json")
-	for key, value := range headers {
-		request.Header.Set(key, value)
-	}
-	writer := httptest.NewRecorder()
-
-	DefaultApiService := NewAPIService()
-	DefaultApiController := api.NewDefaultApiController(DefaultApiService)
-
-	router := api.NewRouter(DefaultApiController)
-	router.ServeHTTP(writer, request)
-	return writer
 }

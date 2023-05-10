@@ -57,6 +57,6 @@ type ProjectApiServicer interface {
 	ProjectGet(context.Context, string, int32, int32) (ImplResponse, error)
 	ProjectIdDelete(context.Context, string, string) (ImplResponse, error)
 	ProjectIdGet(context.Context, string, string) (ImplResponse, error)
-	ProjectIdPatch(context.Context, string, string) (ImplResponse, error)
+	ProjectIdPatch(context.Context, string, string, Project) (ImplResponse, error)
 	ProjectPost(context.Context, string, Project) (ImplResponse, error)
 }

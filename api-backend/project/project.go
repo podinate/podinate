@@ -1,6 +1,7 @@
 package project
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/johncave/podinate/api-backend/account"
@@ -24,20 +25,27 @@ func (p *Project) ValidateNew() *apierror.ApiError {
 	if len(p.Name) > 64 {
 		return &apierror.ApiError{Code: http.StatusBadRequest, Message: "Project name too long"}
 	}
+	log.Println("Validated project")
 	return nil
 }
 
-// GetByID retrieves a project from the database by its id
-func (p *Project) GetByID(theAccount account.Account, id string) *apierror.ApiError {
-	err := config.DB.QueryRow("SELECT uuid, id, name FROM project WHERE account_uuid = $1 AND id = $2", theAccount.Uuid, id).Scan(&p.Uuid, &p.ID, &p.Name)
-	if err != nil {
-		return &apierror.ApiError{Code: http.StatusNotFound, Message: "Project not found"}
-	}
-	return nil
-}
+// // GetByID retrieves a project from the database by its id
+// func GetByID(theAccount account.Account, id string) (Project, *apierror.ApiError) {
+// 	var p Project
+// 	err := config.DB.QueryRow("SELECT uuid, id, name FROM project WHERE account_uuid = $1 AND id = $2", theAccount.Uuid, id).Scan(&p.Uuid, &p.ID, &p.Name)
+// 	if err != nil {
+// 		return Project{}, &apierror.ApiError{Code: http.StatusNotFound, Message: "Project not found"}
+// 	}
+// 	return p, nil
+// }
 
 // GetProjects returns the projects of the account
-func (p *Project) GetAccountProjects(a account.Account, page int32, limit int32) ([]project.Project, apierror.ApiError) {
+func GetByAccount(a account.Account, page int32, limit int32) ([]Project, *apierror.ApiError) {
+	//log.Printf("Getting projects for account %s on page %s limit %s", a.Uuid, page, limit)
+
+	if limit < 1 {
+		limit = 25
+	}
 	rows, err := config.DB.Query("SELECT uuid, id, name FROM project WHERE account_uuid = $1 OFFSET $2 LIMIT $3", a.Uuid, page, limit)
 	if err != nil {
 		return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve projects")
@@ -53,25 +61,71 @@ func (p *Project) GetAccountProjects(a account.Account, page int32, limit int32)
 		}
 		projects = append(projects, project)
 	}
-	return projects, apierror.New(http.StatusOK, "Projects retrieved successfully")
+	return projects, nil
 
 }
 
-// Create creates a new project in the database
-func (p *project.Project) CreateProject(new api.Project, inAccount Account) *apierror.ApiError {
-	err := p.ValidateNew()
-	if err != nil {
-		return err
+// Patch updates an account in the database
+func (p *Project) Patch(requested api.Project) *apierror.ApiError {
+	// Check which fields are actually being updated
+	if requested.Id != "" {
+		p.ID = requested.Id
 	}
-	_, dberr := config.DB.Exec("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2)", p.ID, p.Name)
-	// Check if insert was successful
-	if dberr != nil {
-		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: err.Error()}
+	if requested.Name != "" {
+		p.Name = requested.Name
+	}
+	// Update the database
+	_, err := config.DB.Exec("UPDATE project SET name = $1, id = $2 WHERE uuid = $3", p.Name, p.ID, p.Uuid)
+	if err != nil {
+		log.Println(err)
+		return apierror.New(http.StatusInternalServerError, "Could not update project")
 	}
 	return nil
+}
+
+// Create creates a new project in the database
+func Create(new api.Project, inAccount account.Account) (Project, *apierror.ApiError) {
+	log.Println("Creating project")
+	out := Project{ID: new.Id, Name: new.Name}
+	err := out.ValidateNew()
+	if err != nil {
+		return Project{}, err
+	}
+	//res, dberr := config.DB.Exec("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", new.Id, new.Name, inAccount.Uuid)
+	dberr := config.DB.QueryRow("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", new.Id, new.Name, inAccount.Uuid).Scan(&out.Uuid)
+	// Check if insert was successful
+	if dberr != nil {
+		log.Println("DB error", dberr)
+		return Project{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+	}
+
+	log.Printf("Created project %s / %s", out.ID, out.Name)
+	return out, nil
 }
 
 // ToAPI converts a project to an api.Project
 func (p *Project) ToAPI() api.Project {
 	return api.Project{Id: p.ID, Name: p.Name}
+}
+
+func GetByID(a account.Account, id string) (Project, *apierror.ApiError) {
+	row := config.DB.QueryRow("SELECT uuid, id, name FROM project WHERE account_uuid = $1 AND id = $2", a.Uuid, id)
+
+	p := Project{}
+	err := row.Scan(&p.Uuid, &p.ID, &p.Name)
+
+	if err != nil {
+		return Project{}, apierror.New(http.StatusNotFound, "Could not find project")
+	}
+	return p, nil
+
+}
+
+// Delete deletes a project from the database
+func (p *Project) Delete() *apierror.ApiError {
+	_, err := config.DB.Exec("DELETE FROM project WHERE uuid = $1", p.Uuid)
+	if err != nil {
+		return apierror.New(http.StatusInternalServerError, "Could not delete project")
+	}
+	return nil
 }

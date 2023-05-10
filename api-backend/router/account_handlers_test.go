@@ -1,4 +1,4 @@
-package main
+package router
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ func TestRegisterAccount(t *testing.T) {
 func TestRegisterTooLongAccount(t *testing.T) {
 	// TODO - implement TestRegisterBadAccount
 	acc := api.Account{Id: RandStringBytes(64), Name: RandStringBytes(128)}
-	writer := makeRequest("POST", "/v0/account", acc, nil)
+	writer := MakeRequest("POST", "/v0/account", acc, nil)
 	assert.Equal(t, 400, writer.Code)
 }
 
@@ -44,10 +44,10 @@ func TestGetAccount(t *testing.T) {
 
 func BenchmarkGetAccount(b *testing.B) {
 	acc := api.Account{Id: RandStringBytes(10), Name: RandStringBytes(20)}
-	_ = makeRequest("POST", "/v0/account", acc, nil)
+	_ = MakeRequest("POST", "/v0/account", acc, nil)
 	headers := map[string]string{"Account": acc.Id}
 	for n := 0; n < b.N; n++ {
-		makeRequest("GET", "/v0/account", nil, headers)
+		MakeRequest("GET", "/v0/account", nil, headers)
 	}
 }
 
@@ -61,7 +61,7 @@ func TestPatchAccount(t *testing.T) {
 	acc.Name = RandStringBytes(20)
 
 	headers := map[string]string{"Account": acc.Id}
-	writer := makeRequest("PATCH", "/v0/account", acc, headers)
+	writer := MakeRequest("PATCH", "/v0/account", acc, headers)
 	assert.Equal(t, 200, writer.Code)
 	var patchAcc api.Account
 	err := json.Unmarshal(writer.Body.Bytes(), &patchAcc)
@@ -76,7 +76,7 @@ func TestPatchAccount(t *testing.T) {
 
 // Helper functions for testing
 func RegisterTestAccount(t *testing.T, acc api.Account) {
-	writer := makeRequest("POST", "/v0/account", acc, nil)
+	writer := MakeRequest("POST", "/v0/account", acc, nil)
 	assert.Equal(t, 201, writer.Code)
 	var respAcc api.Account
 	err := json.Unmarshal(writer.Body.Bytes(), &respAcc)
@@ -91,7 +91,7 @@ func RegisterTestAccount(t *testing.T, acc api.Account) {
 // GetTestAccount - get an account from the database
 func GetTestAccount(t *testing.T, id string) api.Account {
 	headers := map[string]string{"Account": id}
-	writer := makeRequest("GET", "/v0/account", nil, headers)
+	writer := MakeRequest("GET", "/v0/account", nil, headers)
 	assert.Equal(t, 200, writer.Code)
 	var responseAcc api.Account
 	err := json.Unmarshal(writer.Body.Bytes(), &responseAcc)
@@ -104,7 +104,7 @@ func GetTestAccount(t *testing.T, id string) api.Account {
 
 func DeleteTestAccount(t *testing.T, id string) {
 	headers := map[string]string{"Account": id}
-	writer := makeRequest("DELETE", "/v0/account", nil, headers)
+	writer := MakeRequest("DELETE", "/v0/account", nil, headers)
 	assert.Equal(t, 202, writer.Code)
 }
 

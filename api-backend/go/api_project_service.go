@@ -81,7 +81,7 @@ func (s *ProjectApiService) ProjectIdGet(ctx context.Context, id string, account
 }
 
 // ProjectIdPatch - Update an existing project
-func (s *ProjectApiService) ProjectIdPatch(ctx context.Context, id string, account string) (ImplResponse, error) {
+func (s *ProjectApiService) ProjectIdPatch(ctx context.Context, id string, account string, project Project) (ImplResponse, error) {
 	// TODO - update ProjectIdPatch with the required logic for this service method.
 	// Add api_project_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
