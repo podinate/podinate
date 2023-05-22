@@ -12,15 +12,19 @@ import (
 	api "github.com/johncave/podinate/api-backend/go"
 )
 
+// GetRouter - Get the router for the API
 func GetRouter() *mux.Router {
 	ProjectAPIService := NewProjectAPIService()
 	ProjectApiController := api.NewProjectApiController(ProjectAPIService)
 	AccountAPIService := NewAccountAPIService()
 	AccountApiController := api.NewAccountApiController(AccountAPIService)
-	return api.NewRouter(ProjectApiController, AccountApiController)
+	PodAPIService := NewPodAPIService()
+	PodApiController := api.NewPodApiController(PodAPIService)
+	return api.NewRouter(ProjectApiController, AccountApiController, PodApiController)
+
 }
 
-// makeRequest - Make a request to the API, useful for testing
+// MakeRequest - Make a request to the API, useful for testing
 func MakeRequest(method, url string, body interface{}, headers map[string]string) *httptest.ResponseRecorder {
 	config.Init()
 	log.Println("Configurinated")

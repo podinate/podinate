@@ -11,11 +11,11 @@ package openapi
 
 type Error struct {
 
-	// The code of the error message (400)
-	ErrorCode float32 `json:"error_code,omitempty"`
+	// The http code of the error message (400)
+	Code float32 `json:"code,omitempty"`
 
 	// The human-readable description of what went wrong
-	ErrorMessage string `json:"error_message,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 // AssertErrorRequired checks if the required fields are not zero-ed

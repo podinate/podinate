@@ -25,6 +25,16 @@ type AccountApiRouter interface {
 	AccountPatch(http.ResponseWriter, *http.Request)
 	AccountPost(http.ResponseWriter, *http.Request)
 }
+// PodApiRouter defines the required methods for binding the api requests to a responses for the PodApi
+// The PodApiRouter implementation should parse necessary information from the http request,
+// pass the data to a PodApiServicer to perform the required actions, then write the service results to the http response.
+type PodApiRouter interface { 
+	ProjectProjectIdPodGet(http.ResponseWriter, *http.Request)
+	ProjectProjectIdPodPodIdDelete(http.ResponseWriter, *http.Request)
+	ProjectProjectIdPodPodIdGet(http.ResponseWriter, *http.Request)
+	ProjectProjectIdPodPodIdPatch(http.ResponseWriter, *http.Request)
+	ProjectProjectIdPodPost(http.ResponseWriter, *http.Request)
+}
 // ProjectApiRouter defines the required methods for binding the api requests to a responses for the ProjectApi
 // The ProjectApiRouter implementation should parse necessary information from the http request,
 // pass the data to a ProjectApiServicer to perform the required actions, then write the service results to the http response.
@@ -46,6 +56,19 @@ type AccountApiServicer interface {
 	AccountGet(context.Context, string) (ImplResponse, error)
 	AccountPatch(context.Context, string, Account) (ImplResponse, error)
 	AccountPost(context.Context, Account) (ImplResponse, error)
+}
+
+
+// PodApiServicer defines the api actions for the PodApi service
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can be ignored with the .openapi-generator-ignore file
+// and updated with the logic required for the API.
+type PodApiServicer interface { 
+	ProjectProjectIdPodGet(context.Context, string, string, int32, int32) (ImplResponse, error)
+	ProjectProjectIdPodPodIdDelete(context.Context, string, string, string) (ImplResponse, error)
+	ProjectProjectIdPodPodIdGet(context.Context, string, string, string) (ImplResponse, error)
+	ProjectProjectIdPodPodIdPatch(context.Context, string, string, string, Pod) (ImplResponse, error)
+	ProjectProjectIdPodPost(context.Context, string, string, Pod) (ImplResponse, error)
 }
 
 

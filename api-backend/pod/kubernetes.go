@@ -1,18 +1,17 @@
-package main
+package pod
 
 import (
 	"context"
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/rest"
 )
 
 func callKubes() {
@@ -124,14 +123,16 @@ func createKubesDeployment(namespace string, image string, tag string) error {
 
 // getKubesClient returns a Kubernetes clientset.
 func getKubesClient() (*kubernetes.Clientset, error) {
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("error getting user home dir: %v", err)
-	}
-	kubeConfigPath := filepath.Join(userHomeDir, ".kube", "config")
-	fmt.Printf("Using kubeconfig: %s\n", kubeConfigPath)
+	// userHomeDir, err := os.UserHomeDir()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error getting user home dir: %v", err)
+	// }
+	// kubeConfigPath := filepath.Join(userHomeDir, ".kube", "config")
+	// fmt.Printf("Using kubeconfig: %s\n", kubeConfigPath)
 
-	kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	// kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+
+	kubeConfig, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, fmt.Errorf("error getting Kubernetes config: %v", err)
 	}

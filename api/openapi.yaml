@@ -10,9 +10,11 @@ servers:
   url: http://staging-api.example.com
 tags:
 - name: Account
-  description: Operations related to your account
+  description: Operations about accounts - accounts hold your resources and allow different users to have different permissions to them
 - name: Project
-  description: Operations related to your projects
+  description: Operations related to your projects - projects are a distcint group of resources related to a single application or service
+- name: Pod
+  description: Operations related to pods - Pods are a group of containers with the same lifecycle, and are the basic unit of deployment on Podinate
 paths:
   /account:
     get:
@@ -129,8 +131,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
-          description: A JSON array of apps
+                type: array
+                items:
+                  oneOf:
+                  -  $ref: '#/components/schemas/Project'
+          description: A JSON array of projects
         "500":
           $ref: "#/components/responses/500Error"
       
@@ -255,7 +260,216 @@ paths:
           $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
-      
+
+  /project/{project_id}/pod:
+    get:
+      summary: Get a list of pods for a given project
+      description: "Returns a list of pods for a given project. Pods are the individual\
+        \ running instances of a project, and are the smallest unit of deployment.\
+        \ For example, a project might have a pod running a Wordpress image, a Postgres\
+        \ Neon database, and a bucket for storing uploads."
+      tags:
+      - Pod
+      parameters:
+      # Pagination parameters
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 0
+        description: The page number to return (starts at 0)
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 20
+        description: The amount of items to return per page
+        # example: 10
+
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - $ref: '#/components/parameters/account'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                  - $ref: '#/components/schemas/Pod'
+          description: A JSON array of pods
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+    post:
+      summary: Create a new pod
+      description: Creating a new pod
+      tags:
+      - Pod
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - $ref: '#/components/parameters/account'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pod'
+        description: A JSON object containing the information needed to create a new
+          pod
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pod'
+          description: The pod was created successfully
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+  /project/{project_id}/pod/{pod_id}:
+    get:
+      summary: Get a pod by ID
+      description: Get a pod by ID
+      tags:
+      - Pod
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: pod_id
+        required: true
+        schema:
+          description: The pod to look at
+          example: hello-world
+          type: string
+        style: simple
+      - $ref: '#/components/parameters/account'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pod'
+          description: An array of pods
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+    patch:
+      summary: Update a pod
+      description: Update a pod
+      tags:
+      - Pod
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: pod_id
+        required: true
+        schema:
+          description: The pod to look at
+          example: hello-world
+          type: string
+        style: simple
+      - $ref: '#/components/parameters/account'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pod'
+        description: A JSON object containing the information needed to update a pod
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pod'
+          description: The pod was updated successfully
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+    delete:
+      summary: Delete a pod
+      description: Delete a pod
+      tags:
+      - Pod
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: pod_id
+        required: true
+        schema:
+          description: The pod to look at
+          example: hello-world
+          type: string
+        style: simple
+      - $ref: '#/components/parameters/account'
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pod'
+          description: We received your request to delete the pod, it will be processed in the background. 
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
 components:
   parameters:
     account:
@@ -357,14 +571,48 @@ components:
           example: "6.0"
           type: string
       type: object
+    Pod:
+      example:
+        id: hello-world
+        name: Hello World
+        image: wordpress
+        tag: "6.0"
+        status: running
+        created_at: "2020-01-01T00:00:00Z"
+      properties:
+        id:
+          description: The short name (slug/url) of the pod
+          example: hello-world
+          type: string
+        name:
+          description: The name of the pod
+          example: Hello World
+          type: string
+        image:
+          description: The container image to run for this pod
+          example: wordpress
+          type: string
+        tag:
+          description: The image tag to run for this pod
+          example: "6.0"
+          type: string
+        status:
+          description: The current status of the pod
+          example: running
+          type: string
+        created_at:
+          description: The date and time the pod was created
+          example: "2020-01-01T00:00:00Z"
+          type: string
+      type: object
     "Error":
       properties:
-        error_code:
+        code:
           default: 400
-          description: The code of the error message (400)
+          description: The http code of the error message (400)
           example: 400
           type: number
-        error_message:
+        message:
           description: The human-readable description of what went wrong
           example: Missing required parameter 'account'
           type: string
