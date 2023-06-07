@@ -26,13 +26,15 @@ func NewProjectAPIService() api.ProjectApiServicer {
 func (s *ProjectAPIService) ProjectGet(ctx context.Context, requestedAccount string, page int32, limit int32) (api.ImplResponse, error) {
 	// Check the account exists
 
+	log.Println("Trying to get account by ID")
 	theAccount, apiErr := account.GetByID(requestedAccount)
-	if apiErr.Code != http.StatusOK {
+	if apiErr != nil {
 		return responder.Response(http.StatusBadRequest, apiErr.Message), nil
 	}
 
+	log.Println("Trying to get projects by account")
 	projects, apiErr := project.GetByAccount(theAccount, page, limit)
-	if apiErr.Code != http.StatusOK {
+	if apiErr != nil {
 		return responder.Response(http.StatusInternalServerError, apiErr.Message), nil
 	}
 	// Assemble the output

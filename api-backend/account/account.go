@@ -72,7 +72,7 @@ func GetByID(desired_id string) (Account, *apierror.ApiError) {
 	var a Account
 	err := row.Scan(&a.Uuid, &a.ID, &a.Name)
 	if err != nil {
-		return Account{}, apierror.New(http.StatusNotFound, "Could not find account")
+		return Account{}, apierror.New(http.StatusNotFound, "Could not find account "+desired_id)
 	}
 	return a, nil
 }

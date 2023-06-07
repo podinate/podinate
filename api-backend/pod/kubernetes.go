@@ -6,8 +6,11 @@ import (
 	"log"
 	"os"
 
+	api "github.com/johncave/podinate/api-backend/go"
+	"github.com/johncave/podinate/api-backend/project"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -43,13 +46,13 @@ func callKubes() {
 
 }
 
-func createKubesNamespace(name string) error {
+func createKubesNamespace(name string) (*corev1.Namespace, error) {
 	fmt.Println("Create Kubernetes namespace")
 
 	clientset, err := getKubesClient()
 	if err != nil {
 		log.Printf("error getting kubernetes client: %v\n", err)
-		return err
+		return nil, err
 	}
 
 	nsSpec := &corev1.Namespace{
@@ -57,18 +60,48 @@ func createKubesNamespace(name string) error {
 			Name: name,
 		},
 	}
-	_, err = clientset.CoreV1().
+	ns, err := clientset.CoreV1().
 		Namespaces().
 		Create(context.Background(), nsSpec, metav1.CreateOptions{})
+	if errors.IsAlreadyExists(err) {
+		// Get the ns instead
+		ns, err := clientset.CoreV1().Namespaces().Get(context.Background(), name, metav1.GetOptions{})
+		if err != nil {
+			fmt.Printf("error getting existing kubernetes namespace: %v\n", err)
+			return ns, err
+		}
+		return ns, nil
+	}
 	if err != nil {
 		fmt.Printf("error creating kubernetes namespace: %v\n", err)
-		return err
+		return nil, err
 	}
-	return nil
+	return ns, nil
+}
+
+// getKubesDeployment returns a deployment in the specified namespace.
+func getKubesDeployment(theProject project.Project, id string) (*appsv1.Deployment, error) {
+	fmt.Println("Get Kubernetes deployment")
+
+	clientset, err := getKubesClient()
+	if err != nil {
+		log.Printf("error getting kubernetes client: %v\n", err)
+		return nil, err
+	}
+
+	deployment, err := clientset.AppsV1().
+		Deployments(theProject.Account.ID+"-project-"+id).
+		Get(context.Background(), id, metav1.GetOptions{})
+
+	if err != nil {
+		fmt.Printf("error getting deployment: %v\n", err)
+		return nil, err
+	}
+	return deployment, nil
 }
 
 // createKubesDeployment creates a deployment in the specified namespace.
-func createKubesDeployment(namespace string, image string, tag string) error {
+func createKubesDeployment(inns *corev1.Namespace, theProject project.Project, requested api.Pod) error {
 	fmt.Println("Create Kubernetes deployment")
 
 	clientset, err := getKubesClient()
@@ -80,26 +113,29 @@ func createKubesDeployment(namespace string, image string, tag string) error {
 
 	deploymentSpec := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "nginx-deployment",
+			Name: requested.Id,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: func(val int32) *int32 { return &val }(3),
+			Replicas: func(val int32) *int32 { return &val }(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "nginx",
+					"podinate": requested.Id,
+					"project":  theProject.ID,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "nginx",
+						"podinate": requested.Id,
+						"project":  theProject.ID,
 					},
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  "nginx",
-							Image: "nginx:latest",
+							Name:  requested.Id,
+							Image: requested.Image + ":" + requested.Tag,
+							// TODO: Figure out what to do about ports
 							Ports: []corev1.ContainerPort{
 								{
 									ContainerPort: 80,
@@ -112,7 +148,7 @@ func createKubesDeployment(namespace string, image string, tag string) error {
 		},
 	}
 	_, err = clientset.AppsV1().
-		Deployments(namespace).
+		Deployments(inns.Name).
 		Create(context.Background(), deploymentSpec, metav1.CreateOptions{})
 	if err != nil {
 		fmt.Printf("error creating deployment: %v\n", err)
@@ -143,4 +179,29 @@ func getKubesClient() (*kubernetes.Clientset, error) {
 	}
 
 	return clientset, nil
+}
+
+// deleteKubesDeployment deletes a deployment in the specified namespace.
+func deleteKubesDeployment(thePod Pod) error {
+	fmt.Println("Delete Kubernetes deployment")
+
+	clientset, err := getKubesClient()
+	if err != nil {
+		log.Printf("error getting kubernetes client: %v\n", err)
+		return err
+	}
+
+	deletePolicy := metav1.DeletePropagationForeground
+	err = clientset.AppsV1().
+		Deployments(thePod.Project.Account.ID+"-project-"+thePod.ID).
+		Delete(context.Background(), thePod.ID, metav1.DeleteOptions{
+			PropagationPolicy: &deletePolicy,
+		})
+	if err != nil {
+		fmt.Printf("error deleting deployment: %v\n", err)
+		return err
+	}
+	return nil
+
+	// TODO - Figure out how to clean up unused namespaces
 }

@@ -11,9 +11,10 @@ import (
 )
 
 type Project struct {
-	Uuid string `json:"uuid"`
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	Uuid    string          `json:"uuid"`
+	ID      string          `json:"id"`
+	Name    string          `json:"name"`
+	Account account.Account `json:"-"`
 }
 
 // Validate project checks that a user's desired project properties are allowed
@@ -59,6 +60,7 @@ func GetByAccount(a account.Account, page int32, limit int32) ([]Project, *apier
 		if err != nil {
 			return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve projects")
 		}
+		project.Account = a
 		projects = append(projects, project)
 	}
 	return projects, nil
@@ -117,6 +119,7 @@ func GetByID(a account.Account, id string) (Project, *apierror.ApiError) {
 	if err != nil {
 		return Project{}, apierror.New(http.StatusNotFound, "Could not find project")
 	}
+	p.Account = a
 	return p, nil
 
 }

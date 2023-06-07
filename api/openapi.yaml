@@ -312,6 +312,7 @@ paths:
           $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
+        # Add conflict
     post:
       summary: Create a new pod
       description: Creating a new pod

@@ -31,6 +31,7 @@ spec:
           volumeMounts:
           - name: cockroach-certs
             mountPath: /cockroach/cockroach-certs/
+      serviceAccountName: api-backend-deployment-manager
 
       volumes:
       - name: cockroach-certs
@@ -71,3 +72,41 @@ metadata:
   name: api-backend-env
 data:
   PORT: "3000"
+---
+# ServiceAccount to give access to manage deployments in all namespaces
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api-backend-deployment-manager
+  namespace: api
+---
+# ClusterRole to give access to manage deployments in all namespaces
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: api-backend-deployment-manager
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments/status"]
+  verbs: ["get", "update", "patch"]
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+# ClusterRoleBinding to bind the ClusterRole to the ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: api-backend-deployment-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: api-backend-deployment-manager
+subjects:
+- kind: ServiceAccount
+  name: api-backend-deployment-manager
+  namespace: api
+
