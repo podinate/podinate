@@ -13,14 +13,14 @@ import (
 )
 
 type Pod struct {
-	Uuid   string
-	ID     string
-	Name   string
-	Image  string
-	Tag    string
-	Status string // Creating, OK, Down
-	Count  int
-	Ram    int
+	Uuid    string
+	ID      string
+	Name    string
+	Image   string
+	Tag     string
+	Status  string // Creating, OK, Down
+	Count   int
+	Ram     int
 	Project project.Project
 	// TODO - add CPU requests / limits
 }
@@ -138,13 +138,13 @@ func Create(theAccount account.Account, theProject project.Project, requestedPod
 	}
 
 	out := Pod{
-		Uuid:   uuid,
-		ID:     requestedPod.Id,
-		Name:   requestedPod.Name,
-		Image:  requestedPod.Image,
-		Tag:    requestedPod.Tag,
+		Uuid:    uuid,
+		ID:      requestedPod.Id,
+		Name:    requestedPod.Name,
+		Image:   requestedPod.Image,
+		Tag:     requestedPod.Tag,
 		Project: theProject,
-		Status: "Creating",
+		Status:  "Creating",
 	}
 	return out, nil
 }
@@ -160,23 +160,22 @@ func (p *Pod) ToAPI() api.Pod {
 }
 
 // Delete removes a pod from the database and the kubernetes cluster
-func (p *Pod) Delete() *apierror.ApiError {
+func (p *Pod) Delete(proj project.Project) *apierror.ApiError {
 
-	
+	// 	// The kubes logic
+	// 	err := deleteKubesDeployment(theProject, id)
+	// 	if err != nil {
+	// 		return apierror.New(http.StatusInternalServerError, err.Error())
+	// 	}
 
-
-// 	// The kubes logic
-// 	err := deleteKubesDeployment(theProject, id)
-// 	if err != nil {
-// 		return apierror.New(http.StatusInternalServerError, err.Error())
-// 	}
-
-// 	// Delete the pod from the database
-// 	_, dberr := config.DB.Exec("DELETE FROM project_pods WHERE project_uuid = $1 AND id = $2", theProject.Uuid, id)
-// 	// Check if delete was successful
-// 	if dberr != nil {
-// 		log.Println("DB error deleting pod", dberr)
-// 		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
-// 	}
-// 	return nil
-// }
+	// // Delete the pod from the database
+	// _, dberr := config.DB.Exec("DELETE FROM project_pods WHERE project_uuid = $1 AND id = $2", theProject.Uuid, id)
+	// // Check if delete was successful
+	//
+	//	if dberr != nil {
+	//		log.Println("DB error deleting pod", dberr)
+	//		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+	//	}
+	//
+	return nil
+}

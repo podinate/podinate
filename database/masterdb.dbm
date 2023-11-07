@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="1.0.2" use-changelog="false" last-position="0,155" last-zoom="1" max-obj-count="4"
+<dbmodel pgmodeler-ver="1.0.5" use-changelog="false" last-position="0,0" last-zoom="1" max-obj-count="7"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -16,14 +16,14 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <schema name="public" layers="0" fill-color="#e1e1e1" sql-disabled="true">
 </schema>
 
-<table name="project" layers="0" collapse-mode="2" max-obj-count="4" z-value="0">
+<table name="project" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="790" y="531"/>
-	<column name="id" not-null="true">
+	<position x="800" y="540"/>
+	<column name="uuid" not-null="true">
 		<type name="uuid" length="0"/>
 	</column>
-	<column name="slug">
+	<column name="id" not-null="true">
 		<type name="text" length="0"/>
 		<comment> <![CDATA[Unique identifier for the project within the user's account]]> </comment>
 	</column>
@@ -31,12 +31,15 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<type name="text" length="0"/>
 		<comment> <![CDATA[Human readable / display name for the project]]> </comment>
 	</column>
+	<column name="created" default-value="current_timestamp">
+		<type name="timestamp" length="0"/>
+	</column>
 	<constraint name="project_pk" type="pk-constr" table="public.project">
-		<columns names="id" ref-type="src-columns"/>
+		<columns names="uuid" ref-type="src-columns"/>
 	</constraint>
 
 	<customidxs object-type="column">
-		<object name="account_id" index="3"/>
+		<object name="account_uuid" index="3"/>
 	</customidxs>
 
 	<customidxs object-type="constraint">
@@ -44,14 +47,14 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</customidxs>
 </table>
 
-<table name="account" layers="0" collapse-mode="2" max-obj-count="3" z-value="0">
+<table name="account" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="340" y="180"/>
-	<column name="id" not-null="true">
+	<column name="uuid" not-null="true">
 		<type name="uuid" length="0"/>
 	</column>
-	<column name="slug">
+	<column name="id">
 		<type name="text" length="0"/>
 		<comment> <![CDATA[The unique identifier for the account within the system.]]> </comment>
 	</column>
@@ -59,22 +62,31 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<type name="text" length="0"/>
 		<comment> <![CDATA[The human readable / display name of the account]]> </comment>
 	</column>
+	<column name="owner_uuid">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="flags">
+		<type name="jsonb" length="0"/>
+	</column>
+	<column name="created" not-null="true" default-value="current_timestamp">
+		<type name="timestamp" length="0"/>
+	</column>
 	<constraint name="unique_account_slug" type="uq-constr" table="public.account">
-		<columns names="slug" ref-type="src-columns"/>
+		<columns names="id" ref-type="src-columns"/>
 	</constraint>
 	<constraint name="account_pk" type="pk-constr" table="public.account">
-		<columns names="id" ref-type="src-columns"/>
+		<columns names="uuid" ref-type="src-columns"/>
 	</constraint>
 </table>
 
 <table name="project_pods" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="1120" y="280"/>
-	<column name="id" not-null="true">
+	<position x="1360" y="520"/>
+	<column name="uuid" not-null="true">
 		<type name="uuid" length="0"/>
 	</column>
-	<column name="slug">
+	<column name="id">
 		<type name="text" length="0"/>
 		<comment> <![CDATA[The unique name for the deployment in kubernetes, used as the kuberenetes name.]]> </comment>
 	</column>
@@ -91,8 +103,16 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<comment> <![CDATA[The image tag to run]]> </comment>
 	</column>
 	<constraint name="project_pods_pk" type="pk-constr" table="public.project_pods">
-		<columns names="id" ref-type="src-columns"/>
+		<columns names="uuid" ref-type="src-columns"/>
 	</constraint>
+
+	<customidxs object-type="column">
+		<object name="project_uuid" index="5"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="project_fk" index="1"/>
+	</customidxs>
 </table>
 
 <relationship name="account_has_many_project" type="rel1n" layers="0"
@@ -114,7 +134,121 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 src-required="false" dst-required="false"/>
 
 <constraint name="unique_project_slug_per_account" type="uq-constr" table="public.project">
-	<columns names="account_id,slug" ref-type="src-columns"/>
+	<columns names="account_uuid,id" ref-type="src-columns"/>
 </constraint>
+
+<table name="user" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="900" y="40"/>
+	<column name="uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="id" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="display_name">
+		<type name="text" length="0"/>
+	</column>
+	<column name="created" default-value="CURRENT_TIMESTAMP">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="flags">
+		<type name="jsonb" length="0"/>
+	</column>
+	<constraint name="user_pk" type="pk-constr" table="public.&quot;user&quot;">
+		<columns names="uuid" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="oauth_login" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1240" y="60"/>
+	<column name="provider" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="provider_id" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="provider_username">
+		<type name="text" length="0"/>
+	</column>
+	<column name="access_token" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="refresh_token" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="authorised_user" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<constraint name="oauth_login_pk" type="pk-constr" table="public.oauth_login">
+		<columns names="provider,provider_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="api_key" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="900" y="280"/>
+	<column name="key" not-null="true">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The one-way hashed API key ]]> </comment>
+	</column>
+	<column name="name" not-null="true">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[User-provided name]]> </comment>
+	</column>
+	<column name="user_uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="issued" not-null="true" default-value="CURRENT_TIMESTAMP">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="expires">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="last_used">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="decription">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[User provided description]]> </comment>
+	</column>
+</table>
+
+<constraint name="owner_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;user&quot;" table="public.account">
+	<columns names="owner_uuid" ref-type="src-columns"/>
+	<columns names="uuid" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="authorised_user_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;user&quot;" table="public.oauth_login">
+	<columns names="authorised_user" ref-type="src-columns"/>
+	<columns names="uuid" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="api_key_user_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;user&quot;" table="public.api_key">
+	<columns names="user_uuid" ref-type="src-columns"/>
+	<columns names="uuid" ref-type="dst-columns"/>
+</constraint>
+
+<relationship name="rel_account_user" type="relfk" layers="0"
+	 src-table="public.account"
+	 dst-table="public.&quot;user&quot;" reference-fk="owner_uuid"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_oauth_login_user" type="relfk" layers="0"
+	 src-table="public.oauth_login"
+	 dst-table="public.&quot;user&quot;" reference-fk="authorised_user_uuid"
+	 src-required="false" dst-required="true"/>
+
+<relationship name="rel_api_key_user" type="relfk" layers="0"
+	 src-table="public.api_key"
+	 dst-table="public.&quot;user&quot;" reference-fk="api_key_user_uuid"
+	 src-required="false" dst-required="true"/>
 
 </dbmodel>

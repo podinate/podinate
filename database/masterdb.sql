@@ -1,5 +1,5 @@
 -- Database generated with pgModeler (PostgreSQL Database Modeler).
--- pgModeler version: 1.0.2
+-- pgModeler version: 1.0.5
 -- PostgreSQL version: 15.0
 -- Project Site: pgmodeler.io
 -- Model Author: ---
@@ -12,84 +12,157 @@
 CREATE DATABASE podinate;
 -- ddl-end --
 
-use podinate;
 
--- object: project | type: TABLE --
--- DROP TABLE IF EXISTS project CASCADE;
-CREATE TABLE project (
+-- object: public.project | type: TABLE --
+-- DROP TABLE IF EXISTS public.project CASCADE;
+CREATE TABLE public.project (
 	uuid uuid NOT NULL,
-	id text,
+	id text NOT NULL,
 	name text,
 	account_uuid uuid,
+	created timestamp DEFAULT current_timestamp,
 	CONSTRAINT project_pk PRIMARY KEY (uuid)
 );
 -- ddl-end --
-COMMENT ON COLUMN project.id IS E'Unique string identifier for the project within the user''s account';
+COMMENT ON COLUMN public.project.id IS E'Unique identifier for the project within the user''s account';
 -- ddl-end --
-COMMENT ON COLUMN project.name IS E'Human readable / display name for the project';
+COMMENT ON COLUMN public.project.name IS E'Human readable / display name for the project';
 -- ddl-end --
-ALTER TABLE project OWNER TO postgres;
+ALTER TABLE public.project OWNER TO postgres;
 -- ddl-end --
 
--- object: account | type: TABLE --
--- DROP TABLE IF EXISTS account CASCADE;
-CREATE TABLE account (
+-- object: public.account | type: TABLE --
+-- DROP TABLE IF EXISTS public.account CASCADE;
+CREATE TABLE public.account (
 	uuid uuid NOT NULL,
 	id text,
 	name text,
-	CONSTRAINT unique_account_id UNIQUE (id),
+	owner_uuid uuid,
+	flags jsonb,
+	created timestamp NOT NULL DEFAULT current_timestamp,
+	CONSTRAINT unique_account_slug UNIQUE (id),
 	CONSTRAINT account_pk PRIMARY KEY (uuid)
 );
 -- ddl-end --
-COMMENT ON COLUMN account.id IS E'The unique string identifier for the account within the system.';
+COMMENT ON COLUMN public.account.id IS E'The unique identifier for the account within the system.';
 -- ddl-end --
-COMMENT ON COLUMN account.name IS E'The human readable / display name of the account';
+COMMENT ON COLUMN public.account.name IS E'The human readable / display name of the account';
 -- ddl-end --
-ALTER TABLE account OWNER TO postgres;
+ALTER TABLE public.account OWNER TO postgres;
 -- ddl-end --
 
--- object: project_pods | type: TABLE --
--- DROP TABLE IF EXISTS project_pods CASCADE;
-CREATE TABLE project_pods (
+-- object: public.project_pods | type: TABLE --
+-- DROP TABLE IF EXISTS public.project_pods CASCADE;
+CREATE TABLE public.project_pods (
 	uuid uuid NOT NULL,
 	id text,
 	name text,
 	image text,
 	tag text,
-	count int,
-	ram int,
 	project_uuid uuid,
-	CONSTRAINT project_pods_pk PRIMARY KEY (id)
+	CONSTRAINT project_pods_pk PRIMARY KEY (uuid)
 );
 -- ddl-end --
-COMMENT ON COLUMN project_pods.id IS E'The string identifier for the deployment in kubernetes, used as the kuberenetes name.';
+COMMENT ON COLUMN public.project_pods.id IS E'The unique name for the deployment in kubernetes, used as the kuberenetes name.';
 -- ddl-end --
-COMMENT ON COLUMN project_pods.name IS E'Human readable / display name for the pod';
+COMMENT ON COLUMN public.project_pods.name IS E'Human readable / display name for the pod';
 -- ddl-end --
-COMMENT ON COLUMN project_pods.image IS E'The OCI image for the pod to run';
+COMMENT ON COLUMN public.project_pods.image IS E'The OCI image for the pod to run';
 -- ddl-end --
-COMMENT ON COLUMN project_pods.tag IS E'The image tag to run';
+COMMENT ON COLUMN public.project_pods.tag IS E'The image tag to run';
 -- ddl-end --
-ALTER TABLE project_pods OWNER TO postgres;
+ALTER TABLE public.project_pods OWNER TO postgres;
 -- ddl-end --
 
 -- object: account_fk | type: CONSTRAINT --
--- ALTER TABLE project DROP CONSTRAINT IF EXISTS account_fk CASCADE;
-ALTER TABLE project ADD CONSTRAINT account_fk FOREIGN KEY (account_uuid)
-REFERENCES account (uuid) MATCH FULL
+-- ALTER TABLE public.project DROP CONSTRAINT IF EXISTS account_fk CASCADE;
+ALTER TABLE public.project ADD CONSTRAINT account_fk FOREIGN KEY (account_uuid)
+REFERENCES public.account (uuid) MATCH FULL
 ON DELETE SET NULL ON UPDATE CASCADE;
 -- ddl-end --
 
 -- object: project_fk | type: CONSTRAINT --
--- ALTER TABLE project_pods DROP CONSTRAINT IF EXISTS project_fk CASCADE;
-ALTER TABLE project_pods ADD CONSTRAINT project_fk FOREIGN KEY (project_uuid)
-REFERENCES project (uuid) MATCH FULL
+-- ALTER TABLE public.project_pods DROP CONSTRAINT IF EXISTS project_fk CASCADE;
+ALTER TABLE public.project_pods ADD CONSTRAINT project_fk FOREIGN KEY (project_uuid)
+REFERENCES public.project (uuid) MATCH FULL
 ON DELETE SET NULL ON UPDATE CASCADE;
 -- ddl-end --
 
 -- object: unique_project_slug_per_account | type: CONSTRAINT --
--- ALTER TABLE project DROP CONSTRAINT IF EXISTS unique_project_slug_per_account CASCADE;
-ALTER TABLE project ADD CONSTRAINT unique_project_id_per_account UNIQUE (account_uuid,id);
+-- ALTER TABLE public.project DROP CONSTRAINT IF EXISTS unique_project_slug_per_account CASCADE;
+ALTER TABLE public.project ADD CONSTRAINT unique_project_slug_per_account UNIQUE (account_uuid,id);
+-- ddl-end --
+
+-- object: public."user" | type: TABLE --
+-- DROP TABLE IF EXISTS public."user" CASCADE;
+CREATE TABLE public."user" (
+	uuid uuid NOT NULL,
+	id text NOT NULL,
+	display_name text,
+	created timestamp DEFAULT CURRENT_TIMESTAMP,
+	flags jsonb,
+	CONSTRAINT user_pk PRIMARY KEY (uuid)
+);
+-- ddl-end --
+ALTER TABLE public."user" OWNER TO postgres;
+-- ddl-end --
+
+-- object: public.oauth_login | type: TABLE --
+-- DROP TABLE IF EXISTS public.oauth_login CASCADE;
+CREATE TABLE public.oauth_login (
+	provider text NOT NULL,
+	provider_id text NOT NULL,
+	provider_username text,
+	access_token text NOT NULL,
+	refresh_token text NOT NULL,
+	authorised_user uuid NOT NULL,
+	CONSTRAINT oauth_login_pk PRIMARY KEY (provider,provider_id)
+);
+-- ddl-end --
+ALTER TABLE public.oauth_login OWNER TO postgres;
+-- ddl-end --
+
+-- object: public.api_key | type: TABLE --
+-- DROP TABLE IF EXISTS public.api_key CASCADE;
+CREATE TABLE public.api_key (
+	key text NOT NULL,
+	name text NOT NULL,
+	user_uuid uuid NOT NULL,
+	issued timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	expires timestamp,
+	last_used timestamp,
+	decription text
+
+);
+-- ddl-end --
+COMMENT ON COLUMN public.api_key.key IS E'The one-way hashed API key';
+-- ddl-end --
+COMMENT ON COLUMN public.api_key.name IS E'User-provided name';
+-- ddl-end --
+COMMENT ON COLUMN public.api_key.decription IS E'User provided description';
+-- ddl-end --
+ALTER TABLE public.api_key OWNER TO postgres;
+-- ddl-end --
+
+-- object: owner_uuid | type: CONSTRAINT --
+-- ALTER TABLE public.account DROP CONSTRAINT IF EXISTS owner_uuid CASCADE;
+ALTER TABLE public.account ADD CONSTRAINT owner_uuid FOREIGN KEY (owner_uuid)
+REFERENCES public."user" (uuid) MATCH SIMPLE
+ON DELETE NO ACTION ON UPDATE NO ACTION;
+-- ddl-end --
+
+-- object: authorised_user_uuid | type: CONSTRAINT --
+-- ALTER TABLE public.oauth_login DROP CONSTRAINT IF EXISTS authorised_user_uuid CASCADE;
+ALTER TABLE public.oauth_login ADD CONSTRAINT authorised_user_uuid FOREIGN KEY (authorised_user)
+REFERENCES public."user" (uuid) MATCH SIMPLE
+ON DELETE NO ACTION ON UPDATE NO ACTION;
+-- ddl-end --
+
+-- object: api_key_user_uuid | type: CONSTRAINT --
+-- ALTER TABLE public.api_key DROP CONSTRAINT IF EXISTS api_key_user_uuid CASCADE;
+ALTER TABLE public.api_key ADD CONSTRAINT api_key_user_uuid FOREIGN KEY (user_uuid)
+REFERENCES public."user" (uuid) MATCH SIMPLE
+ON DELETE NO ACTION ON UPDATE NO ACTION;
 -- ddl-end --
 
 

@@ -470,6 +470,112 @@ paths:
           $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
+  
+  /user/login/init:
+    get:
+      summary: Get a login URL
+      description: Get a login URL
+      tags:
+      - User
+      parameters: 
+        - in: query
+          name: provider
+          schema:
+            type: string
+            example: github
+          description: The oauth provider to use. Valid options will be github | gitlab | podinate, during alpha only podinate is allowed. 
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    description: The URL to redirect the user to
+                    example: https://auth.podinate.com/login?state=1234&client_id=1234&redirect_uri=https://api.podinate.com/v0/user/login/callback
+                  token:
+                    type: string
+                    description: The token to use to get the user's actual API key once they have completed the oauth flow
+                    example: abc1234
+          description: An array of pods
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+  
+  /user/login/complete:
+    get:
+      summary: Complete a user login
+      description: Complete a user login and swap the given login token for an API key
+      tags:
+      - User
+      parameters: 
+        - in: query
+          name: token
+          schema:
+            type: string
+            example: abc1234
+          description: The token given by /user/login/init to get the user's actual API key once they have completed the oauth flow
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logged_in:
+                    type: boolean
+                    description: Whether the user is logged in or not
+                    example: true
+                  api_key:
+                    type: string
+                    description: The user's API key, if they are logged in
+                    example: abc1234
+          description: An array of pods
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+  /user:
+    get:
+      summary: Get the current user
+      description: Get the current user
+      tags:
+      - User
+      parameters: 
+        - $ref: '#/components/parameters/account'
+      responses:
+        "200":
+          description: The user was returned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: The user's ID
+                    example: abc1234
+                  email:
+                    type: string
+                    description: The user's email address
+                    example: test@example.com
+        "204":
+          description: No user is logged in
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
 
 components:
   parameters:

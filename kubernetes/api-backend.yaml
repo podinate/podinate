@@ -28,28 +28,31 @@ spec:
           envFrom:
             - configMapRef:
                 name: api-backend-env
+          env:
+            - name : POSTGRES_HOST
+              value: mypostgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: masterdb-secret
+                  key: superUserPassword
+            - name: CONFIG_FILE
+              value: /etc/config/config.toml
           volumeMounts:
-          - name: cockroach-certs
-            mountPath: /cockroach/cockroach-certs/
+            - name: api-backend-config
+              mountPath: /etc/config
       serviceAccountName: api-backend-deployment-manager
-
       volumes:
-      - name: cockroach-certs
-        projected:
-            sources:
-              - secret:
-                  name: masterdb-node
-                  items:
-                    - key: ca.crt
-                      path: ca.crt
-              - secret:
-                  name: masterdb-root
-                  items:
-                    - key: tls.crt
-                      path: client.root.crt
-                    - key: tls.key
-                      path: client.root.key
-            defaultMode: 256
+        - name: api-backend-config
+          configMap:
+            name: api-backend-config
+            items:
+              - key: config.toml
+                path: config.toml
+      
+      
+    
+
 ---
 apiVersion: v1
 kind: Service
@@ -72,6 +75,20 @@ metadata:
   name: api-backend-env
 data:
   PORT: "3000"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-backend-config
+data:
+  config.toml: |
+    [database]
+    host = "masterdb"
+    port = 5432
+    user = "postgres"
+    database = "podinate"
+
 ---
 # ServiceAccount to give access to manage deployments in all namespaces
 apiVersion: v1

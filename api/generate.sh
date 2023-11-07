@@ -7,3 +7,8 @@ docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
     -o /local/api-backend \
     --additional-properties outputAsLibrary=true,serverPort=3000
 
+docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
+    -i /local/api/openapi.yaml \
+    -g typescript-axios \
+    -o /local/dashboard/api_client \
+    --additional-properties npmName=@podinate/client

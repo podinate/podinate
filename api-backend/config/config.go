@@ -4,14 +4,27 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	_ "github.com/lib/pq"
+	"github.com/pelletier/go-toml"
 )
 
 var (
 	// Config - The configuration for this service.
 	DB *sql.DB
 )
+
+type configFile struct {
+	DB DBConfig `toml:"database"`
+}
+
+type DBConfig struct {
+	Host     string `toml:"host"`
+	Port     int    `toml:"port"`
+	Database string `toml:"database"`
+	User     string `toml:"user"`
+}
 
 // Connect to the database
 func ConnectDatabase(connectionString string) error {
@@ -32,9 +45,13 @@ func ConnectDatabase(connectionString string) error {
 // Init - Initialize the service.
 func Init() error {
 	// TODO - read in the config file
+	confile, err := toml.LoadFile(os.Getenv("CONFIG_FILE"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	crdb := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=verify-full sslrootcert=/cockroach/cockroach-certs/ca.crt sslkey=/cockroach/cockroach-certs/client.root.key sslcert=/cockroach/cockroach-certs/client.root.crt", "masterdb-public", 26257, "podinate")
-	err := ConnectDatabase(crdb)
+	crdb := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=disable user=%s password=%s", confile.Get("database.host"), confile.Get("database.port"), confile.Get("database.database"), confile.Get("database.user"), os.Getenv("POSTGRES_PASSWORD"))
+	err = ConnectDatabase(crdb)
 	if err != nil {
 		log.Fatal(err)
 	}

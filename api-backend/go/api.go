@@ -45,6 +45,14 @@ type ProjectApiRouter interface {
 	ProjectIdPatch(http.ResponseWriter, *http.Request)
 	ProjectPost(http.ResponseWriter, *http.Request)
 }
+// UserApiRouter defines the required methods for binding the api requests to a responses for the UserApi
+// The UserApiRouter implementation should parse necessary information from the http request,
+// pass the data to a UserApiServicer to perform the required actions, then write the service results to the http response.
+type UserApiRouter interface { 
+	UserGet(http.ResponseWriter, *http.Request)
+	UserLoginCompleteGet(http.ResponseWriter, *http.Request)
+	UserLoginInitGet(http.ResponseWriter, *http.Request)
+}
 
 
 // AccountApiServicer defines the api actions for the AccountApi service
@@ -82,4 +90,15 @@ type ProjectApiServicer interface {
 	ProjectIdGet(context.Context, string, string) (ImplResponse, error)
 	ProjectIdPatch(context.Context, string, string, Project) (ImplResponse, error)
 	ProjectPost(context.Context, string, Project) (ImplResponse, error)
+}
+
+
+// UserApiServicer defines the api actions for the UserApi service
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can be ignored with the .openapi-generator-ignore file
+// and updated with the logic required for the API.
+type UserApiServicer interface { 
+	UserGet(context.Context, string) (ImplResponse, error)
+	UserLoginCompleteGet(context.Context, string) (ImplResponse, error)
+	UserLoginInitGet(context.Context, string) (ImplResponse, error)
 }

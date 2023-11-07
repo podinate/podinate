@@ -131,7 +131,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 	}
 
 	// Delete the pod
-	apiErr = pod.Delete(theProject, thePod)
+	apiErr = thePod.Delete(theProject)
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}

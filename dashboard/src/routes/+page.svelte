@@ -29,7 +29,7 @@
 			</a>
 		</div>
 		<div class="space-y-2">
-			<p>Try editing the following:</p>
+			<p>Try editing these following:</p>
 			<p><code class="code">/src/routes/+layout.svelte</code></p>
 			<p><code class="code">/src/routes/+page.svelte</code></p>
 		</div>

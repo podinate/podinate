@@ -737,6 +737,137 @@ paths:
       summary: Update a pod
       tags:
       - Pod
+  /user/login/init:
+    get:
+      description: Get a login URL
+      parameters:
+      - description: "The oauth provider to use. Valid options will be github | gitlab\
+          \ | podinate, during alpha only podinate is allowed."
+        explode: true
+        in: query
+        name: provider
+        required: false
+        schema:
+          example: github
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_user_login_init_get_200_response'
+          description: An array of pods
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Get a login URL
+      tags:
+      - User
+  /user/login/complete:
+    get:
+      description: Complete a user login and swap the given login token for an API
+        key
+      parameters:
+      - description: The token given by /user/login/init to get the user's actual
+          API key once they have completed the oauth flow
+        explode: true
+        in: query
+        name: token
+        required: false
+        schema:
+          example: abc1234
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_user_login_complete_get_200_response'
+          description: An array of pods
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Complete a user login
+      tags:
+      - User
+  /user:
+    get:
+      description: Get the current user
+      parameters:
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_user_get_200_response'
+          description: The user was returned successfully
+        "204":
+          description: No user is logged in
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Get the current user
+      tags:
+      - User
 components:
   parameters:
     account:
@@ -877,3 +1008,46 @@ components:
     _project__project_id__pod_get_200_response_inner:
       oneOf:
       - $ref: '#/components/schemas/Pod'
+    _user_login_init_get_200_response:
+      example:
+        url: https://auth.podinate.com/login?state=1234&client_id=1234&redirect_uri=https://api.podinate.com/v0/user/login/callback
+        token: abc1234
+      properties:
+        url:
+          description: The URL to redirect the user to
+          example: https://auth.podinate.com/login?state=1234&client_id=1234&redirect_uri=https://api.podinate.com/v0/user/login/callback
+          type: string
+        token:
+          description: The token to use to get the user's actual API key once they
+            have completed the oauth flow
+          example: abc1234
+          type: string
+      type: object
+    _user_login_complete_get_200_response:
+      example:
+        api_key: abc1234
+        logged_in: true
+      properties:
+        logged_in:
+          description: Whether the user is logged in or not
+          example: true
+          type: boolean
+        api_key:
+          description: "The user's API key, if they are logged in"
+          example: abc1234
+          type: string
+      type: object
+    _user_get_200_response:
+      example:
+        id: abc1234
+        email: test@example.com
+      properties:
+        id:
+          description: The user's ID
+          example: abc1234
+          type: string
+        email:
+          description: The user's email address
+          example: test@example.com
+          type: string
+      type: object

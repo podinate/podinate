@@ -1,0 +1,9 @@
+global:
+  hosts:
+    domain: dev-git.podinate.com
+    https: false
+  ingress:
+    tls:
+      enabled: false
+    configureCertmanager: false
+  edition: ce

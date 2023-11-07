@@ -13,11 +13,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // AccountApiController binds http requests to an api service and writes the service results to the http response
 type AccountApiController struct {
-	service      AccountApiServicer
+	service AccountApiServicer
 	errorHandler ErrorHandler
 }
 
@@ -47,7 +49,7 @@ func NewAccountApiController(s AccountApiServicer, opts ...AccountApiOption) Rou
 
 // Routes returns all the api routes for the AccountApiController
 func (c *AccountApiController) Routes() Routes {
-	return Routes{
+	return Routes{ 
 		{
 			"AccountDelete",
 			strings.ToUpper("Delete"),
