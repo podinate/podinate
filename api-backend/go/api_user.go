@@ -10,16 +10,13 @@
 package openapi
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
 // UserApiController binds http requests to an api service and writes the service results to the http response
 type UserApiController struct {
-	service UserApiServicer
+	service      UserApiServicer
 	errorHandler ErrorHandler
 }
 
@@ -49,7 +46,7 @@ func NewUserApiController(s UserApiServicer, opts ...UserApiOption) Router {
 
 // Routes returns all the api routes for the UserApiController
 func (c *UserApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"UserGet",
 			strings.ToUpper("Get"),
@@ -63,10 +60,10 @@ func (c *UserApiController) Routes() Routes {
 			c.UserLoginCompleteGet,
 		},
 		{
-			"UserLoginInitGet",
+			"UserLoginInitiateGet",
 			strings.ToUpper("Get"),
-			"/v0/user/login/init",
-			c.UserLoginInitGet,
+			"/v0/user/login/initiate",
+			c.UserLoginInitiateGet,
 		},
 	}
 }
@@ -100,11 +97,11 @@ func (c *UserApiController) UserLoginCompleteGet(w http.ResponseWriter, r *http.
 
 }
 
-// UserLoginInitGet - Get a login URL
-func (c *UserApiController) UserLoginInitGet(w http.ResponseWriter, r *http.Request) {
+// UserLoginInitiateGet - Get a login URL
+func (c *UserApiController) UserLoginInitiateGet(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	providerParam := query.Get("provider")
-	result, err := c.service.UserLoginInitGet(r.Context(), providerParam)
+	result, err := c.service.UserLoginInitiateGet(r.Context(), providerParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

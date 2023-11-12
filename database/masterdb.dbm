@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="1.0.5" use-changelog="false" last-position="0,0" last-zoom="1" max-obj-count="7"
+<dbmodel pgmodeler-ver="1.0.5" use-changelog="false" last-position="0,0" last-zoom="1" max-obj-count="8"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -216,6 +216,24 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<type name="text" length="0"/>
 		<comment> <![CDATA[User provided description]]> </comment>
 	</column>
+</table>
+
+<table name="login_session" layers="0" collapse-mode="2" max-obj-count="3" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1700" y="300"/>
+	<column name="session_id" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="key" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="value">
+		<type name="bytea" length="0"/>
+	</column>
+	<constraint name="composite_primary" type="pk-constr" table="public.login_session">
+		<columns names="session_id,key" ref-type="src-columns"/>
+	</constraint>
 </table>
 
 <constraint name="owner_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"

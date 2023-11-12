@@ -15,6 +15,8 @@ tags:
   description: Operations related to your projects - projects are a distcint group of resources related to a single application or service
 - name: Pod
   description: Operations related to pods - Pods are a group of containers with the same lifecycle, and are the basic unit of deployment on Podinate
+- name: User
+  description: Operations related to users - users are the people who use Podinate, and can have different permissions to different accounts
 paths:
   /account:
     get:
@@ -471,10 +473,10 @@ paths:
         "500":
           $ref: "#/components/responses/500Error"
   
-  /user/login/init:
+  /user/login/initiate:
     get:
       summary: Get a login URL
-      description: Get a login URL
+      description: Get a login URL, which will redirect the user to the oauth provider to complete the login flow. To complete a full login, you should then call /user/login/complete with the token returned by this endpoint.
       tags:
       - User
       parameters: 
@@ -483,7 +485,7 @@ paths:
           schema:
             type: string
             example: github
-          description: The oauth provider to use. Valid options will be github | gitlab | podinate, during alpha only podinate is allowed. 
+          description: The oauth provider to use. Valid options will be github / gitlab / podinate, during alpha only podinate is allowed. 
       responses:
         "200":
           content:

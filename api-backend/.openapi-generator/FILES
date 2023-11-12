@@ -17,7 +17,7 @@ go/model__project__project_id__pod_get_200_response_inner.go
 go/model__project_get_200_response_inner.go
 go/model__user_get_200_response.go
 go/model__user_login_complete_get_200_response.go
-go/model__user_login_init_get_200_response.go
+go/model__user_login_initiate_get_200_response.go
 go/model_account.go
 go/model_error.go
 go/model_pod.go

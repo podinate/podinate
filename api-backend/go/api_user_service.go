@@ -69,13 +69,13 @@ func (s *UserApiService) UserLoginCompleteGet(ctx context.Context, token string)
 	return Response(http.StatusNotImplemented, nil), errors.New("UserLoginCompleteGet method not implemented")
 }
 
-// UserLoginInitGet - Get a login URL
-func (s *UserApiService) UserLoginInitGet(ctx context.Context, provider string) (ImplResponse, error) {
-	// TODO - update UserLoginInitGet with the required logic for this service method.
+// UserLoginInitiateGet - Get a login URL
+func (s *UserApiService) UserLoginInitiateGet(ctx context.Context, provider string) (ImplResponse, error) {
+	// TODO - update UserLoginInitiateGet with the required logic for this service method.
 	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, UserLoginInitGet200Response{}) or use other options such as http.Ok ...
-	//return Response(200, UserLoginInitGet200Response{}), nil
+	//TODO: Uncomment the next line to return response Response(200, UserLoginInitiateGet200Response{}) or use other options such as http.Ok ...
+	//return Response(200, UserLoginInitiateGet200Response{}), nil
 
 	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
 	//return Response(400, Error{}), nil
@@ -86,5 +86,5 @@ func (s *UserApiService) UserLoginInitGet(ctx context.Context, provider string) 
 	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
 	//return Response(500, Error{}), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("UserLoginInitGet method not implemented")
+	return Response(http.StatusNotImplemented, nil), errors.New("UserLoginInitiateGet method not implemented")
 }

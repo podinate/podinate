@@ -144,6 +144,18 @@ COMMENT ON COLUMN public.api_key.decription IS E'User provided description';
 ALTER TABLE public.api_key OWNER TO postgres;
 -- ddl-end --
 
+-- object: public.login_session | type: TABLE --
+-- DROP TABLE IF EXISTS public.login_session CASCADE;
+CREATE TABLE public.login_session (
+	session_id uuid NOT NULL,
+	key text NOT NULL,
+	value bytea,
+	CONSTRAINT composite_primary PRIMARY KEY (session_id,key)
+);
+-- ddl-end --
+ALTER TABLE public.login_session OWNER TO postgres;
+-- ddl-end --
+
 -- object: owner_uuid | type: CONSTRAINT --
 -- ALTER TABLE public.account DROP CONSTRAINT IF EXISTS owner_uuid CASCADE;
 ALTER TABLE public.account ADD CONSTRAINT owner_uuid FOREIGN KEY (owner_uuid)

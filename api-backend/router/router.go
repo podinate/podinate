@@ -20,7 +20,9 @@ func GetRouter() *mux.Router {
 	AccountApiController := api.NewAccountApiController(AccountAPIService)
 	PodAPIService := NewPodAPIService()
 	PodApiController := api.NewPodApiController(PodAPIService)
-	return api.NewRouter(ProjectApiController, AccountApiController, PodApiController)
+	UserAPIService := NewUserAPIService()
+	UserApiController := api.NewUserApiController(UserAPIService)
+	return api.NewRouter(ProjectApiController, AccountApiController, PodApiController, UserApiController)
 
 }
 

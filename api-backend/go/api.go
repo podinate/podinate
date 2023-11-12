@@ -51,7 +51,7 @@ type ProjectApiRouter interface {
 type UserApiRouter interface { 
 	UserGet(http.ResponseWriter, *http.Request)
 	UserLoginCompleteGet(http.ResponseWriter, *http.Request)
-	UserLoginInitGet(http.ResponseWriter, *http.Request)
+	UserLoginInitiateGet(http.ResponseWriter, *http.Request)
 }
 
 
@@ -100,5 +100,5 @@ type ProjectApiServicer interface {
 type UserApiServicer interface { 
 	UserGet(context.Context, string) (ImplResponse, error)
 	UserLoginCompleteGet(context.Context, string) (ImplResponse, error)
-	UserLoginInitGet(context.Context, string) (ImplResponse, error)
+	UserLoginInitiateGet(context.Context, string) (ImplResponse, error)
 }

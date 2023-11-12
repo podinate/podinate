@@ -37,7 +37,7 @@ func main() {
 	gitlab.ProfileURL = "http://gitlab.dev-git.podinate.com:8081/api/v3/user"
 
 	goth.UseProviders(
-		gitlab.New("acd228dbd320a2be27f152d01944519df127f0d4e739d24b24171a54f1aeb6bc", "e834e1f3261806bc7da403e426374a36a06b9b4eb5625b49f95de7642a37ba35", "http://localhost:3002/auth/gitlab/callback", "read_user", "read_repository", "read_registry", "profile", "email"),
+		gitlab.New("b6f324560f50b728493a021a4cb529d52c0aa4c49af7a54c2248ed7ddc9d7e68", "f769bd4869b6d9d81fbe287fd99ff4db6601aca9214463a246193194a1cf5858", "http://localhost:3002/auth/gitlab/callback", "read_user", "read_repository", "read_registry", "profile", "email"),
 	)
 
 	p := pat.New()
