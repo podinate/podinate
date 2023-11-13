@@ -229,7 +229,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<type name="text" length="0"/>
 	</column>
 	<column name="value">
-		<type name="bytea" length="0"/>
+		<type name="text" length="0"/>
 	</column>
 	<constraint name="composite_primary" type="pk-constr" table="public.login_session">
 		<columns names="session_id,key" ref-type="src-columns"/>

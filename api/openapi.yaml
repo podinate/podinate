@@ -501,7 +501,8 @@ paths:
                     type: string
                     description: The token to use to get the user's actual API key once they have completed the oauth flow
                     example: abc1234
-          description: An array of pods
+          description: A redirect URL to send the user to to complete the login flow, and a token to use to get the user's actual API key once they have completed the oauth flow
+
         "400":
           $ref: "#/components/responses/400Error"
         "404":
@@ -537,6 +538,64 @@ paths:
                     type: string
                     description: The user's API key, if they are logged in
                     example: abc1234
+          description: An array of pods
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+  /user/login/callback/{provider}: 
+    get:
+      summary: User login callback URL for oauth providers
+      description: This API endpoint is not intended to be accessed directly. It is used as the callback URL for oauth providers, and will redirect the user to the correct place once they have completed the login flow.
+      tags:
+      - User
+      parameters: 
+        - in: path
+          required: true
+          name: provider
+          schema:
+            type: string
+            example: github
+          description: The oauth provider to use. Valid options will be github / gitlab / podinate, during alpha only podinate is allowed. 
+      responses:
+        "200":
+          content:
+            text/html: 
+              schema:
+                type: string
+                example: You have successfully logged in. Closing this window in 3 seconds...
+          description: An array of pods
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+  
+  /user/login/redirect/{token}: 
+    get:
+      summary: User login redirect URL to oauth providers
+      description: This API endpoint is not intended to be called directly. It is used as the redirect URL for oauth providers, and will redirect the user to the correct place once they have completed the login flow.
+      tags:
+      - User
+      parameters: 
+        - in: path
+          required: true
+          name: token
+          schema:
+            type: string
+            example: abc1234
+          description: The token given by /user/login/init to get the user's actual API key once they have completed the oauth flow
+      responses:
+        "200":
+          content:
+            text/html: 
+              schema:
+                type: string
+                example: You should be redirected automatically. If not click here.
           description: An array of pods
         "400":
           $ref: "#/components/responses/400Error"

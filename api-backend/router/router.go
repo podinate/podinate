@@ -16,12 +16,16 @@ import (
 func GetRouter() *mux.Router {
 	ProjectAPIService := NewProjectAPIService()
 	ProjectApiController := api.NewProjectApiController(ProjectAPIService)
+
 	AccountAPIService := NewAccountAPIService()
 	AccountApiController := api.NewAccountApiController(AccountAPIService)
+
 	PodAPIService := NewPodAPIService()
 	PodApiController := api.NewPodApiController(PodAPIService)
+
 	UserAPIService := NewUserAPIService()
 	UserApiController := api.NewUserApiController(UserAPIService)
+
 	return api.NewRouter(ProjectApiController, AccountApiController, PodApiController, UserApiController)
 
 }

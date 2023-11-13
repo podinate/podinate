@@ -762,7 +762,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_user_login_initiate_get_200_response'
-          description: An array of pods
+          description: "A redirect URL to send the user to to complete the login flow,\
+            \ and a token to use to get the user's actual API key once they have completed\
+            \ the oauth flow"
         "400":
           content:
             application/json:
@@ -827,6 +829,99 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: An internal server error
       summary: Complete a user login
+      tags:
+      - User
+  /user/login/callback/{provider}:
+    get:
+      description: "This API endpoint is not intended to be accessed directly. It\
+        \ is used as the callback URL for oauth providers, and will redirect the user\
+        \ to the correct place once they have completed the login flow."
+      parameters:
+      - description: "The oauth provider to use. Valid options will be github / gitlab\
+          \ / podinate, during alpha only podinate is allowed."
+        explode: false
+        in: path
+        name: provider
+        required: true
+        schema:
+          example: github
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            text/html:
+              schema:
+                example: You have successfully logged in. Closing this window in 3
+                  seconds...
+                type: string
+          description: An array of pods
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: User login callback URL for oauth providers
+      tags:
+      - User
+  /user/login/redirect/{token}:
+    get:
+      description: "This API endpoint is not intended to be called directly. It is\
+        \ used as the redirect URL for oauth providers, and will redirect the user\
+        \ to the correct place once they have completed the login flow."
+      parameters:
+      - description: The token given by /user/login/init to get the user's actual
+          API key once they have completed the oauth flow
+        explode: false
+        in: path
+        name: token
+        required: true
+        schema:
+          example: abc1234
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            text/html:
+              schema:
+                example: You should be redirected automatically. If not click here.
+                type: string
+          description: An array of pods
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: User login redirect URL to oauth providers
       tags:
       - User
   /user:

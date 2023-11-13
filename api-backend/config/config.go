@@ -13,6 +13,7 @@ import (
 var (
 	// Config - The configuration for this service.
 	DB *sql.DB
+	C  *toml.Tree
 )
 
 type configFile struct {
@@ -44,11 +45,14 @@ func ConnectDatabase(connectionString string) error {
 
 // Init - Initialize the service.
 func Init() error {
-	// TODO - read in the config file
+	// Read in the config file
 	confile, err := toml.LoadFile(os.Getenv("CONFIG_FILE"))
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Make it globally accessible
+	C = confile
 
 	crdb := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=disable user=%s password=%s", confile.Get("database.host"), confile.Get("database.port"), confile.Get("database.database"), confile.Get("database.user"), os.Getenv("POSTGRES_PASSWORD"))
 	err = ConnectDatabase(crdb)

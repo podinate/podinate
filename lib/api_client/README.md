@@ -92,8 +92,10 @@ Class | Method | HTTP request | Description
 *ProjectApi* | [**ProjectIdPatch**](docs/ProjectApi.md#projectidpatch) | **Patch** /project/{id} | Update an existing project
 *ProjectApi* | [**ProjectPost**](docs/ProjectApi.md#projectpost) | **Post** /project | Create a new project
 *UserApi* | [**UserGet**](docs/UserApi.md#userget) | **Get** /user | Get the current user
+*UserApi* | [**UserLoginCallbackProviderGet**](docs/UserApi.md#userlogincallbackproviderget) | **Get** /user/login/callback/{provider} | User login callback URL for oauth providers
 *UserApi* | [**UserLoginCompleteGet**](docs/UserApi.md#userlogincompleteget) | **Get** /user/login/complete | Complete a user login
 *UserApi* | [**UserLoginInitiateGet**](docs/UserApi.md#userlogininitiateget) | **Get** /user/login/initiate | Get a login URL
+*UserApi* | [**UserLoginRedirectTokenGet**](docs/UserApi.md#userloginredirecttokenget) | **Get** /user/login/redirect/{token} | User login redirect URL to oauth providers
 
 
 ## Documentation For Models

@@ -149,7 +149,7 @@ ALTER TABLE public.api_key OWNER TO postgres;
 CREATE TABLE public.login_session (
 	session_id uuid NOT NULL,
 	key text NOT NULL,
-	value bytea,
+	value text,
 	CONSTRAINT composite_primary PRIMARY KEY (session_id,key)
 );
 -- ddl-end --

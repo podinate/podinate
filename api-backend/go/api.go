@@ -50,8 +50,10 @@ type ProjectApiRouter interface {
 // pass the data to a UserApiServicer to perform the required actions, then write the service results to the http response.
 type UserApiRouter interface { 
 	UserGet(http.ResponseWriter, *http.Request)
+	UserLoginCallbackProviderGet(http.ResponseWriter, *http.Request)
 	UserLoginCompleteGet(http.ResponseWriter, *http.Request)
 	UserLoginInitiateGet(http.ResponseWriter, *http.Request)
+	UserLoginRedirectTokenGet(http.ResponseWriter, *http.Request)
 }
 
 
@@ -99,6 +101,8 @@ type ProjectApiServicer interface {
 // and updated with the logic required for the API.
 type UserApiServicer interface { 
 	UserGet(context.Context, string) (ImplResponse, error)
+	UserLoginCallbackProviderGet(context.Context, string) (ImplResponse, error)
 	UserLoginCompleteGet(context.Context, string) (ImplResponse, error)
 	UserLoginInitiateGet(context.Context, string) (ImplResponse, error)
+	UserLoginRedirectTokenGet(context.Context, string) (ImplResponse, error)
 }
