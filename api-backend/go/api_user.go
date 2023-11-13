@@ -12,6 +12,8 @@ package openapi
 import (
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // UserApiController binds http requests to an api service and writes the service results to the http response
@@ -54,6 +56,12 @@ func (c *UserApiController) Routes() Routes {
 			c.UserGet,
 		},
 		{
+			"UserLoginCallbackProviderGet",
+			strings.ToUpper("Get"),
+			"/v0/user/login/callback/{provider}",
+			c.UserLoginCallbackProviderGet,
+		},
+		{
 			"UserLoginCompleteGet",
 			strings.ToUpper("Get"),
 			"/v0/user/login/complete",
@@ -65,6 +73,12 @@ func (c *UserApiController) Routes() Routes {
 			"/v0/user/login/initiate",
 			c.UserLoginInitiateGet,
 		},
+		{
+			"UserLoginRedirectTokenGet",
+			strings.ToUpper("Get"),
+			"/v0/user/login/redirect/{token}",
+			c.UserLoginRedirectTokenGet,
+		},
 	}
 }
 
@@ -72,6 +86,21 @@ func (c *UserApiController) Routes() Routes {
 func (c *UserApiController) UserGet(w http.ResponseWriter, r *http.Request) {
 	accountParam := r.Header.Get("account")
 	result, err := c.service.UserGet(r.Context(), accountParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// UserLoginCallbackProviderGet - User login callback URL for oauth providers
+func (c *UserApiController) UserLoginCallbackProviderGet(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	providerParam := params["provider"]
+	result, err := c.service.UserLoginCallbackProviderGet(r.Context(), providerParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -107,6 +136,22 @@ func (c *UserApiController) UserLoginInitiateGet(w http.ResponseWriter, r *http.
 		c.errorHandler(w, r, err, &result)
 		return
 	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// UserLoginRedirectTokenGet - User login redirect URL to oauth providers
+func (c *UserApiController) UserLoginRedirectTokenGet(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	tokenParam := params["token"]
+	result, err := c.service.UserLoginRedirectTokenGet(r.Context(), tokenParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+
 	// If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
 
