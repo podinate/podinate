@@ -1,6 +1,6 @@
 -- Database generated with pgModeler (PostgreSQL Database Modeler).
--- pgModeler version: 1.0.5
--- PostgreSQL version: 15.0
+-- pgModeler version: 1.0.6
+-- PostgreSQL version: 16.0
 -- Project Site: pgmodeler.io
 -- Model Author: ---
 
@@ -94,15 +94,22 @@ ALTER TABLE public.project ADD CONSTRAINT unique_project_slug_per_account UNIQUE
 -- ddl-end --
 
 -- object: public."user" | type: TABLE --
--- DROP TABLE IF EXISTS public."user" CASCADE;
+DROP TABLE IF EXISTS public."user" CASCADE;
 CREATE TABLE public."user" (
-	uuid uuid NOT NULL,
+	uuid uuid NOT NULL DEFAULT gen_random_uuid(),
+	main_provider text NOT NULL,
 	id text NOT NULL,
 	display_name text,
+	avatar_url text,
 	created timestamp DEFAULT CURRENT_TIMESTAMP,
+	email text NOT NULL,
 	flags jsonb,
 	CONSTRAINT user_pk PRIMARY KEY (uuid)
 );
+-- ddl-end --
+COMMENT ON COLUMN public."user".main_provider IS E'The provider string for this username, eg github, gitlab, podinate';
+-- ddl-end --
+COMMENT ON COLUMN public."user".display_name IS E'The user''s human name';
 -- ddl-end --
 ALTER TABLE public."user" OWNER TO postgres;
 -- ddl-end --

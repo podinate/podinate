@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="1.0.5" use-changelog="false" last-position="0,0" last-zoom="1" max-obj-count="8"
+<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,0" last-zoom="1" max-obj-count="8"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -137,21 +137,32 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<columns names="account_uuid,id" ref-type="src-columns"/>
 </constraint>
 
-<table name="user" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
+<table name="user" layers="0" collapse-mode="2" max-obj-count="9" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="900" y="40"/>
-	<column name="uuid" not-null="true">
+	<column name="uuid" not-null="true" default-value="gen_random_uuid()">
 		<type name="uuid" length="0"/>
+	</column>
+	<column name="main_provider" not-null="true">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The provider string for this username, eg github, gitlab, podinate]]> </comment>
 	</column>
 	<column name="id" not-null="true">
 		<type name="text" length="0"/>
 	</column>
 	<column name="display_name">
 		<type name="text" length="0"/>
+		<comment> <![CDATA[The user's human name]]> </comment>
+	</column>
+	<column name="avatar_url">
+		<type name="text" length="0"/>
 	</column>
 	<column name="created" default-value="CURRENT_TIMESTAMP">
 		<type name="timestamp" length="0"/>
+	</column>
+	<column name="email" not-null="true">
+		<type name="text" length="0"/>
 	</column>
 	<column name="flags">
 		<type name="jsonb" length="0"/>
@@ -164,7 +175,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="oauth_login" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="1240" y="60"/>
+	<position x="1380" y="60"/>
 	<column name="provider" not-null="true">
 		<type name="text" length="0"/>
 	</column>
@@ -191,7 +202,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="api_key" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="900" y="280"/>
+	<position x="1140" y="300"/>
 	<column name="key" not-null="true">
 		<type name="text" length="0"/>
 		<comment> <![CDATA[The one-way hashed API key ]]> </comment>

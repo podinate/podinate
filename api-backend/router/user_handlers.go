@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/johncave/podinate/api-backend/config"
+	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/responder"
 	"github.com/markbates/goth"
@@ -24,16 +25,16 @@ type UserAPIShim struct {
 func (c *UserAPIShim) Routes() api.Routes {
 	return api.Routes{
 		{
-			"UserLoginRedirectTokenGet",
-			"GET",
-			"/v0/user/login/redirect/{token}",
-			c.UserLoginRedirectTokenGet,
+			Name:        "UserLoginRedirectTokenGet",
+			Method:      "GET",
+			Pattern:     "/v0/user/login/redirect/{token}",
+			HandlerFunc: c.UserLoginRedirectTokenGet,
 		},
 		{
-			"UserLoginCallbackProviderGet",
-			"GET",
-			"/v0/user/login/callback/{provider}",
-			c.UserLoginCallbackProviderGet,
+			Name:        "UserLoginCallbackProviderGet",
+			Method:      "GET",
+			Pattern:     "/v0/user/login/callback/{provider}",
+			HandlerFunc: c.UserLoginCallbackProviderGet,
 		},
 	}
 }
@@ -163,10 +164,59 @@ func (c *UserAPIShim) UserLoginCallbackProviderGet(w http.ResponseWriter, r *htt
 		}
 	}
 
-	fmt.Println("User: %+v\n", user)
+	fmt.Printf("User: %+v\n", user)
 
 	// We've now finished all the oauth stuff, so we can store and setup the user
-	w.Write([]byte("Your session is now authorised. You can now close this window and return to your app."))
+
+	// See if the user is already registered in the oauth_login table
+	var providerID string
+	var authorisedUser string
+	err = config.DB.QueryRow("SELECT provider_id, authorised_user FROM oauth_login WHERE provider = $1 AND provider_id = $2", providerName, user.UserID).Scan(&providerID, &authorisedUser)
+	if err != nil {
+		eh.Log.Infow("User not found, inserting new user", "error", err, "user", user)
+		fmt.Println("User not found, inserting new user")
+		// The user is not registered, so we need to register them
+		// Add the user to the user table
+		err = config.DB.QueryRow("INSERT INTO \"user\" (main_provider, id, display_name, email, avatar_url) VALUES ($1, $2, $3, $4, $5) RETURNING uuid", user.Provider, user.NickName, user.Name, user.Email, user.AvatarURL).Scan(&authorisedUser)
+		if err != nil {
+			eh.Log.Errorw("Error inserting new user into DB", "error", err)
+
+			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
+			return
+		}
+
+		// Insert into the oauth_login table
+		_, err = config.DB.Exec("INSERT INTO oauth_login (provider, provider_id, provider_username, access_token, refresh_token, authorised_user) VALUES ($1, $2, $3, $4, $5, $6)", providerName, user.UserID, user.NickName, user.AccessToken, user.RefreshToken, authorisedUser)
+		if err != nil {
+			eh.Log.Errorw("Error inserting oauth_login", "error", err)
+			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
+			return
+		}
+
+		eh.Log.Infow("User registered", "user", authorisedUser)
+
+	} else {
+		// The user is already registered, so we just need to update the oauth_login table
+		_, err = config.DB.Exec("UPDATE oauth_login SET provider_username = $1, access_token = $2, refresh_token = $3 WHERE provider = $4 AND provider_id = $5", user.NickName, user.AccessToken, user.RefreshToken, providerName, user.UserID)
+		if err != nil {
+			eh.Log.Errorw("Error updating oauth_login", "error", err, "user", authorisedUser)
+			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
+			return
+		}
+		// Update the user table
+		_, err = config.DB.Exec("UPDATE \"user\" SET display_name = $1, email = $2, avatar_url = $3 WHERE uuid = $4", user.Name, user.Email, user.AvatarURL, authorisedUser)
+		if err != nil {
+			eh.Log.Errorw("Error updating user", "error", err, "user", authorisedUser)
+			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
+			return
+		}
+		eh.Log.Infow("User updated", "reason", "new login, updated details from oauth", "user", authorisedUser)
+	}
+
+	eh.Log.Infow("User logged in", "user", authorisedUser)
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<html><body>Your session is now authorised. You can now close this window and return to what you were doing.</body> <script> setTimeout(function(){window.close()},5000);</script></html>"))
 }
 
 // validateState ensures that the state token param from the original

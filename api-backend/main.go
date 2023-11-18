@@ -16,6 +16,7 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/johncave/podinate/api-backend/config"
+	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	"github.com/johncave/podinate/api-backend/router"
 )
 
@@ -24,6 +25,8 @@ func main() {
 
 	config.Init()
 	log.Println("Server configured...")
+
+	eh.Init()
 
 	theRouter := router.GetRouter()
 	log.Fatal(http.ListenAndServe(":3000", theRouter))
