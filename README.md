@@ -73,3 +73,6 @@ To get a postgres shell in the backend postgres instance, run the following
 make postgres-shell
 ```
 Then copy in the `database/masterdb.sql` file. 
+
+## Use Insomnia
+Load the `API/Insomnia.json` file into Insomnia to see the endpoints. First create an account, then a project, then create a pod inside the project. 
