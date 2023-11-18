@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/responder"
+	myuser "github.com/johncave/podinate/api-backend/user"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/gitlab"
 )
@@ -213,7 +215,21 @@ func (c *UserAPIShim) UserLoginCallbackProviderGet(w http.ResponseWriter, r *htt
 		eh.Log.Infow("User updated", "reason", "new login, updated details from oauth", "user", authorisedUser)
 	}
 
-	eh.Log.Infow("User logged in", "user", authorisedUser)
+	theUser, err := myuser.GetByUUID(authorisedUser)
+	if err != nil {
+		eh.Log.Errorw("Error getting user", "error", err, "user", theUser, "uuid", authorisedUser)
+		api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
+		return
+	}
+	eh.Log.Infow("User registered", "user", theUser)
+
+	// Store which user to authorise in the session
+	err = StoreInSession(cookie.Value, "authorised_user", authorisedUser)
+	if err != nil {
+		eh.Log.Errorw("Error storing authorised user in session", "error", err, "user", theUser, "uuid", authorisedUser)
+		api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
+		return
+	}
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte("<html><body>Your session is now authorised. You can now close this window and return to what you were doing.</body> <script> setTimeout(function(){window.close()},5000);</script></html>"))
@@ -280,11 +296,53 @@ func (s *UserAPIService) UserGet(ctx context.Context, account string) (api.ImplR
 }
 
 // UserLoginCompleteGet - Complete the login process
-func (s *UserAPIService) UserLoginCompleteGet(ctx context.Context, token string) (api.ImplResponse, error) {
-	SetUpGoth()
-	// TODO - update UserLoginCompleteGet with the required logic for this service method.
+func (s *UserAPIService) UserLoginCompleteGet(ctx context.Context, token string, clientName string) (api.ImplResponse, error) {
+	// Check the name isn't 2TB long
+	if len(clientName) > 2048 {
+		eh.Log.Errorw("Client gave a name too long", "name", clientName)
+		return responder.Response(400, "Client name too long"), nil
+	}
 
-	return api.Response(501, nil), nil
+	userid, err := GetFromSession(token, "authorised_user")
+	if err != nil {
+		// TODO: Separate handling for token not found vs other errors
+		if err == sql.ErrNoRows {
+			eh.Log.Errorw("No authorised user found in session", "token", token)
+			return responder.Response(403, "Invalid login token"), nil
+		}
+
+		eh.Log.Errorw("Error getting authorised user from session", "error", err, "token", token)
+		return responder.Response(500, err.Error()), nil
+	}
+
+	user, err := myuser.GetByUUID(userid)
+	if err != nil {
+		eh.Log.Errorw("Error getting user for token", "error", err, "user", user, "uuid", userid)
+		return responder.Response(500, err.Error()), nil
+	}
+
+	// Issue an API key for the user
+	apiKey, err := user.IssueAPIKey(clientName)
+	if err != nil {
+		eh.Log.Errorw("Error issuing API key in exchange for token", "error", err, "user", user, "uuid", userid)
+		return responder.Response(500, err.Error()), nil
+	}
+
+	// API key issued! Remove the reference to the token from the session
+	err = StoreInSession(token, "authorised_user", "")
+	if err != nil {
+		eh.Log.Errorw("Error removing authorised user from session", "error", err, "user", user, "uuid", userid)
+		return responder.Response(500, err.Error()), nil
+	}
+
+	resp := api.UserLoginCompleteGet200Response{
+		ApiKey:   apiKey,
+		LoggedIn: true,
+	}
+
+	eh.Log.Infow("User logged in", "user", user)
+
+	return responder.Response(200, resp), nil
 }
 
 // UserLoginCallbackProviderGet - Handle the callback from the provider
@@ -377,7 +435,16 @@ func SetUpGoth() {
 
 // StoreInSession stores a value in the session
 func StoreInSession(sessionID string, key string, value string) error {
-	// Store in postgres
+	// If value is empty string, remove from key value store
+	if value == "" {
+		_, err := config.DB.Exec("DELETE FROM login_session WHERE session_id = $1 AND key = $2", sessionID, key)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// If value not empty, store in postgres
 	_, err := config.DB.Exec("INSERT INTO login_session (session_id, key, value) VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT composite_primary DO UPDATE SET value = EXCLUDED.value", sessionID, key, value)
 	if err != nil {
 		return err

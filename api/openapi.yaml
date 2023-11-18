@@ -523,6 +523,11 @@ paths:
             type: string
             example: abc1234
           description: The token given by /user/login/init to get the user's actual API key once they have completed the oauth flow
+        - in: query
+          name: client
+          schema:
+            type: string
+            example: "Podinate CLI on James' Macbook Pro"
       responses:
         "200":
           content:
@@ -541,6 +546,13 @@ paths:
           description: An array of pods
         "400":
           $ref: "#/components/responses/400Error"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid login session token
+          
         "404":
           $ref: "#/components/responses/404Error"
         "500":

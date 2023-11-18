@@ -802,6 +802,14 @@ paths:
           example: abc1234
           type: string
         style: form
+      - explode: true
+        in: query
+        name: client
+        required: false
+        schema:
+          example: Podinate CLI on James' Macbook Pro
+          type: string
+        style: form
       responses:
         "200":
           content:

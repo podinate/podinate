@@ -304,11 +304,17 @@ type ApiUserLoginCompleteGetRequest struct {
 	ctx context.Context
 	ApiService *UserApiService
 	token *string
+	client *string
 }
 
 // The token given by /user/login/init to get the user&#39;s actual API key once they have completed the oauth flow
 func (r ApiUserLoginCompleteGetRequest) Token(token string) ApiUserLoginCompleteGetRequest {
 	r.token = &token
+	return r
+}
+
+func (r ApiUserLoginCompleteGetRequest) Client(client string) ApiUserLoginCompleteGetRequest {
+	r.client = &client
 	return r
 }
 
@@ -354,6 +360,9 @@ func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRe
 
 	if r.token != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "token", r.token, "")
+	}
+	if r.client != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "client", r.client, "")
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

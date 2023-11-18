@@ -150,7 +150,7 @@ No authorization required
 
 ## UserLoginCompleteGet
 
-> UserLoginCompleteGet200Response UserLoginCompleteGet(ctx).Token(token).Execute()
+> UserLoginCompleteGet200Response UserLoginCompleteGet(ctx).Token(token).Client(client).Execute()
 
 Complete a user login
 
@@ -170,10 +170,11 @@ import (
 
 func main() {
     token := "abc1234" // string | The token given by /user/login/init to get the user's actual API key once they have completed the oauth flow (optional)
+    client := "Podinate CLI on James' Macbook Pro" // string |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.UserApi.UserLoginCompleteGet(context.Background()).Token(token).Execute()
+    resp, r, err := apiClient.UserApi.UserLoginCompleteGet(context.Background()).Token(token).Client(client).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `UserApi.UserLoginCompleteGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -195,6 +196,7 @@ Other parameters are passed through a pointer to a apiUserLoginCompleteGetReques
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **token** | **string** | The token given by /user/login/init to get the user&#39;s actual API key once they have completed the oauth flow | 
+ **client** | **string** |  | 
 
 ### Return type
 

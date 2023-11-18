@@ -70,7 +70,7 @@ func (s *UserApiService) UserLoginCallbackProviderGet(ctx context.Context, provi
 }
 
 // UserLoginCompleteGet - Complete a user login
-func (s *UserApiService) UserLoginCompleteGet(ctx context.Context, token string) (ImplResponse, error) {
+func (s *UserApiService) UserLoginCompleteGet(ctx context.Context, token string, client string) (ImplResponse, error) {
 	// TODO - update UserLoginCompleteGet with the required logic for this service method.
 	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 

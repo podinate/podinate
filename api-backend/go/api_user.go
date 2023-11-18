@@ -115,7 +115,8 @@ func (c *UserApiController) UserLoginCallbackProviderGet(w http.ResponseWriter, 
 func (c *UserApiController) UserLoginCompleteGet(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	tokenParam := query.Get("token")
-	result, err := c.service.UserLoginCompleteGet(r.Context(), tokenParam)
+	clientParam := query.Get("client")
+	result, err := c.service.UserLoginCompleteGet(r.Context(), tokenParam, clientParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -151,7 +152,6 @@ func (c *UserApiController) UserLoginRedirectTokenGet(w http.ResponseWriter, r *
 		c.errorHandler(w, r, err, &result)
 		return
 	}
-
 	// If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
 

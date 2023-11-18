@@ -102,7 +102,7 @@ type ProjectApiServicer interface {
 type UserApiServicer interface { 
 	UserGet(context.Context, string) (ImplResponse, error)
 	UserLoginCallbackProviderGet(context.Context, string) (ImplResponse, error)
-	UserLoginCompleteGet(context.Context, string) (ImplResponse, error)
+	UserLoginCompleteGet(context.Context, string, string) (ImplResponse, error)
 	UserLoginInitiateGet(context.Context, string) (ImplResponse, error)
 	UserLoginRedirectTokenGet(context.Context, string) (ImplResponse, error)
 }

@@ -4,6 +4,7 @@ import (
 	zap "go.uber.org/zap"
 )
 
+// Log is the global logger, based on zap sugared logger
 var Log *zap.SugaredLogger
 
 func Init() {
