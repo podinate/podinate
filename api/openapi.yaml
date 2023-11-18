@@ -1,13 +1,15 @@
 openapi: 3.0.0
 info:
-  description: The API for the simple containerisation solution Podinate. Login should be performed over oauth from [auth.podinate.com](https://auth.podinate.com)
+  description: The API for the simple containerisation solution Podinate.
   title: Podinate API
   version: 0.0.1
 servers:
-- description: Main (production) server
+- description: Production server
   url: https://api.podinate.com/v0
-- description: Internal staging server for testing
-  url: http://staging-api.example.com
+- description: Development Server
+  url: http://localhost:3001/v0
+security:
+  - APIKeyAuth: []
 tags:
 - name: Account
   description: Operations about accounts - accounts hold your resources and allow different users to have different permissions to them
@@ -16,7 +18,12 @@ tags:
 - name: Pod
   description: Operations related to pods - Pods are a group of containers with the same lifecycle, and are the basic unit of deployment on Podinate
 - name: User
-  description: Operations related to users - users are the people who use Podinate, and can have different permissions to different accounts
+  description: |
+    Operations related to users - users are the people who use Podinate, and can have different permissions to different accounts. 
+
+    To complete a user login, you should call `/user/login/initiate` to get a login URL and token, then redirect the user to that URL. 
+    Once they have completed the login flow on the provider, they will be redirected to `/user/login/callback/{provider}`. 
+    You should then call `/user/login/complete` with that token to get the user's API key.
 paths:
   /account:
     get:
@@ -479,6 +486,8 @@ paths:
       description: Get a login URL, which will redirect the user to the oauth provider to complete the login flow. To complete a full login, you should then call /user/login/complete with the token returned by this endpoint.
       tags:
       - User
+      # No security on this endpoint as it's related to logging in
+      security: []
       parameters: 
         - in: query
           name: provider
@@ -509,13 +518,76 @@ paths:
           $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
-  
+
+  /user/login/redirect/{token}: 
+    get:
+      summary: User login redirect URL to oauth providers
+      description: This API endpoint is not intended to be called directly. It is used as the redirect URL for oauth providers, and will redirect the user to the correct place once they have completed the login flow.
+      tags:
+      - User
+      # No security on this endpoint as it's related to logging in
+      security: []
+      parameters: 
+        - in: path
+          required: true
+          name: token
+          schema:
+            type: string
+            example: abc1234
+          description: The token given by /user/login/init to get the user's actual API key once they have completed the oauth flow
+      responses:
+        "200":
+          content:
+            text/html: 
+              schema:
+                type: string
+                example: You should be redirected automatically. If not click here.
+          description: An array of pods
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+  /user/login/callback/{provider}: 
+    get:
+      summary: User login callback URL for oauth providers
+      description: This API endpoint is not intended to be accessed directly. It is used as the callback URL for oauth providers, and will redirect the user to the correct place once they have completed the login flow.
+      tags:
+      - User
+      security: []
+      parameters: 
+        - in: path
+          required: true
+          name: provider
+          schema:
+            type: string
+            example: github
+          description: The oauth provider to use. Valid options will be github / gitlab / podinate, during alpha only podinate is allowed. 
+      responses:
+        "200":
+          content:
+            text/html: 
+              schema:
+                type: string
+                example: You have successfully logged in. Closing this window in 3 seconds...
+          description: An array of pods
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
   /user/login/complete:
     get:
       summary: Complete a user login
       description: Complete a user login and swap the given login token for an API key
       tags:
       - User
+      # No security on this endpoint as it's related to logging in
+      security: []
       parameters: 
         - in: query
           name: token
@@ -557,64 +629,8 @@ paths:
           $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
-
-  /user/login/callback/{provider}: 
-    get:
-      summary: User login callback URL for oauth providers
-      description: This API endpoint is not intended to be accessed directly. It is used as the callback URL for oauth providers, and will redirect the user to the correct place once they have completed the login flow.
-      tags:
-      - User
-      parameters: 
-        - in: path
-          required: true
-          name: provider
-          schema:
-            type: string
-            example: github
-          description: The oauth provider to use. Valid options will be github / gitlab / podinate, during alpha only podinate is allowed. 
-      responses:
-        "200":
-          content:
-            text/html: 
-              schema:
-                type: string
-                example: You have successfully logged in. Closing this window in 3 seconds...
-          description: An array of pods
-        "400":
-          $ref: "#/components/responses/400Error"
-        "404":
-          $ref: "#/components/responses/404Error"
-        "500":
-          $ref: "#/components/responses/500Error"
   
-  /user/login/redirect/{token}: 
-    get:
-      summary: User login redirect URL to oauth providers
-      description: This API endpoint is not intended to be called directly. It is used as the redirect URL for oauth providers, and will redirect the user to the correct place once they have completed the login flow.
-      tags:
-      - User
-      parameters: 
-        - in: path
-          required: true
-          name: token
-          schema:
-            type: string
-            example: abc1234
-          description: The token given by /user/login/init to get the user's actual API key once they have completed the oauth flow
-      responses:
-        "200":
-          content:
-            text/html: 
-              schema:
-                type: string
-                example: You should be redirected automatically. If not click here.
-          description: An array of pods
-        "400":
-          $ref: "#/components/responses/400Error"
-        "404":
-          $ref: "#/components/responses/404Error"
-        "500":
-          $ref: "#/components/responses/500Error"
+  
 
   /user:
     get:
@@ -630,16 +646,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    description: The user's ID
-                    example: abc1234
-                  email:
-                    type: string
-                    description: The user's email address
-                    example: test@example.com
+                $ref: '#/components/schemas/User'
         "204":
           description: No user is logged in
         "400":
@@ -651,6 +658,11 @@ paths:
 
 
 components:
+  securitySchemes:
+    APIKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
   parameters:
     account:
       description: The account to use for the request
@@ -785,6 +797,31 @@ components:
           example: "2020-01-01T00:00:00Z"
           type: string
       type: object
+    User:
+      example:
+        resource_id: user:podinate:mike
+        email: mike@example.com
+        display_name: Michael Jones
+        avatar_url: https://avatars.githubusercontent.com/u/1234?v=4
+      properties:
+        resource_id: 
+          description: The global Resource ID of the user
+          example: user:podinate:mike
+          type: string
+        email:
+          description: The user's email address
+          example: mike@example.com
+          type: string
+        display_name: 
+          description: The user's display name
+          example: Michael Bolton
+          type: string
+        avatar_url:
+          description: The URL of the user's avatar
+          example: https://avatars.githubusercontent.com/u/1234?v=4
+          type: string
+
+        
     "Error":
       properties:
         code:
