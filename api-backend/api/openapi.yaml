@@ -1,14 +1,15 @@
 openapi: 3.0.0
 info:
-  description: "The API for the simple containerisation solution Podinate. Login should\
-    \ be performed over oauth from [auth.podinate.com](https://auth.podinate.com)"
+  description: The API for the simple containerisation solution Podinate.
   title: Podinate API
   version: 0.0.1
 servers:
-- description: Main (production) server
+- description: Production server
   url: https://api.podinate.com/v0
-- description: Internal staging server for testing
-  url: http://staging-api.example.com
+- description: Development Server
+  url: http://localhost:3001/v0
+security:
+- APIKeyAuth: []
 tags:
 - description: Operations about accounts - accounts hold your resources and allow
     different users to have different permissions to them
@@ -20,7 +21,12 @@ tags:
     \ same lifecycle, and are the basic unit of deployment on Podinate"
   name: Pod
 - description: "Operations related to users - users are the people who use Podinate,\
-    \ and can have different permissions to different accounts"
+    \ and can have different permissions to different accounts. \n\nTo complete a\
+    \ user login, you should call `/user/login/initiate` to get a login URL and token,\
+    \ then redirect the user to that URL. \nOnce they have completed the login flow\
+    \ on the provider, they will be redirected to `/user/login/callback/{provider}`.\
+    \ \nYou should then call `/user/login/complete` with that token to get the user's\
+    \ API key.\n"
   name: User
 paths:
   /account:
@@ -784,38 +790,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: An internal server error
+      security: []
       summary: Get a login URL
       tags:
       - User
-  /user/login/complete:
+  /user/login/redirect/{token}:
     get:
-      description: Complete a user login and swap the given login token for an API
-        key
+      description: "This API endpoint is not intended to be called directly. It is\
+        \ used as the redirect URL for oauth providers, and will redirect the user\
+        \ to the correct place once they have completed the login flow."
       parameters:
       - description: The token given by /user/login/init to get the user's actual
           API key once they have completed the oauth flow
-        explode: true
-        in: query
+        explode: false
+        in: path
         name: token
-        required: false
+        required: true
         schema:
           example: abc1234
           type: string
-        style: form
-      - explode: true
-        in: query
-        name: client
-        required: false
-        schema:
-          example: Podinate CLI on James' Macbook Pro
-          type: string
-        style: form
+        style: simple
       responses:
         "200":
           content:
-            application/json:
+            text/html:
               schema:
-                $ref: '#/components/schemas/_user_login_complete_get_200_response'
+                example: You should be redirected automatically. If not click here.
+                type: string
           description: An array of pods
         "400":
           content:
@@ -836,7 +837,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: An internal server error
-      summary: Complete a user login
+      security: []
+      summary: User login redirect URL to oauth providers
       tags:
       - User
   /user/login/callback/{provider}:
@@ -883,32 +885,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: An internal server error
+      security: []
       summary: User login callback URL for oauth providers
       tags:
       - User
-  /user/login/redirect/{token}:
+  /user/login/complete:
     get:
-      description: "This API endpoint is not intended to be called directly. It is\
-        \ used as the redirect URL for oauth providers, and will redirect the user\
-        \ to the correct place once they have completed the login flow."
+      description: Complete a user login and swap the given login token for an API
+        key
       parameters:
       - description: The token given by /user/login/init to get the user's actual
           API key once they have completed the oauth flow
-        explode: false
-        in: path
+        explode: true
+        in: query
         name: token
-        required: true
+        required: false
         schema:
           example: abc1234
           type: string
-        style: simple
+        style: form
+      - explode: true
+        in: query
+        name: client
+        required: false
+        schema:
+          example: Podinate CLI on James' Macbook Pro
+          type: string
+        style: form
       responses:
         "200":
           content:
-            text/html:
+            application/json:
               schema:
-                example: You should be redirected automatically. If not click here.
-                type: string
+                $ref: '#/components/schemas/_user_login_complete_get_200_response'
           description: An array of pods
         "400":
           content:
@@ -917,6 +926,12 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: "Request issued incorrectly, for example missing parameters\
             \ or wrong endpoint"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid login session token
         "404":
           content:
             application/json:
@@ -929,7 +944,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: An internal server error
-      summary: User login redirect URL to oauth providers
+      security: []
+      summary: Complete a user login
       tags:
       - User
   /user:
@@ -950,7 +966,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_user_get_200_response'
+                $ref: '#/components/schemas/User'
           description: The user was returned successfully
         "204":
           description: No user is logged in
@@ -1098,6 +1114,29 @@ components:
           example: 2020-01-01T00:00:00Z
           type: string
       type: object
+    User:
+      example:
+        resource_id: user:podinate:mike
+        email: mike@example.com
+        display_name: Michael Jones
+        avatar_url: https://avatars.githubusercontent.com/u/1234?v=4
+      properties:
+        resource_id:
+          description: The global Resource ID of the user
+          example: user:podinate:mike
+          type: string
+        email:
+          description: The user's email address
+          example: mike@example.com
+          type: string
+        display_name:
+          description: The user's display name
+          example: Michael Bolton
+          type: string
+        avatar_url:
+          description: The URL of the user's avatar
+          example: https://avatars.githubusercontent.com/u/1234?v=4
+          type: string
     Error:
       properties:
         code:
@@ -1145,17 +1184,8 @@ components:
           example: abc1234
           type: string
       type: object
-    _user_get_200_response:
-      example:
-        id: abc1234
-        email: test@example.com
-      properties:
-        id:
-          description: The user's ID
-          example: abc1234
-          type: string
-        email:
-          description: The user's email address
-          example: test@example.com
-          type: string
-      type: object
+  securitySchemes:
+    APIKeyAuth:
+      in: header
+      name: Authorization
+      type: apiKey

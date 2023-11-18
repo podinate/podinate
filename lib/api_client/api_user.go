@@ -1,7 +1,7 @@
 /*
 Podinate API
 
-The API for the simple containerisation solution Podinate. Login should be performed over oauth from [auth.podinate.com](https://auth.podinate.com)
+The API for the simple containerisation solution Podinate.
 
 API version: 0.0.1
 */
@@ -35,7 +35,7 @@ func (r ApiUserGetRequest) Account(account string) ApiUserGetRequest {
 	return r
 }
 
-func (r ApiUserGetRequest) Execute() (*UserGet200Response, *http.Response, error) {
+func (r ApiUserGetRequest) Execute() (*User, *http.Response, error) {
 	return r.ApiService.UserGetExecute(r)
 }
 
@@ -55,13 +55,13 @@ func (a *UserApiService) UserGet(ctx context.Context) ApiUserGetRequest {
 }
 
 // Execute executes the request
-//  @return UserGet200Response
-func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*UserGet200Response, *http.Response, error) {
+//  @return User
+func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*User, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		formFiles            []formFile
-		localVarReturnValue  *UserGet200Response
+		localVarReturnValue  *User
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserApiService.UserGet")
@@ -96,6 +96,20 @@ func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*UserGet200Respons
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
 	parameterAddToHeaderOrQuery(localVarHeaderParams, "account", r.account, "")
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["APIKeyAuth"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["Authorization"] = key
+			}
+		}
+	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
 		return localVarReturnValue, nil, err
@@ -404,6 +418,17 @@ func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRe
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 400 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+					newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
 			var v Error
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {

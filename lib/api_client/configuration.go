@@ -1,7 +1,7 @@
 /*
 Podinate API
 
-The API for the simple containerisation solution Podinate. Login should be performed over oauth from [auth.podinate.com](https://auth.podinate.com)
+The API for the simple containerisation solution Podinate.
 
 API version: 0.0.1
 */
@@ -28,6 +28,9 @@ func (c contextKey) String() string {
 }
 
 var (
+	// ContextAPIKeys takes a string apikey as authentication for the request
+	ContextAPIKeys = contextKey("apiKeys")
+
 	// ContextServerIndex uses a server configuration from the index.
 	ContextServerIndex = contextKey("serverIndex")
 
@@ -91,11 +94,11 @@ func NewConfiguration() *Configuration {
 		Servers:          ServerConfigurations{
 			{
 				URL: "https://api.podinate.com/v0",
-				Description: "Main (production) server",
+				Description: "Production server",
 			},
 			{
-				URL: "http://staging-api.example.com",
-				Description: "Internal staging server for testing",
+				URL: "http://localhost:3001/v0",
+				Description: "Development Server",
 			},
 		},
 		OperationServers: map[string]ServerConfigurations{

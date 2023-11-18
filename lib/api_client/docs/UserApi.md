@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## UserGet
 
-> UserGet200Response UserGet(ctx).Account(account).Execute()
+> User UserGet(ctx).Account(account).Execute()
 
 Get the current user
 
@@ -42,7 +42,7 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `UserApi.UserGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `UserGet`: UserGet200Response
+    // response from `UserGet`: User
     fmt.Fprintf(os.Stdout, "Response from `UserApi.UserGet`: %v\n", resp)
 }
 ```
@@ -62,11 +62,11 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**UserGet200Response**](UserGet200Response.md)
+[**User**](User.md)
 
 ### Authorization
 
-No authorization required
+[APIKeyAuth](../README.md#APIKeyAuth)
 
 ### HTTP request headers
 

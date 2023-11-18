@@ -2,7 +2,7 @@
 A fast and easy way to get a project from development to prod, cli and OpenTofu-first 
 
 ## Repo Structure
-We use a monorepo, each top level folder here represents a single service, or holds some shared libraries. In the `api` folder is our API definition, if updated generate the updated client and server packages with the script `./api/generate.sh`. It will ask you for a sudo password so it can update some weird permission issues from running the generator inside a Docker container. 
+We use a monorepo, each top level folder here represents a single service, or holds some shared libraries. In the `api` folder is our API definition, if updated generate the updated client and server packages with the script `make api-generate`. It will ask you for a sudo password so it can update some weird permission issues from running the generator inside a Docker container. 
 
 ## Getting started with development
 

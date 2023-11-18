@@ -13,5 +13,10 @@ install-dependencies:
 dev-code-api:
 	./api-backend/scripts/initial-code-upload.sh
 
+# Get a shell on the API backend Postgres pod (for debugging)
 postgres-shell:
 	bash -c "kubectl -n api exec -it masterdb-1-0 -- psql 'postgresql://postgres:$$(kubectl -n api get secret masterdb-secret -o jsonpath='{.data.superUserPassword}' | base64 --decode ; echo)@localhost/podinate'"
+
+# After API spec change, rebuild the generate code
+api-generate:
+	bash api/generate.sh

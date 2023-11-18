@@ -17,8 +17,8 @@ docs/Project.md
 docs/ProjectApi.md
 docs/ProjectGet200ResponseInner.md
 docs/ProjectProjectIdPodGet200ResponseInner.md
+docs/User.md
 docs/UserApi.md
-docs/UserGet200Response.md
 docs/UserLoginCompleteGet200Response.md
 docs/UserLoginInitiateGet200Response.md
 git_push.sh
@@ -26,12 +26,12 @@ go.mod
 go.sum
 model__project__project_id__pod_get_200_response_inner.go
 model__project_get_200_response_inner.go
-model__user_get_200_response.go
 model__user_login_complete_get_200_response.go
 model__user_login_initiate_get_200_response.go
 model_account.go
 model_error.go
 model_pod.go
 model_project.go
+model_user.go
 response.go
 utils.go
