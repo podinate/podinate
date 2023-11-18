@@ -10,7 +10,6 @@
 package openapi
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -19,7 +18,7 @@ import (
 
 // UserApiController binds http requests to an api service and writes the service results to the http response
 type UserApiController struct {
-	service UserApiServicer
+	service      UserApiServicer
 	errorHandler ErrorHandler
 }
 
@@ -49,7 +48,7 @@ func NewUserApiController(s UserApiServicer, opts ...UserApiOption) Router {
 
 // Routes returns all the api routes for the UserApiController
 func (c *UserApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"UserGet",
 			strings.ToUpper("Get"),

@@ -14,6 +14,7 @@ import (
 	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/responder"
+	"github.com/johncave/podinate/api-backend/user"
 	myuser "github.com/johncave/podinate/api-backend/user"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/gitlab"
@@ -41,7 +42,8 @@ func (c *UserAPIShim) Routes() api.Routes {
 	}
 }
 
-// UserLoginRedirectTokenGet - Redirect the user to the provider
+// UserLoginRedirectTokenGet - Redirect the user to the provider.
+// This is a shim so that the user can be redirected to the provider from this code,
 func (c *UserAPIShim) UserLoginRedirectTokenGet(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Handling redirect")
@@ -102,6 +104,7 @@ func (c *UserAPIShim) UserLoginRedirectTokenGet(w http.ResponseWriter, r *http.R
 }
 
 // UserLoginCallbackProviderGet - Handle the callback from the provider
+// This is shimmed so that Goth can have full access to all the variables
 func (c *UserAPIShim) UserLoginCallbackProviderGet(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 
@@ -291,8 +294,10 @@ func NewUserAPIService() api.UserApiServicer {
 
 // UserGet - Get information about the current user
 func (s *UserAPIService) UserGet(ctx context.Context, account string) (api.ImplResponse, error) {
-	// TODO - update UserGet with the required logic for this service method.
-	return api.Response(501, nil), nil
+	u := user.GetFromContext(ctx)
+
+	// TODO: Make return API user object
+	return api.Response(200, u), nil
 }
 
 // UserLoginCompleteGet - Complete the login process

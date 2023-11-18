@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,7 +10,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/johncave/podinate/api-backend/config"
+	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
+	"github.com/johncave/podinate/api-backend/user"
 )
 
 // GetRouter - Get the router for the API
@@ -28,8 +31,56 @@ func GetRouter() *mux.Router {
 
 	UserShimController := NewUserShimController(NewUserAPIService())
 
-	return api.NewRouter(ProjectApiController, AccountApiController, PodApiController, UserShimController, UserApiController)
+	r := api.NewRouter(ProjectApiController, AccountApiController, PodApiController, UserShimController, UserApiController)
+	r.Use(authMiddleware)
+	r.Use(loggingMiddleware)
 
+	return r
+
+}
+
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Check if the request is to the login endpoints
+		currentRoute := mux.CurrentRoute(r).GetName()
+		if currentRoute == "UserLoginInitiateGet" || currentRoute == "UserLoginCallbackProviderGet" || currentRoute == "UserLoginCompleteGet" || currentRoute == "UserLoginRedirectTokenGet" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Get the token from the header
+		keyin := r.Header.Get("Authorization")
+		if keyin == "" {
+			http.Error(w, "No API Key provided", http.StatusUnauthorized)
+			return
+		}
+
+		theUser, err := user.GetFromAPIKey(keyin)
+		if err != nil {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		// Set the user in the context
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, user.ContextKey("user"), theUser)
+
+		// Add the new context to the request
+		r = r.Clone(ctx)
+
+		// Call the next handler
+		next.ServeHTTP(w, r)
+	})
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		u := user.GetFromContext(r.Context())
+		eh.Log.Infow("request", "method", r.Method, "url", r.URL, "remote", r.Header.Get("x-forwarded-for"), "user-agent", r.UserAgent(), "referer", r.Referer(), "user", u.UUID)
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // MakeRequest - Make a request to the API, useful for testing

@@ -10,7 +10,7 @@ install-dependencies:
 	sudo install skaffold /usr/local/bin/
 	rm skaffold
 	
-dev-code-api:
+dev-code-upload:
 	./api-backend/scripts/initial-code-upload.sh
 
 # Get a shell on the API backend Postgres pod (for debugging)
