@@ -1,8 +1,7 @@
 dev-cluster:
 	k3d cluster create podinate-dev --agents 2 -v "$PWD":/mnt/code/@agent:*
 	# Install the cockroach operator and crds 
-	kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/v2.10.0/install/crds.yaml
-	kubectl apply -f https://raw.githubusercontent.com/cockroachdb/cockroach-operator/v2.10.0/install/operator.yaml
+
 
 install-dependencies:
 	paru -S rancher-k3d-bin
@@ -13,3 +12,6 @@ install-dependencies:
 	
 dev-code-api:
 	./api-backend/scripts/initial-code-upload.sh
+
+postgres-shell:
+	bash -c "kubectl -n api exec -it masterdb-1-0 -- psql 'postgresql://postgres:$$(kubectl -n api get secret masterdb-secret -o jsonpath='{.data.superUserPassword}' | base64 --decode ; echo)@localhost/podinate'"
