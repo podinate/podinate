@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## UserGet
 
-> User UserGet(ctx).Account(account).Execute()
+> User UserGet(ctx).Execute()
 
 Get the current user
 
@@ -33,11 +33,10 @@ import (
 )
 
 func main() {
-    account := "my-account" // string | The account to use for the request
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.UserApi.UserGet(context.Background()).Account(account).Execute()
+    resp, r, err := apiClient.UserApi.UserGet(context.Background()).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `UserApi.UserGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -49,16 +48,12 @@ func main() {
 
 ### Path Parameters
 
-
+This endpoint does not need any parameter.
 
 ### Other Parameters
 
 Other parameters are passed through a pointer to a apiUserGetRequest struct via the builder pattern
 
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **account** | **string** | The account to use for the request | 
 
 ### Return type
 

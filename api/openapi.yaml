@@ -638,8 +638,6 @@ paths:
       description: Get the current user
       tags:
       - User
-      parameters: 
-        - $ref: '#/components/parameters/account'
       responses:
         "200":
           description: The user was returned successfully

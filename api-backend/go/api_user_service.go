@@ -27,7 +27,7 @@ func NewUserApiService() UserApiServicer {
 }
 
 // UserGet - Get the current user
-func (s *UserApiService) UserGet(ctx context.Context, account string) (ImplResponse, error) {
+func (s *UserApiService) UserGet(ctx context.Context) (ImplResponse, error) {
 	// TODO - update UserGet with the required logic for this service method.
 	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 

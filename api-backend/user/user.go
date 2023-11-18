@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/johncave/podinate/api-backend/config"
+	api "github.com/johncave/podinate/api-backend/go"
 )
 
 // User is a user
@@ -48,4 +49,13 @@ func (u *User) GetEmail() string {
 
 func (u *User) GetDisplayName() string {
 	return u.DisplayName
+}
+
+func (u *User) ToAPI() *api.User {
+	return &api.User{
+		ResourceId:  u.GetRID(),
+		Email:       u.GetEmail(),
+		DisplayName: u.GetDisplayName(),
+		AvatarUrl:   u.AvatarURL,
+	}
 }

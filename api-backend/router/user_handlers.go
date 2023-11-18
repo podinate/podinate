@@ -290,14 +290,10 @@ func NewUserAPIService() api.UserApiServicer {
 	return &UserAPIService{}
 }
 
-// Build the service methods
-
-// UserGet - Get information about the current user
-func (s *UserAPIService) UserGet(ctx context.Context, account string) (api.ImplResponse, error) {
+// UserGet - Get information about the logged in user
+func (s *UserAPIService) UserGet(ctx context.Context) (api.ImplResponse, error) {
 	u := user.GetFromContext(ctx)
-
-	// TODO: Make return API user object
-	return api.Response(200, u), nil
+	return api.Response(200, u.ToAPI()), nil
 }
 
 // UserLoginCompleteGet - Complete the login process

@@ -100,7 +100,7 @@ type ProjectApiServicer interface {
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type UserApiServicer interface { 
-	UserGet(context.Context, string) (ImplResponse, error)
+	UserGet(context.Context) (ImplResponse, error)
 	UserLoginCallbackProviderGet(context.Context, string) (ImplResponse, error)
 	UserLoginCompleteGet(context.Context, string, string) (ImplResponse, error)
 	UserLoginInitiateGet(context.Context, string) (ImplResponse, error)

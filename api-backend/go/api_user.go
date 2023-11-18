@@ -84,8 +84,7 @@ func (c *UserApiController) Routes() Routes {
 
 // UserGet - Get the current user
 func (c *UserApiController) UserGet(w http.ResponseWriter, r *http.Request) {
-	accountParam := r.Header.Get("account")
-	result, err := c.service.UserGet(r.Context(), accountParam)
+	result, err := c.service.UserGet(r.Context())
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

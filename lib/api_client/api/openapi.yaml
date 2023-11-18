@@ -951,16 +951,6 @@ paths:
   /user:
     get:
       description: Get the current user
-      parameters:
-      - description: The account to use for the request
-        example: my-account
-        explode: false
-        in: header
-        name: account
-        required: true
-        schema:
-          type: string
-        style: simple
       responses:
         "200":
           content:

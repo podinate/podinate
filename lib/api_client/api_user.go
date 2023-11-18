@@ -26,13 +26,6 @@ type UserApiService service
 type ApiUserGetRequest struct {
 	ctx context.Context
 	ApiService *UserApiService
-	account *string
-}
-
-// The account to use for the request
-func (r ApiUserGetRequest) Account(account string) ApiUserGetRequest {
-	r.account = &account
-	return r
 }
 
 func (r ApiUserGetRequest) Execute() (*User, *http.Response, error) {
@@ -74,9 +67,6 @@ func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*User, *http.Respo
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.account == nil {
-		return localVarReturnValue, nil, reportError("account is required and must be specified")
-	}
 
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -95,7 +85,6 @@ func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*User, *http.Respo
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	parameterAddToHeaderOrQuery(localVarHeaderParams, "account", r.account, "")
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
