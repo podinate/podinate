@@ -2,6 +2,7 @@ package iam
 
 import (
 	"context"
+	"strings"
 
 	"github.com/johncave/podinate/api-backend/account"
 	"github.com/johncave/podinate/api-backend/apierror"
@@ -19,7 +20,7 @@ func RequestorCan(ctx context.Context, account account.Account, resource Resourc
 	// Check if the user has permission to do the action on the resource
 	policies, err := GetPolicies(account, requestor)
 	if err != nil {
-		lh.Log.Errorw("Error getting policies for user", "request_id", lh.GetRequestID(ctx), "error", err, "requestor", requestor.GetRID(), "account", account.GetUUID(), "account_id", account.ID)
+		lh.Log.Errorw("Error getting policies for user", "request_id", lh.GetRequestID(ctx), "error", err, "requestor", requestor.GetResourceID(), "account", account.GetUUID(), "account_id", account.ID)
 		return false
 	}
 
@@ -29,7 +30,7 @@ func RequestorCan(ctx context.Context, account account.Account, resource Resourc
 		}
 	}
 
-	lh.Log.Errorw("denying requestor this action", "request_id", lh.GetRequestID(ctx), "requestor", requestor.GetRID(), "account", account.GetUUID(), "account_id", account.ID, "resource", resource.GetRID(), "action", action)
+	lh.Warn(ctx, "deny action", "requestor", requestor.GetResourceID(), "account", account.GetUUID(), "account_id", account.ID, "resource", resource.GetResourceID(), "action", action)
 	return false
 }
 
@@ -53,26 +54,30 @@ func (p *Policy) Allows(ctx context.Context, resource Resource, action string) b
 		return false
 	}
 
-	//lh.Log.Debugw("Checking policy", "policy_uuid", p.UUID, "resource", resource.GetRID(), "action", action, "policy", p, "document", doc)
+	//lh.Log.Debugw("Checking policy", "policy_uuid", p.UUID, "resource", resource.GetResourceID(), "action", action, "policy", p, "document", doc)
 	// Check all statements for a match
 	for _, statement := range doc.Statements {
 		// Check if the statement allows the action
-		if statement.Effect == "allow" {
-			// Check if the resource matches the statement
-			for _, resourcePattern := range statement.Resources {
-				g := glob.MustCompile(resourcePattern, '/', ':')
-				if g.Match(resource.GetRID()) {
-					// Check if the action matches the statement
-					for _, actionPattern := range statement.Actions {
-						g = glob.MustCompile(actionPattern, '/', ':')
-						if g.Match(action) {
-							lh.Log.Infow("allowing action due to policy", "request_id", lh.GetRequestID(ctx), "policy_uuid", p.UUID, "resource", resource.GetRID(), "resource_pattern", resourcePattern, "action", action, "action_pattern", actionPattern, "policy", p, "document", doc, "statement", statement)
-							return true
+		// Check if the resource matches the statement
+		for _, resourcePattern := range statement.Resources {
+			g := glob.MustCompile(resourcePattern, '/', ':')
+			if g.Match(resource.GetResourceID()) {
+				// Check if the action matches the statement
+				for _, actionPattern := range statement.Actions {
+					g = glob.MustCompile(actionPattern, '/', ':')
+					if g.Match(action) {
+						if strings.ToLower(statement.Effect) != "allow" {
+							lh.Warn(ctx, "explicit deny action", "policy_uuid", p.UUID, "resource", resource.GetResourceID(), "resource_pattern", resourcePattern, "action", action, "action_pattern", actionPattern, "policy", p, "document", doc, "statement", statement)
+							return false
 						}
+						lh.Debug(ctx, "allow action", "policy_uuid", p.UUID, "resource", resource.GetResourceID(), "resource_pattern", resourcePattern, "action", action, "action_pattern", actionPattern, "policy", p, "document", doc, "statement", statement)
+						return true
+
 					}
 				}
 			}
 		}
+
 	}
 
 	return false
@@ -80,16 +85,16 @@ func (p *Policy) Allows(ctx context.Context, resource Resource, action string) b
 }
 
 type Resource interface {
-	GetRID() string
+	GetResourceID() string
 }
 
 func GetPolicies(account account.Account, requestor Resource) ([]Policy, error) {
 	// Retrieve any policies from the policy_attachment table
 	// that apply to this user and account
 
-	rows, err := config.DB.Query("SELECT policy.uuid, policy.id, policy.content, policy.current_version FROM policy_attachment, policy WHERE policy_attachment.policy_uuid = policy.uuid AND policy_attachment.account_uuid = $1 AND policy_attachment.resource_id = $2", account.GetUUID(), requestor.GetRID())
+	rows, err := config.DB.Query("SELECT policy.uuid, policy.id, policy.content, policy.current_version FROM policy_attachment, policy WHERE policy_attachment.policy_uuid = policy.uuid AND policy_attachment.account_uuid = $1 AND policy_attachment.resource_id = $2", account.GetUUID(), requestor.GetResourceID())
 	if err != nil {
-		lh.Log.Errorw("Error retrieving policies for user", "error", err, "user", requestor.GetRID(), "account", account.GetUUID(), "account_id", account.ID)
+		lh.Log.Errorw("Error retrieving policies for user", "error", err, "user", requestor.GetResourceID(), "account", account.GetUUID(), "account_id", account.ID)
 		return []Policy{}, err
 	}
 
@@ -165,9 +170,9 @@ func (p *Policy) UpdatePolicy(content string, comment string) error {
 // AttachToResource attaches a policy to a resource
 func (p *Policy) AttachToResource(requestor Resource, resource Resource) *apierror.ApiError {
 	// Attach the policy to the resource in the account using the policy_attachment table
-	_, err := config.DB.Exec("INSERT INTO policy_attachment(policy_uuid, account_uuid, resource_id, attached_by) VALUES($1, $2, $3, $4)", p.UUID, p.Account.GetUUID(), resource.GetRID(), requestor.GetRID())
+	_, err := config.DB.Exec("INSERT INTO policy_attachment(policy_uuid, account_uuid, resource_id, attached_by) VALUES($1, $2, $3, $4)", p.UUID, p.Account.GetUUID(), resource.GetResourceID(), requestor.GetResourceID())
 	if err != nil {
-		lh.Log.Errorw("Error attaching policy to resource", "error", err, "policy", p.UUID, "resource", resource.GetRID(), "requestor", requestor.GetRID())
+		lh.Log.Errorw("Error attaching policy to resource", "error", err, "policy", p.UUID, "resource", resource.GetResourceID(), "requestor", requestor.GetResourceID())
 		return apierror.New(500, "Error attaching policy to resource")
 	}
 	return nil

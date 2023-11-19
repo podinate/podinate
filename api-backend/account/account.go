@@ -107,6 +107,6 @@ func (a *Account) GetUUID() string {
 }
 
 // GetRID returns the RID of the account
-func (a *Account) GetRID() string {
+func (a *Account) GetResourceID() string {
 	return "account:" + a.ID
 }

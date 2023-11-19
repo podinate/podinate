@@ -27,7 +27,7 @@ func GetByUUID(id string) (*User, error) {
 	return &userOut, nil
 }
 
-func (u *User) GetRID() string {
+func (u *User) GetResourceID() string {
 	return "user:" + u.MainProvider + ":" + u.ID
 }
 
@@ -53,7 +53,7 @@ func (u *User) GetDisplayName() string {
 
 func (u *User) ToAPI() *api.User {
 	return &api.User{
-		ResourceId:  u.GetRID(),
+		ResourceId:  u.GetResourceID(),
 		Email:       u.GetEmail(),
 		DisplayName: u.GetDisplayName(),
 		AvatarUrl:   u.AvatarURL,

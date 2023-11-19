@@ -10,12 +10,13 @@ Router package sets up a bunch of different (ApiService), for example UserApiSer
 Logging is handled by the `loghandler` package. It is built on the [zap](https://github.com/uber-go/zap) library from Uber. You can access the zap sugared logger interface like so,
 ```go
 import lh "github.com/johncave/podinate/api-backend/loghandler"
-lh.Log.Infow("error creating user", 
+lh.Info(ctx, "error creating user", 
     "user", user, 
-    "account", account, 
-    "request_id" lh.GetRequestID(ctx) // You may not always have the context
+    "account", account
 )
 ```
+You can also access the raw zap.SugaredLogger instance at `lh.Log`
+
 Where possible, please log the request ID. 
 #### Authorization
 Authorization is all handled by the `iam` package. You must read the readme of the `iam` package. 

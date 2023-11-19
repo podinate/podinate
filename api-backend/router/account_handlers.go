@@ -30,6 +30,7 @@ func (s *AccountAPIService) AccountGet(ctx context.Context, requestedAccount str
 	theAccount, apiErr := account.GetByID(requestedAccount)
 	if apiErr != nil {
 		// We can pass this error directly to the API response
+		lh.Warn(ctx, "user got non-existent account", "error", apiErr, "account", requestedAccount)
 		return responder.Response(http.StatusNotFound, apiErr.Error()), nil
 	}
 

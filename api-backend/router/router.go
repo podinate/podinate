@@ -32,6 +32,7 @@ func GetRouter() *mux.Router {
 	UserShimController := NewUserShimController(NewUserAPIService())
 
 	r := api.NewRouter(ProjectApiController, AccountApiController, PodApiController, UserShimController, UserApiController)
+	r.Use(requestIDMiddleware)
 	r.Use(authMiddleware)
 	r.Use(loggingMiddleware)
 
@@ -39,6 +40,25 @@ func GetRouter() *mux.Router {
 
 }
 
+// requestIDMiddleware - Add a request ID to the context
+// This middleware runs first to make sure all others have access to the request ID
+func requestIDMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestID := lh.NewRequestID()
+
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, lh.ContextKey("request-id"), requestID)
+
+		// Add the new context to the request
+		r = r.Clone(ctx)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// authMiddleware - Add the user to the context
+// Checks if the path is one of the login paths, if so, skip authentication
+// Otherwise, check the token and add the user to the context
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -49,49 +69,29 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Get the token from the header
-		keyin := r.Header.Get("Authorization")
-		if keyin == "" {
-			lh.Log.Errorw("No API Key provided", "request", r)
-			http.Error(w, "No API Key provided", http.StatusUnauthorized)
-			return
+		r, err := iam.AddRequestorToRequest(r)
 
-		}
-
-		requestor, err := iam.GetFromAuthorizationHeader(keyin)
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
-
-		// Set the user in the context
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, iam.ContextKey("requestor"), requestor)
-
-		// Add the new context to the request
-		r = r.Clone(ctx)
 
 		// Call the next handler
 		next.ServeHTTP(w, r)
 	})
 }
 
+// loggingMiddleware - Log basic http information about the request
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		u := iam.GetFromContext(r.Context())
 		requestor := "anonymous"
 
 		if u != nil {
-			requestor = u.GetRID()
+			requestor = u.GetResourceID()
 		}
 
-		requestID := lh.NewRequestID()
-
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, lh.ContextKey("request-id"), requestID)
-
-		// Add the new context to the request
-		r = r.Clone(ctx)
+		requestID := lh.GetRequestID(r.Context())
 
 		lh.Log.Infow("request", "request_id", requestID, "method", r.Method, "url", r.URL, "remote", r.Header.Get("x-forwarded-for"), "user-agent", r.UserAgent(), "referer", r.Referer(), "requestor", requestor)
 
