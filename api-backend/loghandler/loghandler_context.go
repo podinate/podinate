@@ -29,5 +29,5 @@ func GetRequestID(ctx context.Context) RequestID {
 }
 
 func NewRequestID() RequestID {
-	return RequestID(uuid.New().String())
+	return "pr-" + RequestID(uuid.New().String())
 }
