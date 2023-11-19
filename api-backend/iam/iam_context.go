@@ -3,8 +3,9 @@ package iam
 import (
 	"context"
 
-	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	"github.com/johncave/podinate/api-backend/user"
+
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
 // Context key for users in contexts
@@ -17,7 +18,7 @@ func (c ContextKey) String() string {
 func GetFromContext(ctx context.Context) Resource {
 	r, err := ctx.Value(ContextKey("requestor")).(*user.User)
 	if !err {
-		eh.Log.Errorw("Error getting user from context", "error", err)
+		lh.Log.Errorw("Error getting user from context", "error", err)
 		return nil
 	}
 	return r
@@ -27,7 +28,7 @@ func GetFromAuthorizationHeader(authHeader string) (Resource, error) {
 	// Get the user from the database
 	theUser, err := user.GetFromAPIKey(authHeader)
 	if err != nil {
-		eh.Log.Errorw("Error getting requestor from API key", "error", err)
+		lh.Log.Errorw("Error getting requestor from API key", "error", err)
 		return nil, err
 	}
 

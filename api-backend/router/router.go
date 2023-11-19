@@ -10,9 +10,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/johncave/podinate/api-backend/config"
-	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/iam"
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
 // GetRouter - Get the router for the API
@@ -52,7 +52,7 @@ func authMiddleware(next http.Handler) http.Handler {
 		// Get the token from the header
 		keyin := r.Header.Get("Authorization")
 		if keyin == "" {
-			eh.Log.Errorw("No API Key provided", "request", r)
+			lh.Log.Errorw("No API Key provided", "request", r)
 			http.Error(w, "No API Key provided", http.StatusUnauthorized)
 			return
 
@@ -85,7 +85,15 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			requestor = u.GetRID()
 		}
 
-		eh.Log.Info("request", "method", r.Method, "url", r.URL, "remote", r.Header.Get("x-forwarded-for"), "user-agent", r.UserAgent(), "referer", r.Referer(), "requestor", requestor)
+		requestID := lh.NewRequestID()
+
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, lh.ContextKey("request-id"), requestID)
+
+		// Add the new context to the request
+		r = r.Clone(ctx)
+
+		lh.Log.Infow("request", "request_id", requestID, "method", r.Method, "url", r.URL, "remote", r.Header.Get("x-forwarded-for"), "user-agent", r.UserAgent(), "referer", r.Referer(), "requestor", requestor)
 
 		next.ServeHTTP(w, r)
 	})

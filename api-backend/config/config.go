@@ -6,9 +6,10 @@ import (
 	"log"
 	"os"
 
-	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	_ "github.com/lib/pq"
 	"github.com/pelletier/go-toml"
+
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
 var (
@@ -35,13 +36,13 @@ func ConnectDatabase(connectionString string) error {
 	DB, err = sql.Open("postgres", connectionString)
 	if err != nil {
 
-		eh.Log.Errorw("Error connecting to database", "error", err)
+		lh.Log.Errorw("Error connecting to database", "error", err)
 		return err
 	}
 
 	err = DB.Ping()
 	if err != nil {
-		eh.Log.Errorw("Error connecting to database", "error", err)
+		lh.Log.Errorw("Error connecting to database", "error", err)
 		return err
 	}
 	return nil
@@ -52,7 +53,7 @@ func Init() error {
 	// Read in the config file
 	confile, err := toml.LoadFile(os.Getenv("CONFIG_FILE"))
 	if err != nil {
-		eh.Log.Fatalw("Error loading config file", "error", err)
+		lh.Log.Fatalw("Error loading config file", "error", err)
 		//log.Fatal(err)
 	}
 
@@ -62,7 +63,7 @@ func Init() error {
 	crdb := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=disable user=%s password=%s", confile.Get("database.host"), confile.Get("database.port"), confile.Get("database.database"), confile.Get("database.user"), os.Getenv("POSTGRES_PASSWORD"))
 	err = ConnectDatabase(crdb)
 	if err != nil {
-		eh.Log.Fatalw("Error connecting to database", "error", err)
+		lh.Log.Fatalw("Error connecting to database", "error", err)
 		//log.Fatal(err)
 	}
 	log.Println("Connected to database")

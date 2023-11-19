@@ -6,8 +6,9 @@ import (
 	"errors"
 
 	"github.com/johncave/podinate/api-backend/config"
-	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	"golang.org/x/crypto/sha3"
+
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
 // IssueAPIKey issues an API key for the user.
@@ -16,7 +17,7 @@ func (u *User) IssueAPIKey(clientName string) (string, error) {
 	// Generate the key
 	key, err := GenerateAPIKey()
 	if err != nil {
-		eh.Log.Errorw("Error generating API key", "error", err)
+		lh.Log.Errorw("Error generating API key", "error", err)
 		return "", err
 	}
 
@@ -27,7 +28,7 @@ func (u *User) IssueAPIKey(clientName string) (string, error) {
 	// Insert the key into the database
 	_, err = config.DB.Exec("INSERT INTO api_key (user_uuid, name, key, expires) VALUES ($1, $2, $3, CURRENT_TIMESTAMP + interval '1 year')", u.UUID, clientName, store)
 	if err != nil {
-		eh.Log.Errorw("Error inserting API key", "error", err)
+		lh.Log.Errorw("Error inserting API key", "error", err)
 		return "", err
 	}
 
@@ -42,7 +43,7 @@ func GenerateAPIKey() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	eh.Log.Infow("Generated API key", "key", buf)
+	lh.Log.Infow("Generated API key", "key", buf)
 
 	// Base64 encode the random bytes
 	b := base64.URLEncoding.EncodeToString(buf)

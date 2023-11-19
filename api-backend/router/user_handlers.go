@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/johncave/podinate/api-backend/config"
-	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/iam"
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/johncave/podinate/api-backend/responder"
 	myuser "github.com/johncave/podinate/api-backend/user"
 	"github.com/markbates/goth"
@@ -72,7 +72,7 @@ func (s *UserAPIService) UserGet(ctx context.Context) (api.ImplResponse, error) 
 func (s *UserAPIService) UserLoginCompleteGet(ctx context.Context, token string, clientName string) (api.ImplResponse, error) {
 	// Check the name isn't 2TB long
 	if len(clientName) > 2048 {
-		eh.Log.Errorw("Client gave a name too long", "name", clientName)
+		lh.Log.Errorw("Client gave a name too long", "name", clientName)
 		return responder.Response(400, "Client name too long"), nil
 	}
 
@@ -80,31 +80,31 @@ func (s *UserAPIService) UserLoginCompleteGet(ctx context.Context, token string,
 	if err != nil {
 		// TODO: Separate handling for token not found vs other errors
 		if err == sql.ErrNoRows {
-			eh.Log.Errorw("No authorised user found in session", "token", token)
+			lh.Log.Errorw("No authorised user found in session", "token", token)
 			return responder.Response(403, "Invalid login token"), nil
 		}
 
-		eh.Log.Errorw("Error getting authorised user from session", "error", err, "token", token)
+		lh.Log.Errorw("Error getting authorised user from session", "error", err, "token", token)
 		return responder.Response(500, err.Error()), nil
 	}
 
 	user, err := myuser.GetByUUID(userid)
 	if err != nil {
-		eh.Log.Errorw("Error getting user for token", "error", err, "user", user, "uuid", userid)
+		lh.Log.Errorw("Error getting user for token", "error", err, "user", user, "uuid", userid)
 		return responder.Response(500, err.Error()), nil
 	}
 
 	// Issue an API key for the user
 	apiKey, err := user.IssueAPIKey(clientName)
 	if err != nil {
-		eh.Log.Errorw("Error issuing API key in exchange for token", "error", err, "user", user, "uuid", userid)
+		lh.Log.Errorw("Error issuing API key in exchange for token", "error", err, "user", user, "uuid", userid)
 		return responder.Response(500, err.Error()), nil
 	}
 
 	// API key issued! Remove the reference to the token from the session
 	err = StoreInSession(token, "authorised_user", "")
 	if err != nil {
-		eh.Log.Errorw("Error removing authorised user from session", "error", err, "user", user, "uuid", userid)
+		lh.Log.Errorw("Error removing authorised user from session", "error", err, "user", user, "uuid", userid)
 		return responder.Response(500, err.Error()), nil
 	}
 
@@ -113,7 +113,7 @@ func (s *UserAPIService) UserLoginCompleteGet(ctx context.Context, token string,
 		LoggedIn: true,
 	}
 
-	eh.Log.Infow("User logged in", "user", user)
+	lh.Log.Infow("User logged in", "user", user)
 
 	return responder.Response(200, resp), nil
 }

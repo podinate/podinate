@@ -4,6 +4,9 @@ A fast and easy way to get a project from development to prod, cli and OpenTofu-
 ## Repo Structure
 We use a monorepo, each top level folder here represents a single service, or holds some shared libraries. In the `api` folder is our API definition, if updated generate the updated client and server packages with the script `make api-generate`. It will ask you for a sudo password so it can update some weird permission issues from running the generator inside a Docker container. 
 
+## Documentation
+There is a Readme.md file inside important package folders. Please make sure to read `api-backend/Readme.md` and `api-backend/iam/Readme.md`. 
+
 ## Getting started with development
 
 ### Local Kubernetes environment
@@ -76,3 +79,8 @@ Then copy in the `database/masterdb.sql` file.
 
 ## Use Insomnia
 Load the `API/Insomnia.json` file into Insomnia to see the endpoints. First create an account, then a project, then create a pod inside the project. 
+
+## Get Started Developing
+Each top level folder has a Readme. Please read `api-backend/Readme.md` and `cli/Readme.md` to get started.  
+
+The backend and frontend communicate through client/server packages built off the OpenAPI spec in `api/`, if you make any changes to it, run `make api-generate` to rebuild it. 

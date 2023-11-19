@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/johncave/podinate/api-backend/responder"
 	myuser "github.com/johncave/podinate/api-backend/user"
 	"github.com/markbates/goth"
@@ -176,7 +176,7 @@ func (c *UserAPIShim) UserLoginCallbackProviderGet(w http.ResponseWriter, r *htt
 	// We've now finished all the oauth stuff, so we can store and setup the user
 	theUser, err := myuser.RegisterUser(user)
 	if err != nil {
-		eh.Log.Errorw("Error registering user", "error", err, "user", theUser, "uuid", theUser.UUID)
+		lh.Log.Errorw("Error registering user", "error", err, "user", theUser, "uuid", theUser.UUID)
 		api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
 		return
 	}
@@ -184,7 +184,7 @@ func (c *UserAPIShim) UserLoginCallbackProviderGet(w http.ResponseWriter, r *htt
 	// Store which user to authorise in the session
 	err = StoreInSession(cookie.Value, "authorised_user", theUser.UUID)
 	if err != nil {
-		eh.Log.Errorw("Error storing authorised user in session", "error", err, "user", theUser, "uuid", theUser.UUID)
+		lh.Log.Errorw("Error storing authorised user in session", "error", err, "user", theUser, "uuid", theUser.UUID)
 		api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
 		return
 	}

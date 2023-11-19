@@ -7,8 +7,9 @@ import (
 
 	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
-	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
+
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
 type Account struct {
@@ -18,7 +19,10 @@ type Account struct {
 }
 
 const (
-	ActionView = "account:view"
+	ActionView   = "account:view"
+	ActionDelete = "account:delete"
+	ActionUpdate = "account:update"
+	ActionCreate = "account:create"
 )
 
 // Validate account checks that a user's desired account properties are allowed
@@ -47,7 +51,7 @@ func Create(requestedAccount api.Account, owner *user.User) (Account, *apierror.
 	dberr := config.DB.QueryRow("INSERT INTO account(uuid, id, name, owner_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", a.ID, a.Name, owner.GetUUID()).Scan(&a.UUID)
 	// Check if insert was successful
 	if dberr != nil {
-		eh.Log.Errorw("Error creating account", "error", dberr, "account", a)
+		lh.Log.Errorw("Error creating account", "error", dberr, "account", a)
 		return Account{}, &apierror.ApiError{Code: http.StatusBadRequest, Message: dberr.Error()}
 	}
 

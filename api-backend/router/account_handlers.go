@@ -7,6 +7,7 @@ import (
 	"github.com/johncave/podinate/api-backend/account"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/iam"
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/johncave/podinate/api-backend/responder"
 	"github.com/johncave/podinate/api-backend/user"
 )
@@ -25,8 +26,6 @@ func NewAccountAPIService() api.AccountApiServicer {
 
 // AccountGet - Get information about the current account
 func (s *AccountAPIService) AccountGet(ctx context.Context, requestedAccount string) (api.ImplResponse, error) {
-	r := iam.GetFromContext(ctx)
-
 	// Get the account information from the database
 	theAccount, apiErr := account.GetByID(requestedAccount)
 	if apiErr != nil {
@@ -35,7 +34,7 @@ func (s *AccountAPIService) AccountGet(ctx context.Context, requestedAccount str
 	}
 
 	// Check if the user can view the account
-	if iam.RequestorCan(r, theAccount, &theAccount, account.ActionView) {
+	if iam.RequestorCan(ctx, theAccount, &theAccount, account.ActionView) {
 		return responder.Response(http.StatusOK, theAccount.ToAPIAccount()), nil
 	}
 	return responder.Response(http.StatusNotFound, "Account not found"), nil
@@ -61,6 +60,8 @@ func (s *AccountAPIService) AccountPatch(ctx context.Context, requestedAccount s
 // AccountPost - Request a new account
 func (s *AccountAPIService) AccountPost(ctx context.Context, requestedAccount api.Account) (api.ImplResponse, error) {
 	u := iam.GetFromContext(ctx).(*user.User)
+	reqID := lh.GetRequestID(ctx)
+
 	newAcc, err := account.Create(requestedAccount, u)
 	if err != nil {
 		// We can pass this error directly to the API response
@@ -81,6 +82,7 @@ statements:
 		return responder.Response(err.Code, err.Error()), nil
 	}
 
+	lh.Log.Info("Account created", "request_id", reqID, "account", newAcc)
 	return api.Response(http.StatusCreated, newAcc.ToAPIAccount()), nil
 }
 

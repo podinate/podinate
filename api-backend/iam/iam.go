@@ -1,30 +1,35 @@
 package iam
 
 import (
+	"context"
+
 	"github.com/johncave/podinate/api-backend/account"
 	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/gobwas/glob"
-	eh "github.com/johncave/podinate/api-backend/errorhandler"
+
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
-func RequestorCan(requestor Resource, account account.Account, resource Resource, action string) bool {
+func RequestorCan(ctx context.Context, account account.Account, resource Resource, action string) bool {
+	requestor := GetFromContext(ctx)
+
 	// Check if the user has permission to do the action on the resource
 	policies, err := GetPolicies(account, requestor)
 	if err != nil {
-		eh.Log.Errorw("Error getting policies for user", "error", err, "requestor", requestor.GetRID(), "account", account.GetUUID(), "account_id", account.ID)
+		lh.Log.Errorw("Error getting policies for user", "request_id", lh.GetRequestID(ctx), "error", err, "requestor", requestor.GetRID(), "account", account.GetUUID(), "account_id", account.ID)
 		return false
 	}
 
 	for _, policy := range policies {
-		if policy.Allows(resource, action) {
+		if policy.Allows(ctx, resource, action) {
 			return true
 		}
 	}
 
-	eh.Log.Errorw("denying requestor this action", "requestor", requestor.GetRID(), "account", account.GetUUID(), "account_id", account.ID, "resource", resource.GetRID(), "action", action)
+	lh.Log.Errorw("denying requestor this action", "request_id", lh.GetRequestID(ctx), "requestor", requestor.GetRID(), "account", account.GetUUID(), "account_id", account.ID, "resource", resource.GetRID(), "action", action)
 	return false
 }
 
@@ -39,16 +44,16 @@ type PolicyStatement struct {
 	Resources []string `yaml:"resources"`
 }
 
-func (p *Policy) Allows(resource Resource, action string) bool {
+func (p *Policy) Allows(ctx context.Context, resource Resource, action string) bool {
 	// Check if the policy allows the action
 	var doc PolicyDocument
 	err := yaml.Unmarshal([]byte(p.Content), &doc)
 	if err != nil {
-		eh.Log.Errorw("Error unmarshalling policy", "error", err, "policy", p.UUID)
+		lh.Log.Errorw("Error unmarshalling policy", "request_id", lh.GetRequestID(ctx), "error", err, "policy", p.UUID)
 		return false
 	}
 
-	//eh.Log.Debugw("Checking policy", "policy_uuid", p.UUID, "resource", resource.GetRID(), "action", action, "policy", p, "document", doc)
+	//lh.Log.Debugw("Checking policy", "policy_uuid", p.UUID, "resource", resource.GetRID(), "action", action, "policy", p, "document", doc)
 	// Check all statements for a match
 	for _, statement := range doc.Statements {
 		// Check if the statement allows the action
@@ -61,7 +66,7 @@ func (p *Policy) Allows(resource Resource, action string) bool {
 					for _, actionPattern := range statement.Actions {
 						g = glob.MustCompile(actionPattern, '/', ':')
 						if g.Match(action) {
-							eh.Log.Infow("allowing action due to policy", "policy_uuid", p.UUID, "resource", resource.GetRID(), "resource_pattern", resourcePattern, "action", action, "action_pattern", actionPattern, "policy", p, "document", doc, "statement", statement)
+							lh.Log.Infow("allowing action due to policy", "request_id", lh.GetRequestID(ctx), "policy_uuid", p.UUID, "resource", resource.GetRID(), "resource_pattern", resourcePattern, "action", action, "action_pattern", actionPattern, "policy", p, "document", doc, "statement", statement)
 							return true
 						}
 					}
@@ -84,7 +89,7 @@ func GetPolicies(account account.Account, requestor Resource) ([]Policy, error) 
 
 	rows, err := config.DB.Query("SELECT policy.uuid, policy.id, policy.content, policy.current_version FROM policy_attachment, policy WHERE policy_attachment.policy_uuid = policy.uuid AND policy_attachment.account_uuid = $1 AND policy_attachment.resource_id = $2", account.GetUUID(), requestor.GetRID())
 	if err != nil {
-		eh.Log.Errorw("Error retrieving policies for user", "error", err, "user", requestor.GetRID(), "account", account.GetUUID(), "account_id", account.ID)
+		lh.Log.Errorw("Error retrieving policies for user", "error", err, "user", requestor.GetRID(), "account", account.GetUUID(), "account_id", account.ID)
 		return []Policy{}, err
 	}
 
@@ -94,7 +99,7 @@ func GetPolicies(account account.Account, requestor Resource) ([]Policy, error) 
 		var policy Policy
 		err = rows.Scan(&policy.UUID, &policy.Name, &policy.Content, &policy.Version)
 		if err != nil {
-			eh.Log.Errorw("Error scanning policy", "error", err)
+			lh.Log.Errorw("Error scanning policy", "error", err)
 			return []Policy{}, err
 		}
 		policy.Account = account
@@ -114,14 +119,14 @@ func CreatePolicyForAccount(account account.Account, name string, content string
 
 	err := config.DB.QueryRow("INSERT INTO policy(uuid, account_uuid, id, content, current_version) VALUES(gen_random_uuid(), $1, $2, $3, 1) returning uuid", account.GetUUID(), name, content).Scan(&policy.UUID)
 	if err != nil {
-		eh.Log.Errorw("Error creating policy", "error", err, "account", account.GetUUID(), "account_id", account.ID)
+		lh.Log.Errorw("Error creating policy", "error", err, "account", account.GetUUID(), "account_id", account.ID)
 		return Policy{}, &apierror.ApiError{Code: 500, Message: "Error creating policy"}
 	}
 
 	// Insert the policy version too
 	_, err = config.DB.Exec("INSERT INTO policy_version(uuid, policy_uuid, content, version_number, comment) VALUES(gen_random_uuid(), $1, $2, 1, $3)", policy.UUID, content, versionComment)
 	if err != nil {
-		eh.Log.Errorw("Error creating policy version", "error", err, "account", account.GetUUID(), "account_id", account.ID)
+		lh.Log.Errorw("Error creating policy version", "error", err, "account", account.GetUUID(), "account_id", account.ID)
 		return Policy{}, &apierror.ApiError{Code: 500, Message: "Error creating policy version"}
 	}
 	policy.Content = content
@@ -135,20 +140,20 @@ func (p *Policy) UpdatePolicy(content string, comment string) error {
 	// TODO: Validate the policy content before updating it
 	err := p.ValidateNewContent(content)
 	if err != nil {
-		eh.Log.Errorw("Error validating new policy content", "error", err, "policy", p.UUID)
+		lh.Log.Errorw("Error validating new policy content", "error", err, "policy", p.UUID)
 		return err
 	}
 
 	err = config.DB.QueryRow("INSERT INTO policy_version(uuid, policy_uuid, content, comment, version) VALUES(gen_random_uuid(), $1, $2, $3, (SELECT policy_version + 1 FROM policy_version WHERE policy_uuid = $1 ORDER BY policy_version DESC LIMIT 1)) returning version", p.UUID, content, comment).Scan(&p.Version)
 	if err != nil {
-		eh.Log.Errorw("Error creating new policy version", "error", err, "policy", p.UUID)
+		lh.Log.Errorw("Error creating new policy version", "error", err, "policy", p.UUID)
 		return err
 	}
 
 	// Update the policy version too
 	_, err = config.DB.Exec("UPDATE policy SET version = $1, content = $2 WHERE uuid = $3", p.Version, content, p.UUID)
 	if err != nil {
-		eh.Log.Errorw("Error updating policy", "error", err, "policy", p.UUID)
+		lh.Log.Errorw("Error updating policy", "error", err, "policy", p.UUID)
 		return err
 	}
 
@@ -162,7 +167,7 @@ func (p *Policy) AttachToResource(requestor Resource, resource Resource) *apierr
 	// Attach the policy to the resource in the account using the policy_attachment table
 	_, err := config.DB.Exec("INSERT INTO policy_attachment(policy_uuid, account_uuid, resource_id, attached_by) VALUES($1, $2, $3, $4)", p.UUID, p.Account.GetUUID(), resource.GetRID(), requestor.GetRID())
 	if err != nil {
-		eh.Log.Errorw("Error attaching policy to resource", "error", err, "policy", p.UUID, "resource", resource.GetRID(), "requestor", requestor.GetRID())
+		lh.Log.Errorw("Error attaching policy to resource", "error", err, "policy", p.UUID, "resource", resource.GetRID(), "requestor", requestor.GetRID())
 		return apierror.New(500, "Error attaching policy to resource")
 	}
 	return nil

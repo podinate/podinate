@@ -16,18 +16,19 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/johncave/podinate/api-backend/config"
-	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	"github.com/johncave/podinate/api-backend/router"
+
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
 func main() {
 	log.Printf("Server initialising...")
 
-	eh.Init()
+	lh.Init()
 
 	err := config.Init()
 	if err != nil {
-		eh.Log.Panicw("Error initialising config", "error", err)
+		lh.Log.Panicw("Error initialising config", "error", err)
 	}
 	log.Println("Server configured...")
 
