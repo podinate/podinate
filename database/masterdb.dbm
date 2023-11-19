@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,0" last-zoom="1" max-obj-count="8"
+<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,313" last-zoom="1" max-obj-count="12"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -19,7 +19,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="project" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="800" y="540"/>
+	<position x="460" y="840"/>
 	<column name="uuid" not-null="true">
 		<type name="uuid" length="0"/>
 	</column>
@@ -82,7 +82,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="project_pods" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="1360" y="520"/>
+	<position x="1560" y="880"/>
 	<column name="uuid" not-null="true">
 		<type name="uuid" length="0"/>
 	</column>
@@ -247,6 +247,104 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</constraint>
 </table>
 
+<table name="policy_attachment" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="780" y="460"/>
+	<column name="account_uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="user_uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="policy_uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="date_attached" default-value="CURRENT_TIMESTAMP">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="valid_until">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="attached_by">
+		<type name="uuid" length="0"/>
+		<comment> <![CDATA[The user uuid that originally attached this policy]]> </comment>
+	</column>
+	<constraint name="compound_primary" type="pk-constr" table="public.policy_attachment">
+		<columns names="account_uuid,user_uuid,policy_uuid" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="policy" layers="0" collapse-mode="2" max-obj-count="9" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1180" y="600"/>
+	<column name="uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="account_uuid">
+		<type name="uuid" length="0"/>
+		<comment> <![CDATA[The account to which this policy belongs]]> </comment>
+	</column>
+	<column name="current_revision">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="name">
+		<type name="text" length="0"/>
+	</column>
+	<column name="content">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The content of the active revision of the policy]]> </comment>
+	</column>
+	<column name="date_added" default-value="CURRENT_TIMESTAMP">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="added_by">
+		<type name="uuid" length="0"/>
+		<comment> <![CDATA[UUID of the user who added this]]> </comment>
+	</column>
+	<column name="notes">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[Space for user to write some notes about this policy]]> </comment>
+	</column>
+	<constraint name="uuid_primary_key" type="pk-constr" table="public.policy">
+		<columns names="uuid" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="policy_revision" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1640" y="560"/>
+	<column name="uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="policy_uuid">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="version_number" not-null="true">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="content">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The policy document itself ]]> </comment>
+	</column>
+	<column name="comment" not-null="true">
+		<type name="text" length="0"/>
+		<comment> <![CDATA[Commit message for the revision]]> </comment>
+	</column>
+	<column name="user_uuid">
+		<type name="uuid" length="0"/>
+		<comment> <![CDATA[User who made the revision]]> </comment>
+	</column>
+	<column name="date_made" default-value="CURRENT_TIMESTAMP">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="uuid" type="pk-constr" table="public.policy_revision">
+		<columns names="uuid" ref-type="src-columns"/>
+	</constraint>
+</table>
+
 <constraint name="owner_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
 	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;user&quot;" table="public.account">
 	<columns names="owner_uuid" ref-type="src-columns"/>
@@ -265,6 +363,30 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<columns names="uuid" ref-type="dst-columns"/>
 </constraint>
 
+<constraint name="account_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.account" table="public.policy_attachment">
+	<columns names="account_uuid" ref-type="src-columns"/>
+	<columns names="uuid" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="user_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="NO ACTION" ref-table="public.&quot;user&quot;" table="public.policy_attachment">
+	<columns names="user_uuid" ref-type="src-columns"/>
+	<columns names="uuid" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="policy_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.policy" table="public.policy_attachment">
+	<columns names="policy_uuid" ref-type="src-columns"/>
+	<columns names="uuid" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="policy_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.policy" table="public.policy_revision">
+	<columns names="policy_uuid" ref-type="src-columns"/>
+	<columns names="uuid" ref-type="dst-columns"/>
+</constraint>
+
 <relationship name="rel_account_user" type="relfk" layers="0"
 	 src-table="public.account"
 	 dst-table="public.&quot;user&quot;" reference-fk="owner_uuid"
@@ -279,5 +401,25 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 src-table="public.api_key"
 	 dst-table="public.&quot;user&quot;" reference-fk="api_key_user_uuid"
 	 src-required="false" dst-required="true"/>
+
+<relationship name="rel_policy_attachment_account" type="relfk" layers="0"
+	 src-table="public.policy_attachment"
+	 dst-table="public.account" reference-fk="account_uuid"
+	 src-required="false" dst-required="true"/>
+
+<relationship name="rel_policy_attachment_user" type="relfk" layers="0"
+	 src-table="public.policy_attachment"
+	 dst-table="public.&quot;user&quot;" reference-fk="user_uuid"
+	 src-required="false" dst-required="true"/>
+
+<relationship name="rel_policy_attachment_policy" type="relfk" layers="0"
+	 src-table="public.policy_attachment"
+	 dst-table="public.policy" reference-fk="policy_uuid"
+	 src-required="false" dst-required="true"/>
+
+<relationship name="rel_policy_revision_policy" type="relfk" layers="0"
+	 src-table="public.policy_revision"
+	 dst-table="public.policy" reference-fk="policy_uuid"
+	 src-required="false" dst-required="false"/>
 
 </dbmodel>

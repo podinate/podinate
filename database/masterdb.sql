@@ -94,7 +94,7 @@ ALTER TABLE public.project ADD CONSTRAINT unique_project_slug_per_account UNIQUE
 -- ddl-end --
 
 -- object: public."user" | type: TABLE --
-DROP TABLE IF EXISTS public."user" CASCADE;
+-- DROP TABLE IF EXISTS public."user" CASCADE;
 CREATE TABLE public."user" (
 	uuid uuid NOT NULL DEFAULT gen_random_uuid(),
 	main_provider text NOT NULL,
@@ -163,6 +163,70 @@ CREATE TABLE public.login_session (
 ALTER TABLE public.login_session OWNER TO postgres;
 -- ddl-end --
 
+-- object: public.policy_attachment | type: TABLE --
+-- DROP TABLE IF EXISTS public.policy_attachment CASCADE;
+CREATE TABLE public.policy_attachment (
+	account_uuid uuid NOT NULL,
+	user_uuid uuid NOT NULL,
+	policy_uuid uuid NOT NULL,
+	date_attached timestamp DEFAULT CURRENT_TIMESTAMP,
+	valid_until timestamp,
+	attached_by uuid,
+	CONSTRAINT compound_primary PRIMARY KEY (account_uuid,user_uuid,policy_uuid)
+);
+-- ddl-end --
+COMMENT ON COLUMN public.policy_attachment.attached_by IS E'The user uuid that originally attached this policy';
+-- ddl-end --
+ALTER TABLE public.policy_attachment OWNER TO postgres;
+-- ddl-end --
+
+-- object: public.policy | type: TABLE --
+-- DROP TABLE IF EXISTS public.policy CASCADE;
+CREATE TABLE public.policy (
+	uuid uuid NOT NULL,
+	account_uuid uuid,
+	current_revision smallint,
+	name text,
+	content text,
+	date_added timestamp DEFAULT CURRENT_TIMESTAMP,
+	added_by uuid,
+	notes text,
+	CONSTRAINT uuid_primary_key PRIMARY KEY (uuid)
+);
+-- ddl-end --
+COMMENT ON COLUMN public.policy.account_uuid IS E'The account to which this policy belongs';
+-- ddl-end --
+COMMENT ON COLUMN public.policy.content IS E'The content of the active revision of the policy';
+-- ddl-end --
+COMMENT ON COLUMN public.policy.added_by IS E'UUID of the user who added this';
+-- ddl-end --
+COMMENT ON COLUMN public.policy.notes IS E'Space for user to write some notes about this policy';
+-- ddl-end --
+ALTER TABLE public.policy OWNER TO postgres;
+-- ddl-end --
+
+-- object: public.policy_revision | type: TABLE --
+-- DROP TABLE IF EXISTS public.policy_revision CASCADE;
+CREATE TABLE public.policy_revision (
+	uuid uuid NOT NULL,
+	policy_uuid uuid,
+	version_number smallint NOT NULL,
+	content text,
+	comment text NOT NULL,
+	user_uuid uuid,
+	date_made timestamp DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT uuid PRIMARY KEY (uuid)
+);
+-- ddl-end --
+COMMENT ON COLUMN public.policy_revision.content IS E'The policy document itself';
+-- ddl-end --
+COMMENT ON COLUMN public.policy_revision.comment IS E'Commit message for the revision';
+-- ddl-end --
+COMMENT ON COLUMN public.policy_revision.user_uuid IS E'User who made the revision';
+-- ddl-end --
+ALTER TABLE public.policy_revision OWNER TO postgres;
+-- ddl-end --
+
 -- object: owner_uuid | type: CONSTRAINT --
 -- ALTER TABLE public.account DROP CONSTRAINT IF EXISTS owner_uuid CASCADE;
 ALTER TABLE public.account ADD CONSTRAINT owner_uuid FOREIGN KEY (owner_uuid)
@@ -181,6 +245,34 @@ ON DELETE NO ACTION ON UPDATE NO ACTION;
 -- ALTER TABLE public.api_key DROP CONSTRAINT IF EXISTS api_key_user_uuid CASCADE;
 ALTER TABLE public.api_key ADD CONSTRAINT api_key_user_uuid FOREIGN KEY (user_uuid)
 REFERENCES public."user" (uuid) MATCH SIMPLE
+ON DELETE NO ACTION ON UPDATE NO ACTION;
+-- ddl-end --
+
+-- object: account_uuid | type: CONSTRAINT --
+-- ALTER TABLE public.policy_attachment DROP CONSTRAINT IF EXISTS account_uuid CASCADE;
+ALTER TABLE public.policy_attachment ADD CONSTRAINT account_uuid FOREIGN KEY (account_uuid)
+REFERENCES public.account (uuid) MATCH SIMPLE
+ON DELETE CASCADE ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: user_uuid | type: CONSTRAINT --
+-- ALTER TABLE public.policy_attachment DROP CONSTRAINT IF EXISTS user_uuid CASCADE;
+ALTER TABLE public.policy_attachment ADD CONSTRAINT user_uuid FOREIGN KEY (user_uuid)
+REFERENCES public."user" (uuid) MATCH SIMPLE
+ON DELETE NO ACTION ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: policy_uuid | type: CONSTRAINT --
+-- ALTER TABLE public.policy_attachment DROP CONSTRAINT IF EXISTS policy_uuid CASCADE;
+ALTER TABLE public.policy_attachment ADD CONSTRAINT policy_uuid FOREIGN KEY (policy_uuid)
+REFERENCES public.policy (uuid) MATCH SIMPLE
+ON DELETE CASCADE ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: policy_uuid | type: CONSTRAINT --
+-- ALTER TABLE public.policy_revision DROP CONSTRAINT IF EXISTS policy_uuid CASCADE;
+ALTER TABLE public.policy_revision ADD CONSTRAINT policy_uuid FOREIGN KEY (policy_uuid)
+REFERENCES public.policy (uuid) MATCH SIMPLE
 ON DELETE NO ACTION ON UPDATE NO ACTION;
 -- ddl-end --
 

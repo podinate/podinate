@@ -9,7 +9,6 @@ import (
 	"net/url"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/johncave/podinate/api-backend/config"
 	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
@@ -19,224 +18,6 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/gitlab"
 )
-
-type UserAPIShim struct {
-	service      api.UserApiServicer
-	errorHandler api.ErrorHandler
-}
-
-func (c *UserAPIShim) Routes() api.Routes {
-	return api.Routes{
-		{
-			Name:        "UserLoginRedirectTokenGet",
-			Method:      "GET",
-			Pattern:     "/v0/user/login/redirect/{token}",
-			HandlerFunc: c.UserLoginRedirectTokenGet,
-		},
-		{
-			Name:        "UserLoginCallbackProviderGet",
-			Method:      "GET",
-			Pattern:     "/v0/user/login/callback/{provider}",
-			HandlerFunc: c.UserLoginCallbackProviderGet,
-		},
-	}
-}
-
-// UserLoginRedirectTokenGet - Redirect the user to the provider.
-// This is a shim so that the user can be redirected to the provider from this code,
-func (c *UserAPIShim) UserLoginRedirectTokenGet(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Println("Handling redirect")
-
-	// Grab the token from the URL
-	params := mux.Vars(r)
-	token := params["token"]
-
-	// Check the token is a valid uuidv4
-	_, err := uuid.Parse(token)
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(400, "Invalid redirect token"), nil, w)
-		return
-	}
-
-	code := 500 // Default to 500
-	providerName, err := GetProviderFromSession(token)
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(500, err.Error()), &code, w)
-		return
-	}
-
-	provider, err := goth.GetProvider(providerName)
-	if err != nil {
-		code = 400
-		api.EncodeJSONResponse(responder.Response(400, err.Error()), &code, w)
-		return
-	}
-
-	value, err := GetFromSession(token, providerName)
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(500, err.Error()), &code, w)
-		return
-	}
-
-	session, err := provider.UnmarshalSession(value)
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(500, err.Error()), &code, w)
-		return
-	}
-
-	// Redirect the user to the provider
-	authUrl, err := session.GetAuthURL()
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(500, err.Error()), &code, w)
-		return
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "login-token",
-		Value:    token,
-		HttpOnly: true,
-		Path:     "/",
-		MaxAge:   3600,
-	})
-	http.Redirect(w, r, authUrl, http.StatusTemporaryRedirect)
-	w.Write([]byte("You should now be redirected. If not click <a href=\"" + authUrl + "\">here</a>"))
-}
-
-// UserLoginCallbackProviderGet - Handle the callback from the provider
-// This is shimmed so that Goth can have full access to all the variables
-func (c *UserAPIShim) UserLoginCallbackProviderGet(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query()
-
-	// Grab the provider from the URL
-	params := mux.Vars(r)
-	providerName := params["provider"]
-
-	fmt.Printf("Handling callback for %+v %s\n", params, providerName)
-	//result, err := c.service.UserLoginCallbackProviderGet(r, providerName)
-
-	SetUpGoth()
-
-	provider, err := goth.GetProvider(providerName)
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(400, err.Error()), nil, w)
-		return
-	}
-
-	cookie, err := r.Cookie("login-token")
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(403, "No login cookie found"), nil, w)
-		return
-	}
-
-	value, err := GetFromSession(cookie.Value, providerName)
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-		return
-	}
-
-	session, err := provider.UnmarshalSession(value)
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-		return
-	}
-	if session == nil {
-		api.EncodeJSONResponse(responder.Response(500, "No session"), nil, w)
-		return
-	}
-
-	err = validateState(r, session)
-	if err != nil {
-		api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-		return
-	}
-
-	user, err := provider.FetchUser(session)
-	if err == nil {
-		// We already found the user information, so it can be displayed
-		fmt.Printf("Success %+v\n", user)
-	} else {
-		// We need to fetch the user information from the provider
-		_, err = session.Authorize(provider, query)
-		if err != nil {
-			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-			return
-		}
-		user, err = provider.FetchUser(session)
-		if err != nil {
-			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-			return
-		}
-	}
-
-	fmt.Printf("User: %+v\n", user)
-
-	// We've now finished all the oauth stuff, so we can store and setup the user
-
-	// See if the user is already registered in the oauth_login table
-	var providerID string
-	var authorisedUser string
-	err = config.DB.QueryRow("SELECT provider_id, authorised_user FROM oauth_login WHERE provider = $1 AND provider_id = $2", providerName, user.UserID).Scan(&providerID, &authorisedUser)
-	if err != nil {
-		eh.Log.Infow("User not found, inserting new user", "error", err, "user", user)
-		fmt.Println("User not found, inserting new user")
-		// The user is not registered, so we need to register them
-		// Add the user to the user table
-		err = config.DB.QueryRow("INSERT INTO \"user\" (main_provider, id, display_name, email, avatar_url) VALUES ($1, $2, $3, $4, $5) RETURNING uuid", user.Provider, user.NickName, user.Name, user.Email, user.AvatarURL).Scan(&authorisedUser)
-		if err != nil {
-			eh.Log.Errorw("Error inserting new user into DB", "error", err)
-
-			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-			return
-		}
-
-		// Insert into the oauth_login table
-		_, err = config.DB.Exec("INSERT INTO oauth_login (provider, provider_id, provider_username, access_token, refresh_token, authorised_user) VALUES ($1, $2, $3, $4, $5, $6)", providerName, user.UserID, user.NickName, user.AccessToken, user.RefreshToken, authorisedUser)
-		if err != nil {
-			eh.Log.Errorw("Error inserting oauth_login", "error", err)
-			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-			return
-		}
-
-		eh.Log.Infow("User registered", "user", authorisedUser)
-
-	} else {
-		// The user is already registered, so we just need to update the oauth_login table
-		_, err = config.DB.Exec("UPDATE oauth_login SET provider_username = $1, access_token = $2, refresh_token = $3 WHERE provider = $4 AND provider_id = $5", user.NickName, user.AccessToken, user.RefreshToken, providerName, user.UserID)
-		if err != nil {
-			eh.Log.Errorw("Error updating oauth_login", "error", err, "user", authorisedUser)
-			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-			return
-		}
-		// Update the user table
-		_, err = config.DB.Exec("UPDATE \"user\" SET display_name = $1, email = $2, avatar_url = $3 WHERE uuid = $4", user.Name, user.Email, user.AvatarURL, authorisedUser)
-		if err != nil {
-			eh.Log.Errorw("Error updating user", "error", err, "user", authorisedUser)
-			api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-			return
-		}
-		eh.Log.Infow("User updated", "reason", "new login, updated details from oauth", "user", authorisedUser)
-	}
-
-	theUser, err := myuser.GetByUUID(authorisedUser)
-	if err != nil {
-		eh.Log.Errorw("Error getting user", "error", err, "user", theUser, "uuid", authorisedUser)
-		api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-		return
-	}
-	eh.Log.Infow("User registered", "user", theUser)
-
-	// Store which user to authorise in the session
-	err = StoreInSession(cookie.Value, "authorised_user", authorisedUser)
-	if err != nil {
-		eh.Log.Errorw("Error storing authorised user in session", "error", err, "user", theUser, "uuid", authorisedUser)
-		api.EncodeJSONResponse(responder.Response(500, err.Error()), nil, w)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte("<html><body>Your session is now authorised. You can now close this window and return to what you were doing.</body> <script> setTimeout(function(){window.close()},5000);</script></html>"))
-}
 
 // validateState ensures that the state token param from the original
 // AuthURL matches the one included in the current (callback) request.
@@ -271,14 +52,14 @@ var GetState = func(req *http.Request) string {
 	return params.Get("state")
 }
 
-// NewUserShimController creates a new shim controller for handling requests in the default API
-func NewUserShimController(s api.UserApiServicer, opts ...api.UserApiOption) api.Router {
-	controller := &UserAPIShim{
-		service: s,
-	}
+// // NewUserShimController creates a new shim controller for handling requests in the default API
+// func NewUserShimController(s api.UserApiServicer, opts ...api.UserApiOption) api.Router {
+// 	controller := &UserAPIShim{
+// 		service: s,
+// 	}
 
-	return controller
-}
+// 	return controller
+// }
 
 // Import the default service struct
 type UserAPIService struct {
@@ -350,32 +131,6 @@ func (s *UserAPIService) UserLoginCompleteGet(ctx context.Context, token string,
 func (s *UserAPIService) UserLoginCallbackProviderGet(ctx context.Context, providerName string) (api.ImplResponse, error) {
 	return api.Response(501, nil), nil
 }
-
-// // UserLoginRedirectTokenGet - Redirect the user to the provider
-// func (s *UserAPIService) UserLoginRedirectTokenGet(ctx context.Context, token string) (api.ImplResponse, error) {
-// 	SetUpGoth()
-// 	// TODO - update UserLoginRedirectTokenGet with the required logic for this service method.
-// 	providerName, err := GetProviderFromSession(token)
-// 	if err != nil {
-// 		return responder.Response(500, err.Error()), nil
-// 	}
-
-// 	provider, err := goth.GetProvider(providerName)
-// 	if err != nil {
-// 		return responder.Response(400, err.Error()), nil
-// 	}
-
-// 	value, err := GetFromSession(token, providerName)
-// 	if err != nil {
-// 		return responder.Response(500, err.Error()), nil
-// 	}
-
-// 	session, err := provider.UnmarshalSession(value)
-// 	if err != nil {
-// 		return responder.Response(500, err.Error()), nil
-// 	}
-
-// }
 
 // UserLoginInitiateGet - Initiate the login process
 func (s *UserAPIService) UserLoginInitiateGet(ctx context.Context, providerName string) (api.ImplResponse, error) {
