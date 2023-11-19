@@ -9,7 +9,7 @@ spec:
   selector:
     matchLabels:
       app: api-backend
-  replicas: 0
+  replicas: 1
   strategy:
     type: RollingUpdate
   template:
