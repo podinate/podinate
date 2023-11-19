@@ -23,10 +23,13 @@ import (
 func main() {
 	log.Printf("Server initialising...")
 
-	config.Init()
-	log.Println("Server configured...")
-
 	eh.Init()
+
+	err := config.Init()
+	if err != nil {
+		eh.Log.Panicw("Error initialising config", "error", err)
+	}
+	log.Println("Server configured...")
 
 	theRouter := router.GetRouter()
 	log.Fatal(http.ListenAndServe(":3000", theRouter))

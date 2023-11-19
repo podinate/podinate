@@ -6,7 +6,9 @@ import (
 
 	"github.com/johncave/podinate/api-backend/account"
 	api "github.com/johncave/podinate/api-backend/go"
+	"github.com/johncave/podinate/api-backend/iam"
 	"github.com/johncave/podinate/api-backend/responder"
+	"github.com/johncave/podinate/api-backend/user"
 )
 
 // / Import the default service
@@ -23,6 +25,8 @@ func NewAccountAPIService() api.AccountApiServicer {
 
 // AccountGet - Get information about the current account
 func (s *AccountAPIService) AccountGet(ctx context.Context, requestedAccount string) (api.ImplResponse, error) {
+	r := iam.GetFromContext(ctx)
+
 	// Get the account information from the database
 	theAccount, apiErr := account.GetByID(requestedAccount)
 	if apiErr != nil {
@@ -30,7 +34,11 @@ func (s *AccountAPIService) AccountGet(ctx context.Context, requestedAccount str
 		return responder.Response(http.StatusNotFound, apiErr.Error()), nil
 	}
 
-	return responder.Response(http.StatusOK, theAccount.ToAPIAccount()), nil
+	// Check if the user can view the account
+	if iam.RequestorCan(r, theAccount, &theAccount, account.ActionView) {
+		return responder.Response(http.StatusOK, theAccount.ToAPIAccount()), nil
+	}
+	return responder.Response(http.StatusNotFound, "Account not found"), nil
 }
 
 // AccountPatch - Update the current account
@@ -52,7 +60,22 @@ func (s *AccountAPIService) AccountPatch(ctx context.Context, requestedAccount s
 
 // AccountPost - Request a new account
 func (s *AccountAPIService) AccountPost(ctx context.Context, requestedAccount api.Account) (api.ImplResponse, error) {
-	newAcc, err := account.Create(requestedAccount)
+	u := iam.GetFromContext(ctx).(*user.User)
+	newAcc, err := account.Create(requestedAccount, u)
+	if err != nil {
+		// We can pass this error directly to the API response
+		return responder.Response(err.Code, err.Error()), nil
+	}
+
+	// Add initial policies to the account
+	superAdminPolicyDocument := `
+version: 2023.1
+statements:
+  - effect: allow
+    actions: ["**"]
+    resources: ["**"]`
+	superAdminPolicy, err := iam.CreatePolicyForAccount(newAcc, "super-administrator", superAdminPolicyDocument, "Default policy created during initial account creation")
+	err = superAdminPolicy.AttachToResource(u, u)
 	if err != nil {
 		// We can pass this error directly to the API response
 		return responder.Response(err.Code, err.Error()), nil

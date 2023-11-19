@@ -47,7 +47,7 @@ func GetByAccount(a account.Account, page int32, limit int32) ([]Project, *apier
 	if limit < 1 {
 		limit = 25
 	}
-	rows, err := config.DB.Query("SELECT uuid, id, name FROM project WHERE account_uuid = $1 OFFSET $2 LIMIT $3", a.Uuid, page, limit)
+	rows, err := config.DB.Query("SELECT uuid, id, name FROM project WHERE account_uuid = $1 OFFSET $2 LIMIT $3", a.GetUUID(), page, limit)
 	if err != nil {
 		return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve projects")
 	}
@@ -94,7 +94,7 @@ func Create(new api.Project, inAccount account.Account) (Project, *apierror.ApiE
 		return Project{}, err
 	}
 	//res, dberr := config.DB.Exec("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", new.Id, new.Name, inAccount.Uuid)
-	dberr := config.DB.QueryRow("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", new.Id, new.Name, inAccount.Uuid).Scan(&out.Uuid)
+	dberr := config.DB.QueryRow("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", new.Id, new.Name, inAccount.GetUUID()).Scan(&out.Uuid)
 	// Check if insert was successful
 	if dberr != nil {
 		log.Println("DB error", dberr)
@@ -111,7 +111,7 @@ func (p *Project) ToAPI() api.Project {
 }
 
 func GetByID(a account.Account, id string) (Project, *apierror.ApiError) {
-	row := config.DB.QueryRow("SELECT uuid, id, name FROM project WHERE account_uuid = $1 AND id = $2", a.Uuid, id)
+	row := config.DB.QueryRow("SELECT uuid, id, name FROM project WHERE account_uuid = $1 AND id = $2", a.GetUUID(), id)
 
 	p := Project{}
 	err := row.Scan(&p.Uuid, &p.ID, &p.Name)

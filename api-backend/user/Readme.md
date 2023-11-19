@@ -13,3 +13,8 @@ At a high level, logins work like this:
 2) The redirect url is /user/login/redirect/{token}. When they go to this URL a cookie is set with the session token and they are redirected to the provider.
 3) The user authorizes the session with the provider and is redirected to our callback endpoint. Goth handles all of unwrapping the session and gives us a user. We set up the user in the database at this point, and the callback endpoint just displays some html telling the user to close their browser tab now.
 4) The client should then call the /user/login/complete endpoint with the token. At that point they can exchange the token for a proper API key 
+
+## API Keys & Middleware
+API Keys are created and validated by this package. The validation happens through a middleware in the router package, which wraps the user up into the request context. You can then get the user inside any request handler by calling `u := user.GetFromContext(ctx)`. This function returns no errors as your handler will never be called if there's any issue unwrapping a user from the request. 
+
+This middleware resides in the `router` package. Check the `authMiddleware()` function. 

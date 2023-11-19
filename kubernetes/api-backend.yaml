@@ -90,7 +90,7 @@ data:
     database = "podinate"
 
     [auth]
-    api_host: "http://localhost:3001"
+    api_host = "http://localhost:3001"
     [[gitlab]]
     public_host = "http://gitlab.dev-git.podinate.com:8081"
     internal_host = "http://gitlab-webservice-default.gitlab:8080"

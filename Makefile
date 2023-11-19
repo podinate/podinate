@@ -1,8 +1,9 @@
+# Make a dev cluster
 dev-cluster:
 	k3d cluster create podinate-dev --agents 2 -v "$PWD":/mnt/code/@agent:*
 	# Install the cockroach operator and crds 
 
-
+# Install K3d on Arch Linux
 install-dependencies:
 	paru -S rancher-k3d-bin
 	sudo pacman -S kubectl docker
@@ -10,6 +11,10 @@ install-dependencies:
 	sudo install skaffold /usr/local/bin/
 	rm skaffold
 	
+# Show the logs for the API backend in the Kubernetes cluster while developing
+dev-backend-logs:
+	kubectl -n api logs -l app=api-backend -f
+
 dev-code-upload:
 	./api-backend/scripts/initial-code-upload.sh
 

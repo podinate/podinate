@@ -12,8 +12,8 @@ import (
 	"github.com/johncave/podinate/api-backend/config"
 	eh "github.com/johncave/podinate/api-backend/errorhandler"
 	api "github.com/johncave/podinate/api-backend/go"
+	"github.com/johncave/podinate/api-backend/iam"
 	"github.com/johncave/podinate/api-backend/responder"
-	"github.com/johncave/podinate/api-backend/user"
 	myuser "github.com/johncave/podinate/api-backend/user"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/gitlab"
@@ -52,15 +52,6 @@ var GetState = func(req *http.Request) string {
 	return params.Get("state")
 }
 
-// // NewUserShimController creates a new shim controller for handling requests in the default API
-// func NewUserShimController(s api.UserApiServicer, opts ...api.UserApiOption) api.Router {
-// 	controller := &UserAPIShim{
-// 		service: s,
-// 	}
-
-// 	return controller
-// }
-
 // Import the default service struct
 type UserAPIService struct {
 	api.UserApiService
@@ -73,7 +64,7 @@ func NewUserAPIService() api.UserApiServicer {
 
 // UserGet - Get information about the logged in user
 func (s *UserAPIService) UserGet(ctx context.Context) (api.ImplResponse, error) {
-	u := user.GetFromContext(ctx)
+	u := iam.GetFromContext(ctx).(*myuser.User)
 	return api.Response(200, u.ToAPI()), nil
 }
 

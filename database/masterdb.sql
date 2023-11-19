@@ -167,12 +167,12 @@ ALTER TABLE public.login_session OWNER TO postgres;
 -- DROP TABLE IF EXISTS public.policy_attachment CASCADE;
 CREATE TABLE public.policy_attachment (
 	account_uuid uuid NOT NULL,
-	user_uuid uuid NOT NULL,
+	resource_id text NOT NULL,
 	policy_uuid uuid NOT NULL,
 	date_attached timestamp DEFAULT CURRENT_TIMESTAMP,
 	valid_until timestamp,
 	attached_by uuid,
-	CONSTRAINT compound_primary PRIMARY KEY (account_uuid,user_uuid,policy_uuid)
+	CONSTRAINT compound_primary PRIMARY KEY (account_uuid,resource_id,policy_uuid)
 );
 -- ddl-end --
 COMMENT ON COLUMN public.policy_attachment.attached_by IS E'The user uuid that originally attached this policy';
@@ -185,8 +185,8 @@ ALTER TABLE public.policy_attachment OWNER TO postgres;
 CREATE TABLE public.policy (
 	uuid uuid NOT NULL,
 	account_uuid uuid,
+	id text,
 	current_revision smallint,
-	name text,
 	content text,
 	date_added timestamp DEFAULT CURRENT_TIMESTAMP,
 	added_by uuid,
@@ -205,9 +205,9 @@ COMMENT ON COLUMN public.policy.notes IS E'Space for user to write some notes ab
 ALTER TABLE public.policy OWNER TO postgres;
 -- ddl-end --
 
--- object: public.policy_revision | type: TABLE --
--- DROP TABLE IF EXISTS public.policy_revision CASCADE;
-CREATE TABLE public.policy_revision (
+-- object: public.policy_version | type: TABLE --
+-- DROP TABLE IF EXISTS public.policy_version CASCADE;
+CREATE TABLE public.policy_version (
 	uuid uuid NOT NULL,
 	policy_uuid uuid,
 	version_number smallint NOT NULL,
@@ -218,20 +218,20 @@ CREATE TABLE public.policy_revision (
 	CONSTRAINT uuid PRIMARY KEY (uuid)
 );
 -- ddl-end --
-COMMENT ON COLUMN public.policy_revision.content IS E'The policy document itself';
+COMMENT ON COLUMN public.policy_version.content IS E'The policy document itself';
 -- ddl-end --
-COMMENT ON COLUMN public.policy_revision.comment IS E'Commit message for the revision';
+COMMENT ON COLUMN public.policy_version.comment IS E'Commit message for the revision';
 -- ddl-end --
-COMMENT ON COLUMN public.policy_revision.user_uuid IS E'User who made the revision';
+COMMENT ON COLUMN public.policy_version.user_uuid IS E'User who made the revision';
 -- ddl-end --
-ALTER TABLE public.policy_revision OWNER TO postgres;
+ALTER TABLE public.policy_version OWNER TO postgres;
 -- ddl-end --
 
 -- object: owner_uuid | type: CONSTRAINT --
 -- ALTER TABLE public.account DROP CONSTRAINT IF EXISTS owner_uuid CASCADE;
 ALTER TABLE public.account ADD CONSTRAINT owner_uuid FOREIGN KEY (owner_uuid)
 REFERENCES public."user" (uuid) MATCH SIMPLE
-ON DELETE NO ACTION ON UPDATE NO ACTION;
+ON DELETE CASCADE ON UPDATE CASCADE;
 -- ddl-end --
 
 -- object: authorised_user_uuid | type: CONSTRAINT --
@@ -255,13 +255,6 @@ REFERENCES public.account (uuid) MATCH SIMPLE
 ON DELETE CASCADE ON UPDATE CASCADE;
 -- ddl-end --
 
--- object: user_uuid | type: CONSTRAINT --
--- ALTER TABLE public.policy_attachment DROP CONSTRAINT IF EXISTS user_uuid CASCADE;
-ALTER TABLE public.policy_attachment ADD CONSTRAINT user_uuid FOREIGN KEY (user_uuid)
-REFERENCES public."user" (uuid) MATCH SIMPLE
-ON DELETE NO ACTION ON UPDATE CASCADE;
--- ddl-end --
-
 -- object: policy_uuid | type: CONSTRAINT --
 -- ALTER TABLE public.policy_attachment DROP CONSTRAINT IF EXISTS policy_uuid CASCADE;
 ALTER TABLE public.policy_attachment ADD CONSTRAINT policy_uuid FOREIGN KEY (policy_uuid)
@@ -270,8 +263,8 @@ ON DELETE CASCADE ON UPDATE CASCADE;
 -- ddl-end --
 
 -- object: policy_uuid | type: CONSTRAINT --
--- ALTER TABLE public.policy_revision DROP CONSTRAINT IF EXISTS policy_uuid CASCADE;
-ALTER TABLE public.policy_revision ADD CONSTRAINT policy_uuid FOREIGN KEY (policy_uuid)
+-- ALTER TABLE public.policy_version DROP CONSTRAINT IF EXISTS policy_uuid CASCADE;
+ALTER TABLE public.policy_version ADD CONSTRAINT policy_uuid FOREIGN KEY (policy_uuid)
 REFERENCES public.policy (uuid) MATCH SIMPLE
 ON DELETE NO ACTION ON UPDATE NO ACTION;
 -- ddl-end --

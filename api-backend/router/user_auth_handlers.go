@@ -18,6 +18,15 @@ type UserAPIShim struct {
 	errorHandler api.ErrorHandler
 }
 
+// NewUserShimController creates a new shim controller for handling requests in the default API
+func NewUserShimController(s api.UserApiServicer, opts ...api.UserApiOption) api.Router {
+	controller := &UserAPIShim{
+		service: s,
+	}
+
+	return controller
+}
+
 func (c *UserAPIShim) Routes() api.Routes {
 	return api.Routes{
 		{
