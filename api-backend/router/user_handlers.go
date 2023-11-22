@@ -88,6 +88,12 @@ func (s *UserAPIService) UserLoginCompleteGet(ctx context.Context, token string,
 		return responder.Response(500, err.Error()), nil
 	}
 
+	// TODO - update to 204 no content
+	if userid == "in_progress" {
+		lh.Info(ctx, "status of token checked", "token", token)
+		return responder.Response(204, "Login in progress"), nil
+	}
+
 	user, err := myuser.GetByUUID(userid)
 	if err != nil {
 		lh.Log.Errorw("Error getting user for token", "error", err, "user", user, "uuid", userid)
@@ -154,6 +160,12 @@ func (s *UserAPIService) UserLoginInitiateGet(ctx context.Context, providerName 
 		return responder.Response(500, err.Error()), nil
 	}
 
+	err = StoreInSession(sessionID, "authorised_user", "in_progress")
+	if err != nil {
+		lh.Error(ctx, "Error storing user in progress in session", "error", err, "session_id", sessionID)
+		return responder.Response(500, err.Error()), nil
+	}
+
 	out := struct {
 		Url   string `json:"url"`
 		Token string `json:"token"`
@@ -162,6 +174,7 @@ func (s *UserAPIService) UserLoginInitiateGet(ctx context.Context, providerName 
 		Token: sessionID,
 	}
 
+	lh.Info(ctx, "User login initiated", "provider", providerName, "session_id", sessionID)
 	return responder.Response(200, out), nil
 }
 
@@ -212,7 +225,7 @@ func GetFromSession(sessionID string, key string) (string, error) {
 // GetProviderFromSession gets a provider from the session
 func GetProviderFromSession(sessionID string) (string, error) {
 	var value string
-	err := config.DB.QueryRow("SELECT key FROM login_session WHERE session_id = $1", sessionID).Scan(&value)
+	err := config.DB.QueryRow("SELECT key FROM login_session WHERE session_id = $1 AND key != 'authorised_user'", sessionID).Scan(&value)
 	if err != nil {
 		return "", err
 	}

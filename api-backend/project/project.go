@@ -8,6 +8,7 @@ import (
 	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
 type Project struct {
@@ -16,6 +17,13 @@ type Project struct {
 	Name    string          `json:"name"`
 	Account account.Account `json:"-"`
 }
+
+const (
+	ActionCreate = "project:create"
+	ActionView   = "project:view"
+	ActionUpdate = "project:update"
+	ActionDelete = "project:delete"
+)
 
 // Validate project checks that a user's desired project properties are allowed
 func (p *Project) ValidateNew() *apierror.ApiError {
@@ -87,7 +95,7 @@ func (p *Project) Patch(requested api.Project) *apierror.ApiError {
 
 // Create creates a new project in the database
 func Create(new api.Project, inAccount account.Account) (Project, *apierror.ApiError) {
-	log.Println("Creating project")
+	lh.Log.Debugw("Creating project", "project", new, "account", inAccount)
 	out := Project{ID: new.Id, Name: new.Name}
 	err := out.ValidateNew()
 	if err != nil {
@@ -126,9 +134,14 @@ func GetByID(a account.Account, id string) (Project, *apierror.ApiError) {
 
 // Delete deletes a project from the database
 func (p *Project) Delete() *apierror.ApiError {
+	// Todo: Delete every pod in the project
 	_, err := config.DB.Exec("DELETE FROM project WHERE uuid = $1", p.Uuid)
 	if err != nil {
 		return apierror.New(http.StatusInternalServerError, "Could not delete project")
 	}
 	return nil
+}
+
+func (p Project) GetResourceID() string {
+	return "account:" + p.Account.GetUUID() + "/project:" + p.ID
 }

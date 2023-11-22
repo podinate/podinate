@@ -151,6 +151,7 @@ paths:
     post:
       summary: Create a new project
       description: Creating a new project
+      x-speakeasy-entity-operation: Project#create
       tags:
       - Project
       parameters:
@@ -179,6 +180,7 @@ paths:
     get:
       summary: Get an existing project given by ID
       description: Allows you to see an existing project's configuration
+      x-speakeasy-entity-operation: Project#get
       tags:
       - Project
       parameters:
@@ -211,6 +213,7 @@ paths:
       description: "Allows you to update or edit an existing project. For example,\
         \ you can update the tag to deploy when you have made and pushed a new build,\
         \ or change the image to run entirely."
+      x-speakeasy-entity-operation: Project#update
       tags:
       - Project
       parameters:
@@ -243,6 +246,7 @@ paths:
       summary: Delete an existing project
       description: "Allows you to delete an existing project. This will delete all\
         \ associated resources, and is irreversible. Use with caution!"
+      x-speakeasy-entity-operation: Project#delete
       tags:
       - Project
       parameters:
@@ -258,10 +262,6 @@ paths:
       - $ref: '#/components/parameters/account'
       responses:
         "202":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
           description: We received your request to delete the project, it will be processed in the background. 
         "400":
           $ref: "#/components/responses/400Error"
@@ -279,6 +279,7 @@ paths:
         \ Neon database, and a bucket for storing uploads."
       tags:
       - Pod
+      #x-speakeasy-entity-operation: Pod#get
       parameters:
       # Pagination parameters
       - in: query
@@ -327,6 +328,7 @@ paths:
       description: Creating a new pod
       tags:
       - Pod
+      x-speakeasy-entity-operation: Pod#create
       parameters:
       - explode: false
         in: path
@@ -363,6 +365,7 @@ paths:
       description: Get a pod by ID
       tags:
       - Pod
+      x-speakeasy-entity-operation: Pod#get
       parameters:
       - explode: false
         in: path
@@ -382,6 +385,7 @@ paths:
           example: hello-world
           type: string
         style: simple
+        x-speakeasy-match: id
       - $ref: '#/components/parameters/account'
       responses:
         "200":
@@ -401,6 +405,7 @@ paths:
       description: Update a pod
       tags:
       - Pod
+      x-speakeasy-entity-operation: Pod#update
       parameters:
       - explode: false
         in: path
@@ -420,6 +425,7 @@ paths:
           example: hello-world
           type: string
         style: simple
+        x-speakeasy-match: id
       - $ref: '#/components/parameters/account'
       requestBody:
         content:
@@ -446,6 +452,7 @@ paths:
       description: Delete a pod
       tags:
       - Pod
+      x-speakeasy-entity-operation: Pod#delete
       parameters:
       - explode: false
         in: path
@@ -465,13 +472,10 @@ paths:
           example: hello-world
           type: string
         style: simple
+        x-speakeasy-match: id
       - $ref: '#/components/parameters/account'
       responses:
         "202":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Pod'
           description: We received your request to delete the pod, it will be processed in the background. 
         "400":
           $ref: "#/components/responses/400Error"
@@ -616,6 +620,8 @@ paths:
                     description: The user's API key, if they are logged in
                     example: abc1234
           description: An array of pods
+        "204":
+          description: The login is still in progress, check back soon
         "400":
           $ref: "#/components/responses/400Error"
         "403":
@@ -737,7 +743,14 @@ components:
           description: The human readable name of the account, used for display purposes.
           example: "Tim's Widgets Company Blog - Prod"
           type: string
+        resource_id:
+          description: The global Resource ID of the account
+          example: account:podinate-blog-prod
+          type: string
+          x-speakeasy-param-readonly: true
     Project:
+      description: A project is a container for individual resources. For example the my-cool-blog project might contain a pod running a Wordpress image, a Postgres Neon database, and a bucket for storing uploads.
+      x-speakeasy-entity: Project
       example:
         image: wordpress
         name: Hello World
@@ -752,16 +765,23 @@ components:
           description: The name of the app
           example: Hello World
           type: string
-        image:
-          description: The container image to run for this app
-          example: wordpress
+        resource_id:
+          description: The global Resource ID of the project
+          example: account:podinate/project:hello-world
           type: string
-        tag:
-          description: The image tag to run for this app
-          example: "6.0"
-          type: string
+          x-speakeasy-param-readonly: true
+        # image:
+        #   description: The container image to run for this app
+        #   example: wordpress
+        #   type: string
+        # tag:
+        #   description: The image tag to run for this app
+        #   example: "6.0"
+        #   type: string
       type: object
     Pod:
+      description: A pod is a group of containers with the same lifecycle, and are the basic unit of deployment on Podinate
+      x-speakeasy-entity: Pod
       example:
         id: hello-world
         name: Hello World
@@ -786,14 +806,25 @@ components:
           description: The image tag to run for this pod
           example: "6.0"
           type: string
+        # cluster:
+        #   description: The cluster to run this pod on
+        #   example: "nz-1"
+        #   type: string
         status:
           description: The current status of the pod
           example: running
           type: string
+          x-speakeasy-param-readonly: true
         created_at:
           description: The date and time the pod was created
           example: "2020-01-01T00:00:00Z"
           type: string
+          x-speakeasy-param-readonly: true
+        resource_id:
+          description: The global Resource ID of the pod
+          example: account:podinate/project:hello-world/pod:my-blog
+          type: string
+          x-speakeasy-param-readonly: true
       type: object
     User:
       example:

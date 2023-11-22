@@ -86,4 +86,11 @@ statements:
 
 The user has full access to all of the resources in the project `account:mine/project:my-blog`, but cannot delete any pods created in that project. 
 
+## Globbing
+String matching is performed using globbing. The most basic globs are the `*` and `**` character. The package used for globbing has the concept of a "delimiter", which in our case for our Resource IDs are a `:` or `/`. The single `*` matches anything except a delimiter, while the `**` matches anything including a delimiter. 
+
+In the example above in Policy Document, you can see how the `**` and `*` characters differ.
+
+You can also do more advanced globbing, for example character lists, or alternative lists, but I don't think those will be relevant to our purposes. It's much easier (and more readable) to just list multiple Resource IDs than use complicated pattern-alternatives.
+
 Check the documentation for the [github.com/gobwas/glob](https://github.com/gobwas/glob) package for more information about how the globbing works.

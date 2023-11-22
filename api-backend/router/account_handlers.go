@@ -49,6 +49,11 @@ func (s *AccountAPIService) AccountPatch(ctx context.Context, requestedAccount s
 		// We can pass this error directly to the API response
 		return responder.Response(http.StatusNotFound, apiErr.Error()), nil
 	}
+
+	if !iam.RequestorCan(ctx, workAccount, workAccount, account.ActionUpdate) {
+		return responder.Response(http.StatusNotFound, "Account not found"), nil
+	}
+
 	apiErr = workAccount.Patch(accountNew)
 	if apiErr.Code != http.StatusOK {
 		// We can pass this error directly to the API response
@@ -94,6 +99,11 @@ func (s *AccountAPIService) AccountDelete(ctx context.Context, requestedAccount 
 		// We can pass this error directly to the API response
 		return responder.Response(http.StatusNotFound, apiErr.Error()), nil
 	}
+
+	if !iam.RequestorCan(ctx, workAccount, workAccount, account.ActionDelete) {
+		return responder.Response(http.StatusNotFound, "Account not found"), nil
+	}
+
 	err := workAccount.Delete()
 	if err != nil {
 		// We can pass this error directly to the API response

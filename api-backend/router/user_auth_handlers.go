@@ -47,8 +47,7 @@ func (c *UserAPIShim) Routes() api.Routes {
 // UserLoginRedirectTokenGet - Redirect the user to the provider.
 // This is a shim so that the user can be redirected to the provider from this code,
 func (c *UserAPIShim) UserLoginRedirectTokenGet(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Println("Handling redirect")
+	SetUpGoth()
 
 	// Grab the token from the URL
 	params := mux.Vars(r)

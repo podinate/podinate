@@ -72,6 +72,7 @@ func authMiddleware(next http.Handler) http.Handler {
 		r, err := iam.AddRequestorToRequest(r)
 
 		if err != nil {
+			//out := api.EncodeJSONResponse(responder.Response(http.StatusUnauthorized, "Invalid Key"), nil, w)
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}

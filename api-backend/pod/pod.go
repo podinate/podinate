@@ -12,6 +12,13 @@ import (
 	"github.com/johncave/podinate/api-backend/project"
 )
 
+const (
+	ActionCreate = "pod:create"
+	ActionView   = "pod:view"
+	ActionUpdate = "pod:update"
+	ActionDelete = "pod:delete"
+)
+
 type Pod struct {
 	Uuid    string
 	ID      string
@@ -160,22 +167,26 @@ func (p *Pod) ToAPI() api.Pod {
 }
 
 // Delete removes a pod from the database and the kubernetes cluster
-func (p *Pod) Delete(proj project.Project) *apierror.ApiError {
+func (p *Pod) Delete() *apierror.ApiError {
 
-	// 	// The kubes logic
-	// 	err := deleteKubesDeployment(theProject, id)
-	// 	if err != nil {
-	// 		return apierror.New(http.StatusInternalServerError, err.Error())
-	// 	}
+	// The kubes logic
+	err := deleteKubesDeployment(*p)
+	if err != nil {
+		return apierror.New(http.StatusInternalServerError, err.Error())
+	}
 
-	// // Delete the pod from the database
-	// _, dberr := config.DB.Exec("DELETE FROM project_pods WHERE project_uuid = $1 AND id = $2", theProject.Uuid, id)
-	// // Check if delete was successful
-	//
-	//	if dberr != nil {
-	//		log.Println("DB error deleting pod", dberr)
-	//		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
-	//	}
+	// Delete the pod from the database
+	_, dberr := config.DB.Exec("DELETE FROM project_pods WHERE project_uuid = $1 AND id = $2", p.Project.Uuid, p.ID)
+	// Check if delete was successful
+
+	if dberr != nil {
+		log.Println("DB error deleting pod", dberr)
+		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+	}
 	//
 	return nil
+}
+
+func (p Pod) GetResourceID() string {
+	return p.Project.GetResourceID() + "/pod:" + p.ID
 }

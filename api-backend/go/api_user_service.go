@@ -77,6 +77,9 @@ func (s *UserApiService) UserLoginCompleteGet(ctx context.Context, token string,
 	//TODO: Uncomment the next line to return response Response(200, UserLoginCompleteGet200Response{}) or use other options such as http.Ok ...
 	//return Response(200, UserLoginCompleteGet200Response{}), nil
 
+	//TODO: Uncomment the next line to return response Response(204, {}) or use other options such as http.Ok ...
+	//return Response(204, nil),nil
+
 	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
 	//return Response(400, Error{}), nil
 

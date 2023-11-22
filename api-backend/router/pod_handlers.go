@@ -7,6 +7,8 @@ import (
 
 	"github.com/johncave/podinate/api-backend/account"
 	api "github.com/johncave/podinate/api-backend/go"
+	"github.com/johncave/podinate/api-backend/iam"
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 	pod "github.com/johncave/podinate/api-backend/pod"
 	"github.com/johncave/podinate/api-backend/project"
 	"github.com/johncave/podinate/api-backend/responder"
@@ -48,7 +50,9 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 	// Convert the pods to the API format
 	apiPods := make([]api.Pod, 0)
 	for _, p := range pods {
-		apiPods = append(apiPods, p.ToAPI())
+		if iam.RequestorCan(ctx, theAccount, p, pod.ActionView) {
+			apiPods = append(apiPods, p.ToAPI())
+		}
 	}
 
 	return responder.Response(http.StatusOK, apiPods), nil
@@ -71,11 +75,16 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdGet(ctx context.Context, project
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
 
-	pod, apiErr := pod.GetByID(theProject, podID)
+	p, apiErr := pod.GetByID(theProject, podID)
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
-	return responder.Response(http.StatusOK, pod.ToAPI()), nil
+
+	if !iam.RequestorCan(ctx, theAccount, p, pod.ActionView) {
+		return responder.Response(http.StatusForbidden, "You do not have permission to view this pod"), nil
+	}
+
+	return responder.Response(http.StatusOK, p.ToAPI()), nil
 }
 
 // ProjectProjectIdPodPodIdPatch - Updates a pod for a project.
@@ -98,17 +107,21 @@ func (s *PodAPIService) ProjectProjectIdPodPost(ctx context.Context, projectId s
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
 
+	if !iam.RequestorCan(ctx, theAccount, theProject, pod.ActionCreate) {
+		return responder.Response(http.StatusForbidden, "You do not have permission to create this pod in this project"), nil
+	}
+
 	thepod, err := pod.Create(theAccount, theProject, requestedPod)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}
-	log.Printf("%+v", thepod)
+	lh.Info(ctx, "Created pod", "pod", thepod)
 
-	return responder.Response(http.StatusOK, thepod.ToAPI()), nil
+	return responder.Response(http.StatusCreated, thepod.ToAPI()), nil
 }
 
 // ProjectProjectIdPodPodIdDelete - Deletes a pod for a project.
-func (s *PodAPIService) ProjectProjectIdPodPodIdDelete(ctx context.Context, projectID string, accountID string, podID string) (api.ImplResponse, error) {
+func (s *PodAPIService) ProjectProjectIdPodPodIdDelete(ctx context.Context, projectID string, podID string, accountID string) (api.ImplResponse, error) {
 
 	log.Printf("%s %s %s", projectID, podID, accountID)
 
@@ -130,11 +143,16 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
 
+	// Check if the user can delete the pod
+	if !iam.RequestorCan(ctx, theAccount, thePod, pod.ActionDelete) {
+		return responder.Response(http.StatusForbidden, "You do not have permission to delete this pod"), nil
+	}
+
 	// Delete the pod
-	apiErr = thePod.Delete(theProject)
+	apiErr = thePod.Delete()
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
 
-	return responder.Response(http.StatusOK, nil), nil
+	return responder.Response(http.StatusAccepted, nil), nil
 }

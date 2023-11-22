@@ -192,3 +192,15 @@ type Policy struct {
 	Content   string
 	Version   int
 }
+
+type ShimResource struct {
+	ResourceID string
+}
+
+func NewResource(resource string) ShimResource {
+	return ShimResource{ResourceID: resource}
+}
+
+func (r ShimResource) GetResourceID() string {
+	return r.ResourceID
+}

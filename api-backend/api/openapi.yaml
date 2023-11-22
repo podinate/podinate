@@ -919,6 +919,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/_user_login_complete_get_200_response'
           description: An array of pods
+        "204":
+          description: "The login is still in progress, check back soon"
         "400":
           content:
             application/json:
