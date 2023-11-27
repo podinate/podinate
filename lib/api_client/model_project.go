@@ -17,16 +17,14 @@ import (
 // checks if the Project type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &Project{}
 
-// Project struct for Project
+// Project A project is a container for individual resources. For example the my-cool-blog project might contain a pod running a Wordpress image, a Postgres Neon database, and a bucket for storing uploads.
 type Project struct {
 	// The short name (slug/url) of the project
 	Id *string `json:"id,omitempty"`
 	// The name of the app
 	Name *string `json:"name,omitempty"`
-	// The container image to run for this app
-	Image *string `json:"image,omitempty"`
-	// The image tag to run for this app
-	Tag *string `json:"tag,omitempty"`
+	// The global Resource ID of the project
+	ResourceId *string `json:"resource_id,omitempty"`
 }
 
 // NewProject instantiates a new Project object
@@ -110,68 +108,36 @@ func (o *Project) SetName(v string) {
 	o.Name = &v
 }
 
-// GetImage returns the Image field value if set, zero value otherwise.
-func (o *Project) GetImage() string {
-	if o == nil || IsNil(o.Image) {
+// GetResourceId returns the ResourceId field value if set, zero value otherwise.
+func (o *Project) GetResourceId() string {
+	if o == nil || IsNil(o.ResourceId) {
 		var ret string
 		return ret
 	}
-	return *o.Image
+	return *o.ResourceId
 }
 
-// GetImageOk returns a tuple with the Image field value if set, nil otherwise
+// GetResourceIdOk returns a tuple with the ResourceId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Project) GetImageOk() (*string, bool) {
-	if o == nil || IsNil(o.Image) {
+func (o *Project) GetResourceIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ResourceId) {
 		return nil, false
 	}
-	return o.Image, true
+	return o.ResourceId, true
 }
 
-// HasImage returns a boolean if a field has been set.
-func (o *Project) HasImage() bool {
-	if o != nil && !IsNil(o.Image) {
+// HasResourceId returns a boolean if a field has been set.
+func (o *Project) HasResourceId() bool {
+	if o != nil && !IsNil(o.ResourceId) {
 		return true
 	}
 
 	return false
 }
 
-// SetImage gets a reference to the given string and assigns it to the Image field.
-func (o *Project) SetImage(v string) {
-	o.Image = &v
-}
-
-// GetTag returns the Tag field value if set, zero value otherwise.
-func (o *Project) GetTag() string {
-	if o == nil || IsNil(o.Tag) {
-		var ret string
-		return ret
-	}
-	return *o.Tag
-}
-
-// GetTagOk returns a tuple with the Tag field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *Project) GetTagOk() (*string, bool) {
-	if o == nil || IsNil(o.Tag) {
-		return nil, false
-	}
-	return o.Tag, true
-}
-
-// HasTag returns a boolean if a field has been set.
-func (o *Project) HasTag() bool {
-	if o != nil && !IsNil(o.Tag) {
-		return true
-	}
-
-	return false
-}
-
-// SetTag gets a reference to the given string and assigns it to the Tag field.
-func (o *Project) SetTag(v string) {
-	o.Tag = &v
+// SetResourceId gets a reference to the given string and assigns it to the ResourceId field.
+func (o *Project) SetResourceId(v string) {
+	o.ResourceId = &v
 }
 
 func (o Project) MarshalJSON() ([]byte, error) {
@@ -190,11 +156,8 @@ func (o Project) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Name) {
 		toSerialize["name"] = o.Name
 	}
-	if !IsNil(o.Image) {
-		toSerialize["image"] = o.Image
-	}
-	if !IsNil(o.Tag) {
-		toSerialize["tag"] = o.Tag
+	if !IsNil(o.ResourceId) {
+		toSerialize["resource_id"] = o.ResourceId
 	}
 	return toSerialize, nil
 }

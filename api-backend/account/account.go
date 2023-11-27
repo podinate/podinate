@@ -88,7 +88,7 @@ func GetByID(desired_id string) (Account, *apierror.ApiError) {
 }
 
 func (a *Account) ToAPIAccount() api.Account {
-	return api.Account{Id: a.ID, Name: a.Name}
+	return api.Account{Id: a.ID, Name: a.Name, ResourceId: a.GetResourceID()}
 }
 
 // Delete removes an account from the database

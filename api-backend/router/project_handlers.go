@@ -39,13 +39,20 @@ func (s *ProjectAPIService) ProjectGet(ctx context.Context, requestedAccount str
 		return responder.Response(http.StatusInternalServerError, apiErr.Message), nil
 	}
 	// Assemble the output
-	var out []api.Project
+	//var out []api.Project
+	var items []api.ProjectGet200ResponseItemsInner
 	for _, theProject := range projects {
 		if iam.RequestorCan(ctx, theAccount, theProject, project.ActionView) {
-			out = append(out, theProject.ToAPI())
+			//out = append(out, theProject.ToAPI())
+			items = append(items, api.ProjectGet200ResponseItemsInner{
+				Id:         theProject.ID,
+				Name:       theProject.Name,
+				ResourceId: theProject.GetResourceID(),
+			})
 		}
 	}
-	return responder.Response(http.StatusOK, out), nil
+
+	return responder.Response(http.StatusOK, api.ProjectGet200Response{Items: items, Total: int32(len(items)), Page: page, Limit: limit}), nil
 
 }
 

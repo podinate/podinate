@@ -9,6 +9,7 @@
 
 package openapi
 
+// Project - A project is a container for individual resources. For example the my-cool-blog project might contain a pod running a Wordpress image, a Postgres Neon database, and a bucket for storing uploads.
 type Project struct {
 
 	// The short name (slug/url) of the project
@@ -17,11 +18,8 @@ type Project struct {
 	// The name of the app
 	Name string `json:"name,omitempty"`
 
-	// The container image to run for this app
-	Image string `json:"image,omitempty"`
-
-	// The image tag to run for this app
-	Tag string `json:"tag,omitempty"`
+	// The global Resource ID of the project
+	ResourceId string `json:"resource_id,omitempty"`
 }
 
 // AssertProjectRequired checks if the required fields are not zero-ed

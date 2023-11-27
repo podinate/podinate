@@ -50,7 +50,7 @@ func (r ApiProjectProjectIdPodGetRequest) Limit(limit int32) ApiProjectProjectId
 	return r
 }
 
-func (r ApiProjectProjectIdPodGetRequest) Execute() ([]ProjectProjectIdPodGet200ResponseInner, *http.Response, error) {
+func (r ApiProjectProjectIdPodGetRequest) Execute() (*ProjectProjectIdPodGet200Response, *http.Response, error) {
 	return r.ApiService.ProjectProjectIdPodGetExecute(r)
 }
 
@@ -72,13 +72,13 @@ func (a *PodApiService) ProjectProjectIdPodGet(ctx context.Context, projectId st
 }
 
 // Execute executes the request
-//  @return []ProjectProjectIdPodGet200ResponseInner
-func (a *PodApiService) ProjectProjectIdPodGetExecute(r ApiProjectProjectIdPodGetRequest) ([]ProjectProjectIdPodGet200ResponseInner, *http.Response, error) {
+//  @return ProjectProjectIdPodGet200Response
+func (a *PodApiService) ProjectProjectIdPodGetExecute(r ApiProjectProjectIdPodGetRequest) (*ProjectProjectIdPodGet200Response, *http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodGet
 		localVarPostBody     interface{}
 		formFiles            []formFile
-		localVarReturnValue  []ProjectProjectIdPodGet200ResponseInner
+		localVarReturnValue  *ProjectProjectIdPodGet200Response
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodGet")
@@ -217,7 +217,7 @@ func (r ApiProjectProjectIdPodPodIdDeleteRequest) Account(account string) ApiPro
 	return r
 }
 
-func (r ApiProjectProjectIdPodPodIdDeleteRequest) Execute() (*Pod, *http.Response, error) {
+func (r ApiProjectProjectIdPodPodIdDeleteRequest) Execute() (*http.Response, error) {
 	return r.ApiService.ProjectProjectIdPodPodIdDeleteExecute(r)
 }
 
@@ -241,18 +241,16 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 }
 
 // Execute executes the request
-//  @return Pod
-func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjectIdPodPodIdDeleteRequest) (*Pod, *http.Response, error) {
+func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjectIdPodPodIdDeleteRequest) (*http.Response, error) {
 	var (
 		localVarHTTPMethod   = http.MethodDelete
 		localVarPostBody     interface{}
 		formFiles            []formFile
-		localVarReturnValue  *Pod
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodPodIdDelete")
 	if err != nil {
-		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+		return nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
 	localVarPath := localBasePath + "/project/{project_id}/pod/{pod_id}"
@@ -263,7 +261,7 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjec
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 	if r.account == nil {
-		return localVarReturnValue, nil, reportError("account is required and must be specified")
+		return nil, reportError("account is required and must be specified")
 	}
 
 	// to determine the Content-Type header
@@ -300,19 +298,19 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjec
 	}
 	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
 	if err != nil {
-		return localVarReturnValue, nil, err
+		return nil, err
 	}
 
 	localVarHTTPResponse, err := a.client.callAPI(req)
 	if err != nil || localVarHTTPResponse == nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarHTTPResponse, err
 	}
 
 	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
 	localVarHTTPResponse.Body.Close()
 	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
 	if err != nil {
-		return localVarReturnValue, localVarHTTPResponse, err
+		return localVarHTTPResponse, err
 	}
 
 	if localVarHTTPResponse.StatusCode >= 300 {
@@ -325,46 +323,37 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjec
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarHTTPResponse, newErr
 			}
 					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
 					newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
 			var v Error
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarHTTPResponse, newErr
 			}
 					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
 					newErr.model = v
-			return localVarReturnValue, localVarHTTPResponse, newErr
+			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
 			var v Error
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = err.Error()
-				return localVarReturnValue, localVarHTTPResponse, newErr
+				return localVarHTTPResponse, newErr
 			}
 					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
 					newErr.model = v
 		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
+		return localVarHTTPResponse, newErr
 	}
 
-	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
-	if err != nil {
-		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
-		}
-		return localVarReturnValue, localVarHTTPResponse, newErr
-	}
-
-	return localVarReturnValue, localVarHTTPResponse, nil
+	return localVarHTTPResponse, nil
 }
 
 type ApiProjectProjectIdPodPodIdGetRequest struct {

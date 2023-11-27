@@ -16,6 +16,9 @@ type Account struct {
 
 	// The human readable name of the account, used for display purposes.
 	Name string `json:"name,omitempty"`
+
+	// The global Resource ID of the account
+	ResourceId string `json:"resource_id,omitempty"`
 }
 
 // AssertAccountRequired checks if the required fields are not zero-ed

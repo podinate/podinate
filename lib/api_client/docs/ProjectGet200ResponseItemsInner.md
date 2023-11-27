@@ -1,4 +1,4 @@
-# Project
+# ProjectGet200ResponseItemsInner
 
 ## Properties
 
@@ -10,95 +10,95 @@ Name | Type | Description | Notes
 
 ## Methods
 
-### NewProject
+### NewProjectGet200ResponseItemsInner
 
-`func NewProject() *Project`
+`func NewProjectGet200ResponseItemsInner() *ProjectGet200ResponseItemsInner`
 
-NewProject instantiates a new Project object
+NewProjectGet200ResponseItemsInner instantiates a new ProjectGet200ResponseItemsInner object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewProjectWithDefaults
+### NewProjectGet200ResponseItemsInnerWithDefaults
 
-`func NewProjectWithDefaults() *Project`
+`func NewProjectGet200ResponseItemsInnerWithDefaults() *ProjectGet200ResponseItemsInner`
 
-NewProjectWithDefaults instantiates a new Project object
+NewProjectGet200ResponseItemsInnerWithDefaults instantiates a new ProjectGet200ResponseItemsInner object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
 ### GetId
 
-`func (o *Project) GetId() string`
+`func (o *ProjectGet200ResponseItemsInner) GetId() string`
 
 GetId returns the Id field if non-nil, zero value otherwise.
 
 ### GetIdOk
 
-`func (o *Project) GetIdOk() (*string, bool)`
+`func (o *ProjectGet200ResponseItemsInner) GetIdOk() (*string, bool)`
 
 GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetId
 
-`func (o *Project) SetId(v string)`
+`func (o *ProjectGet200ResponseItemsInner) SetId(v string)`
 
 SetId sets Id field to given value.
 
 ### HasId
 
-`func (o *Project) HasId() bool`
+`func (o *ProjectGet200ResponseItemsInner) HasId() bool`
 
 HasId returns a boolean if a field has been set.
 
 ### GetName
 
-`func (o *Project) GetName() string`
+`func (o *ProjectGet200ResponseItemsInner) GetName() string`
 
 GetName returns the Name field if non-nil, zero value otherwise.
 
 ### GetNameOk
 
-`func (o *Project) GetNameOk() (*string, bool)`
+`func (o *ProjectGet200ResponseItemsInner) GetNameOk() (*string, bool)`
 
 GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetName
 
-`func (o *Project) SetName(v string)`
+`func (o *ProjectGet200ResponseItemsInner) SetName(v string)`
 
 SetName sets Name field to given value.
 
 ### HasName
 
-`func (o *Project) HasName() bool`
+`func (o *ProjectGet200ResponseItemsInner) HasName() bool`
 
 HasName returns a boolean if a field has been set.
 
 ### GetResourceId
 
-`func (o *Project) GetResourceId() string`
+`func (o *ProjectGet200ResponseItemsInner) GetResourceId() string`
 
 GetResourceId returns the ResourceId field if non-nil, zero value otherwise.
 
 ### GetResourceIdOk
 
-`func (o *Project) GetResourceIdOk() (*string, bool)`
+`func (o *ProjectGet200ResponseItemsInner) GetResourceIdOk() (*string, bool)`
 
 GetResourceIdOk returns a tuple with the ResourceId field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetResourceId
 
-`func (o *Project) SetResourceId(v string)`
+`func (o *ProjectGet200ResponseItemsInner) SetResourceId(v string)`
 
 SetResourceId sets ResourceId field to given value.
 
 ### HasResourceId
 
-`func (o *Project) HasResourceId() bool`
+`func (o *ProjectGet200ResponseItemsInner) HasResourceId() bool`
 
 HasResourceId returns a boolean if a field has been set.
 

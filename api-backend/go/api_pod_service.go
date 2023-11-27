@@ -31,8 +31,8 @@ func (s *PodApiService) ProjectProjectIdPodGet(ctx context.Context, projectId st
 	// TODO - update ProjectProjectIdPodGet with the required logic for this service method.
 	// Add api_pod_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, []ProjectProjectIdPodGet200ResponseInner{}) or use other options such as http.Ok ...
-	//return Response(200, []ProjectProjectIdPodGet200ResponseInner{}), nil
+	//TODO: Uncomment the next line to return response Response(200, ProjectProjectIdPodGet200Response{}) or use other options such as http.Ok ...
+	//return Response(200, ProjectProjectIdPodGet200Response{}), nil
 
 	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
 	//return Response(400, Error{}), nil
@@ -51,8 +51,8 @@ func (s *PodApiService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 	// TODO - update ProjectProjectIdPodPodIdDelete with the required logic for this service method.
 	// Add api_pod_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(202, Pod{}) or use other options such as http.Ok ...
-	//return Response(202, Pod{}), nil
+	//TODO: Uncomment the next line to return response Response(202, {}) or use other options such as http.Ok ...
+	//return Response(202, nil),nil
 
 	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
 	//return Response(400, Error{}), nil

@@ -31,8 +31,8 @@ func (s *ProjectApiService) ProjectGet(ctx context.Context, account string, page
 	// TODO - update ProjectGet with the required logic for this service method.
 	// Add api_project_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, []ProjectGet200ResponseInner{}) or use other options such as http.Ok ...
-	//return Response(200, []ProjectGet200ResponseInner{}), nil
+	//TODO: Uncomment the next line to return response Response(200, ProjectGet200Response{}) or use other options such as http.Ok ...
+	//return Response(200, ProjectGet200Response{}), nil
 
 	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
 	//return Response(500, Error{}), nil
@@ -45,8 +45,8 @@ func (s *ProjectApiService) ProjectIdDelete(ctx context.Context, id string, acco
 	// TODO - update ProjectIdDelete with the required logic for this service method.
 	// Add api_project_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(202, Project{}) or use other options such as http.Ok ...
-	//return Response(202, Project{}), nil
+	//TODO: Uncomment the next line to return response Response(202, {}) or use other options such as http.Ok ...
+	//return Response(202, nil),nil
 
 	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
 	//return Response(400, Error{}), nil

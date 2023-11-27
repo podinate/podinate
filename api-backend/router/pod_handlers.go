@@ -27,7 +27,8 @@ func NewPodAPIService() api.PodApiServicer {
 // ProjectProjectIdPodGet - Returns a list of pods for a project.
 func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID string, accountID string, page int32, limit int32) (api.ImplResponse, error) {
 
-	log.Printf("%s %s %d %d", projectID, accountID, page, limit)
+	//log.Printf("%s %s %d %d", projectID, accountID, page, limit)
+	lh.Debug(ctx, "Getting pods for project", "projectID", projectID, "accountID", accountID, "page", page, "limit", limit)
 
 	// Get the account
 	theAccount, apiErr := account.GetByID(accountID)
@@ -48,14 +49,28 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 	}
 
 	// Convert the pods to the API format
-	apiPods := make([]api.Pod, 0)
+	var apiPods []api.ProjectProjectIdPodGet200ResponseItemsInner
 	for _, p := range pods {
 		if iam.RequestorCan(ctx, theAccount, p, pod.ActionView) {
-			apiPods = append(apiPods, p.ToAPI())
+			apiPods = append(apiPods, api.ProjectProjectIdPodGet200ResponseItemsInner{
+				Id:         p.ID,
+				Name:       p.Name,
+				ResourceId: p.GetResourceID(),
+				Image:      p.Image,
+				Tag:        p.Tag,
+				Status:     p.Status,
+			})
 		}
 	}
 
-	return responder.Response(http.StatusOK, apiPods), nil
+	out := api.ProjectProjectIdPodGet200Response{
+		Items: apiPods,
+		Total: int32(len(apiPods)),
+		Page:  page,
+		Limit: limit,
+	}
+
+	return responder.Response(http.StatusOK, out), nil
 }
 
 // ProjectProjectIdPodPodIdGet - Returns a pod for a project.

@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## ProjectProjectIdPodGet
 
-> []ProjectProjectIdPodGet200ResponseInner ProjectProjectIdPodGet(ctx, projectId).Account(account).Page(page).Limit(limit).Execute()
+> ProjectProjectIdPodGet200Response ProjectProjectIdPodGet(ctx, projectId).Account(account).Page(page).Limit(limit).Execute()
 
 Get a list of pods for a given project
 
@@ -45,7 +45,7 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `PodApi.ProjectProjectIdPodGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `ProjectProjectIdPodGet`: []ProjectProjectIdPodGet200ResponseInner
+    // response from `ProjectProjectIdPodGet`: ProjectProjectIdPodGet200Response
     fmt.Fprintf(os.Stdout, "Response from `PodApi.ProjectProjectIdPodGet`: %v\n", resp)
 }
 ```
@@ -72,7 +72,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ProjectProjectIdPodGet200ResponseInner**](ProjectProjectIdPodGet200ResponseInner.md)
+[**ProjectProjectIdPodGet200Response**](ProjectProjectIdPodGet200Response.md)
 
 ### Authorization
 
@@ -90,7 +90,7 @@ Name | Type | Description  | Notes
 
 ## ProjectProjectIdPodPodIdDelete
 
-> Pod ProjectProjectIdPodPodIdDelete(ctx, projectId, podId).Account(account).Execute()
+> ProjectProjectIdPodPodIdDelete(ctx, projectId, podId).Account(account).Execute()
 
 Delete a pod
 
@@ -115,13 +115,11 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PodApi.ProjectProjectIdPodPodIdDelete(context.Background(), projectId, podId).Account(account).Execute()
+    r, err := apiClient.PodApi.ProjectProjectIdPodPodIdDelete(context.Background(), projectId, podId).Account(account).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PodApi.ProjectProjectIdPodPodIdDelete``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `ProjectProjectIdPodPodIdDelete`: Pod
-    fmt.Fprintf(os.Stdout, "Response from `PodApi.ProjectProjectIdPodPodIdDelete`: %v\n", resp)
 }
 ```
 
@@ -147,7 +145,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Pod**](Pod.md)
+ (empty response body)
 
 ### Authorization
 

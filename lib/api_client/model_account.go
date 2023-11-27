@@ -23,6 +23,8 @@ type Account struct {
 	Id *string `json:"id,omitempty"`
 	// The human readable name of the account, used for display purposes.
 	Name *string `json:"name,omitempty"`
+	// The global Resource ID of the account
+	ResourceId *string `json:"resource_id,omitempty"`
 }
 
 // NewAccount instantiates a new Account object
@@ -106,6 +108,38 @@ func (o *Account) SetName(v string) {
 	o.Name = &v
 }
 
+// GetResourceId returns the ResourceId field value if set, zero value otherwise.
+func (o *Account) GetResourceId() string {
+	if o == nil || IsNil(o.ResourceId) {
+		var ret string
+		return ret
+	}
+	return *o.ResourceId
+}
+
+// GetResourceIdOk returns a tuple with the ResourceId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Account) GetResourceIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ResourceId) {
+		return nil, false
+	}
+	return o.ResourceId, true
+}
+
+// HasResourceId returns a boolean if a field has been set.
+func (o *Account) HasResourceId() bool {
+	if o != nil && !IsNil(o.ResourceId) {
+		return true
+	}
+
+	return false
+}
+
+// SetResourceId gets a reference to the given string and assigns it to the ResourceId field.
+func (o *Account) SetResourceId(v string) {
+	o.ResourceId = &v
+}
+
 func (o Account) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -121,6 +155,9 @@ func (o Account) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.Name) {
 		toSerialize["name"] = o.Name
+	}
+	if !IsNil(o.ResourceId) {
+		toSerialize["resource_id"] = o.ResourceId
 	}
 	return toSerialize, nil
 }

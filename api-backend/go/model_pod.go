@@ -9,6 +9,7 @@
 
 package openapi
 
+// Pod - A pod is a group of containers with the same lifecycle, and are the basic unit of deployment on Podinate
 type Pod struct {
 
 	// The short name (slug/url) of the pod
@@ -28,6 +29,9 @@ type Pod struct {
 
 	// The date and time the pod was created
 	CreatedAt string `json:"created_at,omitempty"`
+
+	// The global Resource ID of the pod
+	ResourceId string `json:"resource_id,omitempty"`
 }
 
 // AssertPodRequired checks if the required fields are not zero-ed

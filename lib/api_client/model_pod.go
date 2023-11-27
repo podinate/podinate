@@ -17,7 +17,7 @@ import (
 // checks if the Pod type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &Pod{}
 
-// Pod struct for Pod
+// Pod A pod is a group of containers with the same lifecycle, and are the basic unit of deployment on Podinate
 type Pod struct {
 	// The short name (slug/url) of the pod
 	Id *string `json:"id,omitempty"`
@@ -31,6 +31,8 @@ type Pod struct {
 	Status *string `json:"status,omitempty"`
 	// The date and time the pod was created
 	CreatedAt *string `json:"created_at,omitempty"`
+	// The global Resource ID of the pod
+	ResourceId *string `json:"resource_id,omitempty"`
 }
 
 // NewPod instantiates a new Pod object
@@ -242,6 +244,38 @@ func (o *Pod) SetCreatedAt(v string) {
 	o.CreatedAt = &v
 }
 
+// GetResourceId returns the ResourceId field value if set, zero value otherwise.
+func (o *Pod) GetResourceId() string {
+	if o == nil || IsNil(o.ResourceId) {
+		var ret string
+		return ret
+	}
+	return *o.ResourceId
+}
+
+// GetResourceIdOk returns a tuple with the ResourceId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pod) GetResourceIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ResourceId) {
+		return nil, false
+	}
+	return o.ResourceId, true
+}
+
+// HasResourceId returns a boolean if a field has been set.
+func (o *Pod) HasResourceId() bool {
+	if o != nil && !IsNil(o.ResourceId) {
+		return true
+	}
+
+	return false
+}
+
+// SetResourceId gets a reference to the given string and assigns it to the ResourceId field.
+func (o *Pod) SetResourceId(v string) {
+	o.ResourceId = &v
+}
+
 func (o Pod) MarshalJSON() ([]byte, error) {
 	toSerialize,err := o.ToMap()
 	if err != nil {
@@ -269,6 +303,9 @@ func (o Pod) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.CreatedAt) {
 		toSerialize["created_at"] = o.CreatedAt
+	}
+	if !IsNil(o.ResourceId) {
+		toSerialize["resource_id"] = o.ResourceId
 	}
 	return toSerialize, nil
 }

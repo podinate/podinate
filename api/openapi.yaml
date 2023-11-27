@@ -140,10 +140,25 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                  -  $ref: '#/components/schemas/Project'
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      oneOf:
+                      - $ref: '#/components/schemas/Project'
+                  total:
+                    type: integer
+                    description: The total number of projects
+                    example: 1
+                  page:
+                    type: integer
+                    description: The current page number
+                    example: 0
+                  limit:
+                    type: integer
+                    description: The number of items per page
+                    example: 20
           description: A JSON array of projects
         "500":
           $ref: "#/components/responses/500Error"
@@ -311,10 +326,29 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  oneOf:
-                  - $ref: '#/components/schemas/Pod'
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      oneOf:
+                      - $ref: '#/components/schemas/Pod'
+                  total:
+                    type: integer
+                    description: The total number of pods
+                    example: 1
+                  page:
+                    type: integer
+                    description: The current page number
+                    example: 0
+                  limit:
+                    type: integer
+                    description: The number of items per page
+                    example: 20
+          #       type: array
+          #       items:
+          #         oneOf:
+          #         - $ref: '#/components/schemas/Pod'
           description: A JSON array of pods
         "400":
           $ref: "#/components/responses/400Error"

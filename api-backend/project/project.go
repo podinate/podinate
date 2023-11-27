@@ -115,7 +115,7 @@ func Create(new api.Project, inAccount account.Account) (Project, *apierror.ApiE
 
 // ToAPI converts a project to an api.Project
 func (p *Project) ToAPI() api.Project {
-	return api.Project{Id: p.ID, Name: p.Name}
+	return api.Project{Id: p.ID, Name: p.Name, ResourceId: p.GetResourceID()}
 }
 
 func GetByID(a account.Account, id string) (Project, *apierror.ApiError) {
@@ -143,5 +143,5 @@ func (p *Project) Delete() *apierror.ApiError {
 }
 
 func (p Project) GetResourceID() string {
-	return "account:" + p.Account.GetUUID() + "/project:" + p.ID
+	return p.Account.GetResourceID() + "/project:" + p.ID
 }

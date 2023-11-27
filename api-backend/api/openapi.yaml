@@ -228,9 +228,7 @@ paths:
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/_project_get_200_response_inner'
-                type: array
+                $ref: '#/components/schemas/_project_get_200_response'
           description: A JSON array of projects
         "500":
           content:
@@ -284,6 +282,7 @@ paths:
       summary: Create a new project
       tags:
       - Project
+      x-speakeasy-entity-operation: Project#create
   /project/{id}:
     delete:
       description: "Allows you to delete an existing project. This will delete all\
@@ -309,10 +308,6 @@ paths:
         style: simple
       responses:
         "202":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
           description: "We received your request to delete the project, it will be\
             \ processed in the background."
         "400":
@@ -337,6 +332,7 @@ paths:
       summary: Delete an existing project
       tags:
       - Project
+      x-speakeasy-entity-operation: Project#delete
     get:
       description: Allows you to see an existing project's configuration
       parameters:
@@ -388,6 +384,7 @@ paths:
       summary: Get an existing project given by ID
       tags:
       - Project
+      x-speakeasy-entity-operation: Project#get
     patch:
       description: "Allows you to update or edit an existing project. For example,\
         \ you can update the tag to deploy when you have made and pushed a new build,\
@@ -434,6 +431,7 @@ paths:
       summary: Update an existing project
       tags:
       - Project
+      x-speakeasy-entity-operation: Project#update
   /project/{project_id}/pod:
     get:
       description: "Returns a list of pods for a given project. Pods are the individual\
@@ -482,9 +480,7 @@ paths:
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/_project__project_id__pod_get_200_response_inner'
-                type: array
+                $ref: '#/components/schemas/_project__project_id__pod_get_200_response'
           description: A JSON array of pods
         "400":
           content:
@@ -560,6 +556,7 @@ paths:
       summary: Create a new pod
       tags:
       - Pod
+      x-speakeasy-entity-operation: Pod#create
   /project/{project_id}/pod/{pod_id}:
     delete:
       description: Delete a pod
@@ -582,6 +579,7 @@ paths:
           example: hello-world
           type: string
         style: simple
+        x-speakeasy-match: id
       - description: The account to use for the request
         example: my-account
         explode: false
@@ -593,10 +591,6 @@ paths:
         style: simple
       responses:
         "202":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Pod'
           description: "We received your request to delete the pod, it will be processed\
             \ in the background."
         "400":
@@ -621,6 +615,7 @@ paths:
       summary: Delete a pod
       tags:
       - Pod
+      x-speakeasy-entity-operation: Pod#delete
     get:
       description: Get a pod by ID
       parameters:
@@ -642,6 +637,7 @@ paths:
           example: hello-world
           type: string
         style: simple
+        x-speakeasy-match: id
       - description: The account to use for the request
         example: my-account
         explode: false
@@ -680,6 +676,7 @@ paths:
       summary: Get a pod by ID
       tags:
       - Pod
+      x-speakeasy-entity-operation: Pod#get
     patch:
       description: Update a pod
       parameters:
@@ -701,6 +698,7 @@ paths:
           example: hello-world
           type: string
         style: simple
+        x-speakeasy-match: id
       - description: The account to use for the request
         example: my-account
         explode: false
@@ -746,6 +744,7 @@ paths:
       summary: Update a pod
       tags:
       - Pod
+      x-speakeasy-entity-operation: Pod#update
   /user/login/initiate:
     get:
       description: "Get a login URL, which will redirect the user to the oauth provider\
@@ -1048,7 +1047,15 @@ components:
           description: "The human readable name of the account, used for display purposes."
           example: Tim's Widgets Company Blog - Prod
           type: string
+        resource_id:
+          description: The global Resource ID of the account
+          example: account:podinate-blog-prod
+          type: string
+          x-speakeasy-param-readonly: true
     Project:
+      description: "A project is a container for individual resources. For example\
+        \ the my-cool-blog project might contain a pod running a Wordpress image,\
+        \ a Postgres Neon database, and a bucket for storing uploads."
       example:
         image: wordpress
         name: Hello World
@@ -1063,16 +1070,16 @@ components:
           description: The name of the app
           example: Hello World
           type: string
-        image:
-          description: The container image to run for this app
-          example: wordpress
+        resource_id:
+          description: The global Resource ID of the project
+          example: account:podinate/project:hello-world
           type: string
-        tag:
-          description: The image tag to run for this app
-          example: "6.0"
-          type: string
+          x-speakeasy-param-readonly: true
       type: object
+      x-speakeasy-entity: Project
     Pod:
+      description: "A pod is a group of containers with the same lifecycle, and are\
+        \ the basic unit of deployment on Podinate"
       example:
         id: hello-world
         name: Hello World
@@ -1101,11 +1108,19 @@ components:
           description: The current status of the pod
           example: running
           type: string
+          x-speakeasy-param-readonly: true
         created_at:
           description: The date and time the pod was created
           example: 2020-01-01T00:00:00Z
           type: string
+          x-speakeasy-param-readonly: true
+        resource_id:
+          description: The global Resource ID of the pod
+          example: account:podinate/project:hello-world/pod:my-blog
+          type: string
+          x-speakeasy-param-readonly: true
       type: object
+      x-speakeasy-entity: Pod
     User:
       example:
         resource_id: user:podinate:mike
@@ -1141,12 +1156,64 @@ components:
           example: Missing required parameter 'account'
           type: string
       type: object
-    _project_get_200_response_inner:
+    _project_get_200_response_items_inner:
       oneOf:
       - $ref: '#/components/schemas/Project'
-    _project__project_id__pod_get_200_response_inner:
+    _project_get_200_response:
+      example:
+        total: 1
+        limit: 20
+        page: 0
+        items:
+        - null
+        - null
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/_project_get_200_response_items_inner'
+          type: array
+        total:
+          description: The total number of projects
+          example: 1
+          type: integer
+        page:
+          description: The current page number
+          example: 0
+          type: integer
+        limit:
+          description: The number of items per page
+          example: 20
+          type: integer
+      type: object
+    _project__project_id__pod_get_200_response_items_inner:
       oneOf:
       - $ref: '#/components/schemas/Pod'
+    _project__project_id__pod_get_200_response:
+      example:
+        total: 1
+        limit: 20
+        page: 0
+        items:
+        - null
+        - null
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/_project__project_id__pod_get_200_response_items_inner'
+          type: array
+        total:
+          description: The total number of pods
+          example: 1
+          type: integer
+        page:
+          description: The current page number
+          example: 0
+          type: integer
+        limit:
+          description: The number of items per page
+          example: 20
+          type: integer
+      type: object
     _user_login_initiate_get_200_response:
       example:
         url: https://auth.podinate.com/login?state=1234&client_id=1234&redirect_uri=https://api.podinate.com/v0/user/login/callback

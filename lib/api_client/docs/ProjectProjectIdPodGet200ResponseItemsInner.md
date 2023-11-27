@@ -1,4 +1,4 @@
-# Pod
+# ProjectProjectIdPodGet200ResponseItemsInner
 
 ## Properties
 
@@ -14,195 +14,195 @@ Name | Type | Description | Notes
 
 ## Methods
 
-### NewPod
+### NewProjectProjectIdPodGet200ResponseItemsInner
 
-`func NewPod() *Pod`
+`func NewProjectProjectIdPodGet200ResponseItemsInner() *ProjectProjectIdPodGet200ResponseItemsInner`
 
-NewPod instantiates a new Pod object
+NewProjectProjectIdPodGet200ResponseItemsInner instantiates a new ProjectProjectIdPodGet200ResponseItemsInner object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewPodWithDefaults
+### NewProjectProjectIdPodGet200ResponseItemsInnerWithDefaults
 
-`func NewPodWithDefaults() *Pod`
+`func NewProjectProjectIdPodGet200ResponseItemsInnerWithDefaults() *ProjectProjectIdPodGet200ResponseItemsInner`
 
-NewPodWithDefaults instantiates a new Pod object
+NewProjectProjectIdPodGet200ResponseItemsInnerWithDefaults instantiates a new ProjectProjectIdPodGet200ResponseItemsInner object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 
 ### GetId
 
-`func (o *Pod) GetId() string`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetId() string`
 
 GetId returns the Id field if non-nil, zero value otherwise.
 
 ### GetIdOk
 
-`func (o *Pod) GetIdOk() (*string, bool)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetIdOk() (*string, bool)`
 
 GetIdOk returns a tuple with the Id field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetId
 
-`func (o *Pod) SetId(v string)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetId(v string)`
 
 SetId sets Id field to given value.
 
 ### HasId
 
-`func (o *Pod) HasId() bool`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasId() bool`
 
 HasId returns a boolean if a field has been set.
 
 ### GetName
 
-`func (o *Pod) GetName() string`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetName() string`
 
 GetName returns the Name field if non-nil, zero value otherwise.
 
 ### GetNameOk
 
-`func (o *Pod) GetNameOk() (*string, bool)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetNameOk() (*string, bool)`
 
 GetNameOk returns a tuple with the Name field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetName
 
-`func (o *Pod) SetName(v string)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetName(v string)`
 
 SetName sets Name field to given value.
 
 ### HasName
 
-`func (o *Pod) HasName() bool`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasName() bool`
 
 HasName returns a boolean if a field has been set.
 
 ### GetImage
 
-`func (o *Pod) GetImage() string`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetImage() string`
 
 GetImage returns the Image field if non-nil, zero value otherwise.
 
 ### GetImageOk
 
-`func (o *Pod) GetImageOk() (*string, bool)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetImageOk() (*string, bool)`
 
 GetImageOk returns a tuple with the Image field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetImage
 
-`func (o *Pod) SetImage(v string)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetImage(v string)`
 
 SetImage sets Image field to given value.
 
 ### HasImage
 
-`func (o *Pod) HasImage() bool`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasImage() bool`
 
 HasImage returns a boolean if a field has been set.
 
 ### GetTag
 
-`func (o *Pod) GetTag() string`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetTag() string`
 
 GetTag returns the Tag field if non-nil, zero value otherwise.
 
 ### GetTagOk
 
-`func (o *Pod) GetTagOk() (*string, bool)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetTagOk() (*string, bool)`
 
 GetTagOk returns a tuple with the Tag field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetTag
 
-`func (o *Pod) SetTag(v string)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetTag(v string)`
 
 SetTag sets Tag field to given value.
 
 ### HasTag
 
-`func (o *Pod) HasTag() bool`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasTag() bool`
 
 HasTag returns a boolean if a field has been set.
 
 ### GetStatus
 
-`func (o *Pod) GetStatus() string`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetStatus() string`
 
 GetStatus returns the Status field if non-nil, zero value otherwise.
 
 ### GetStatusOk
 
-`func (o *Pod) GetStatusOk() (*string, bool)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetStatusOk() (*string, bool)`
 
 GetStatusOk returns a tuple with the Status field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetStatus
 
-`func (o *Pod) SetStatus(v string)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetStatus(v string)`
 
 SetStatus sets Status field to given value.
 
 ### HasStatus
 
-`func (o *Pod) HasStatus() bool`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasStatus() bool`
 
 HasStatus returns a boolean if a field has been set.
 
 ### GetCreatedAt
 
-`func (o *Pod) GetCreatedAt() string`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetCreatedAt() string`
 
 GetCreatedAt returns the CreatedAt field if non-nil, zero value otherwise.
 
 ### GetCreatedAtOk
 
-`func (o *Pod) GetCreatedAtOk() (*string, bool)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetCreatedAtOk() (*string, bool)`
 
 GetCreatedAtOk returns a tuple with the CreatedAt field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetCreatedAt
 
-`func (o *Pod) SetCreatedAt(v string)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetCreatedAt(v string)`
 
 SetCreatedAt sets CreatedAt field to given value.
 
 ### HasCreatedAt
 
-`func (o *Pod) HasCreatedAt() bool`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasCreatedAt() bool`
 
 HasCreatedAt returns a boolean if a field has been set.
 
 ### GetResourceId
 
-`func (o *Pod) GetResourceId() string`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetResourceId() string`
 
 GetResourceId returns the ResourceId field if non-nil, zero value otherwise.
 
 ### GetResourceIdOk
 
-`func (o *Pod) GetResourceIdOk() (*string, bool)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetResourceIdOk() (*string, bool)`
 
 GetResourceIdOk returns a tuple with the ResourceId field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetResourceId
 
-`func (o *Pod) SetResourceId(v string)`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetResourceId(v string)`
 
 SetResourceId sets ResourceId field to given value.
 
 ### HasResourceId
 
-`func (o *Pod) HasResourceId() bool`
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasResourceId() bool`
 
 HasResourceId returns a boolean if a field has been set.
 

@@ -6,6 +6,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | Pointer to **string** | The short name (slug/url) of the account. The account ID is globally unique and cannot be changed. | [optional] 
 **Name** | Pointer to **string** | The human readable name of the account, used for display purposes. | [optional] 
+**ResourceId** | Pointer to **string** | The global Resource ID of the account | [optional] 
 
 ## Methods
 
@@ -75,6 +76,31 @@ SetName sets Name field to given value.
 `func (o *Account) HasName() bool`
 
 HasName returns a boolean if a field has been set.
+
+### GetResourceId
+
+`func (o *Account) GetResourceId() string`
+
+GetResourceId returns the ResourceId field if non-nil, zero value otherwise.
+
+### GetResourceIdOk
+
+`func (o *Account) GetResourceIdOk() (*string, bool)`
+
+GetResourceIdOk returns a tuple with the ResourceId field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetResourceId
+
+`func (o *Account) SetResourceId(v string)`
+
+SetResourceId sets ResourceId field to given value.
+
+### HasResourceId
+
+`func (o *Account) HasResourceId() bool`
+
+HasResourceId returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

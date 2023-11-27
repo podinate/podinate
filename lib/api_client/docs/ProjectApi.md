@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## ProjectGet
 
-> []ProjectGet200ResponseInner ProjectGet(ctx).Account(account).Page(page).Limit(limit).Execute()
+> ProjectGet200Response ProjectGet(ctx).Account(account).Page(page).Limit(limit).Execute()
 
 Returns a list of projects.
 
@@ -44,7 +44,7 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `ProjectApi.ProjectGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `ProjectGet`: []ProjectGet200ResponseInner
+    // response from `ProjectGet`: ProjectGet200Response
     fmt.Fprintf(os.Stdout, "Response from `ProjectApi.ProjectGet`: %v\n", resp)
 }
 ```
@@ -66,7 +66,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]ProjectGet200ResponseInner**](ProjectGet200ResponseInner.md)
+[**ProjectGet200Response**](ProjectGet200Response.md)
 
 ### Authorization
 
@@ -84,7 +84,7 @@ Name | Type | Description  | Notes
 
 ## ProjectIdDelete
 
-> Project ProjectIdDelete(ctx, id).Account(account).Execute()
+> ProjectIdDelete(ctx, id).Account(account).Execute()
 
 Delete an existing project
 
@@ -108,13 +108,11 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.ProjectApi.ProjectIdDelete(context.Background(), id).Account(account).Execute()
+    r, err := apiClient.ProjectApi.ProjectIdDelete(context.Background(), id).Account(account).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `ProjectApi.ProjectIdDelete``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `ProjectIdDelete`: Project
-    fmt.Fprintf(os.Stdout, "Response from `ProjectApi.ProjectIdDelete`: %v\n", resp)
 }
 ```
 
@@ -138,7 +136,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Project**](Project.md)
+ (empty response body)
 
 ### Authorization
 

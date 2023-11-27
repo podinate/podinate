@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/johncave/podinate/cli/apiclient"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,14 +19,25 @@ var (
 
 // Config file stuff
 func init() {
-	cobra.OnInitialize(initConfig)
+
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.cobra.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
-	viper.BindPFlag("projectbase", rootCmd.PersistentFlags().Lookup("projectbase"))
-	viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
-	viper.SetDefault("author", "NAME HERE <EMAIL ADDRESS>")
-	viper.SetDefault("license", "apache")
+	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+
+	rootCmd.PersistentFlags().StringP("project", "p", "", "project to use")
+	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
+
+	rootCmd.PersistentFlags().StringP("account", "a", "", "account to use")
+	viper.BindPFlag("account", rootCmd.PersistentFlags().Lookup("account"))
+
+	cobra.OnInitialize(initConfig)
+
+	//viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
+	// viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
+	// viper.BindPFlag("projectbase", rootCmd.PersistentFlags().Lookup("projectbase"))
+	// viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
+	// viper.SetDefault("author", "NAME HERE <EMAIL ADDRESS>")
+	// viper.SetDefault("license", "apache")
 }
 
 func initConfig() {
@@ -53,20 +65,28 @@ func initConfig() {
 	viper.AddConfigPath(home + "/.config/podinate/")
 	viper.SetConfigName("credentials")
 	if err := viper.MergeInConfig(); err != nil {
-		fmt.Println("Can't read credentials file:", err)
-		os.Exit(1)
+		if err == err.(viper.ConfigFileNotFoundError) {
+			apiclient.DoLogin()
+		} else {
+			fmt.Println("Can't read credentials file:", err)
+			os.Exit(1)
+		}
 	}
+	apiclient.SetupUser()
+	if viper.GetBool("verbose") {
+		log.Println("Verbose output enabled")
+		fmt.Printf("Config: %+v\n", viper.AllSettings())
+	}
+	//fmt.Printf("Config: %+v\n", viper.AllSettings())
 }
 
 var rootCmd = &cobra.Command{
 	Use:   "podinate",
 	Short: "The podinate cli, easy to use hosting for containerised applications",
-	Long:  "podinate is a command-line interface for managing your containers and applicatioions. \nIt provides an easy-to-use interface for deploying and managing your applications in Docker containers.",
+	Long:  "podinate is a command-line interface for managing your containers and applicatioions. \nIt provides an easy-to-use interface for deploying and managing containerised applications.",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Do Stuff Here
-		log.Println("Hello World")
-		fmt.Println(viper.Get("project"))
-		fmt.Println(viper.Get("user.key"))
+		cobra.CheckErr(cmd.Help())
 	},
 }
 
