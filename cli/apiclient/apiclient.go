@@ -50,6 +50,7 @@ func SetupUser() {
 	// fmt.Printf("Config: %+v\n", )
 
 	config.DefaultHeader["Authorization"] = viper.GetString("profiles.0.api_key")
+	viper.Set("api_key", viper.GetString("profiles.0.api_key"))
 }
 
 // InitLogin starts the login process
@@ -94,7 +95,7 @@ func AwaitCompleteLogin(initresp *api.UserLoginInitiateGet200Response) (*api.Use
 		fmt.Println("Error saving profile:", err)
 		os.Exit(1)
 	}
-	viper.Set("user.key", *resp.ApiKey)
+	viper.Set("api_key", *resp.ApiKey)
 	config.DefaultHeader["Authorization"] = *resp.ApiKey
 
 	return resp, r, err
@@ -156,7 +157,7 @@ func DoLogin() {
 		//tui.ListItem("GitHub"),
 		//tui.ListItem("GitLab"),
 		tui.ListItem("Podinate's GitLab"),
-	}, "Welcome to Podinate. How would you like to log in?")
+	}, "Welcome to Podinate. How would you like to log in?", "Logging in with %s")
 
 	fm, err := tea.NewProgram(m).Run()
 	if err != nil {

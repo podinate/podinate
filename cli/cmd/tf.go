@@ -31,13 +31,24 @@ var tfCmd = &cobra.Command{
 			}
 		}
 
-		e, err := exec.Command(path, args...).Output()
-		if err != nil {
-			fmt.Print(string(e))
-			fmt.Println("Error running OpenTofu:", err)
-			os.Exit(1)
+		if args[0] != "-help" {
+			//e, err := exec.Command(path, args...).Output())
+			args = append(args, "-var", "podinate_api_key="+viper.GetString("api_key"))
+			//args = append(args, "-var", "account="+viper.GetString("account"))
+			args = append(args, "-var", "account_id="+viper.GetString("account"))
 		}
-		fmt.Println(string(e))
 
+		//fmt.Println("Running:", path, args)
+
+		c := exec.Command(path, args...)
+		c.Stdin = os.Stdin
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+
+		err = c.Run()
+		if err != nil {
+			// Trust the tf binary to display the error
+			os.Exit(c.ProcessState.ExitCode())
+		}
 	},
 }

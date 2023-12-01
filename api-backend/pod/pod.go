@@ -126,7 +126,8 @@ func Create(theAccount account.Account, theProject project.Project, requestedPod
 	// Start creating the pod
 
 	// The kubes logic
-	ns, err := createKubesNamespace(theAccount.ID + "-project-" + requestedPod.Id)
+	ns, err := createKubesNamespace(theAccount.ID + "-project-" + theProject.ID)
+	//ns, err := createKubesNamespace(theProject.GetResourceID())
 	if err != nil {
 		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
 	}
@@ -158,11 +159,12 @@ func Create(theAccount account.Account, theProject project.Project, requestedPod
 
 func (p *Pod) ToAPI() api.Pod {
 	return api.Pod{
-		Id:     p.ID,
-		Name:   p.Name,
-		Image:  p.Image,
-		Tag:    p.Tag,
-		Status: p.Status,
+		Id:         p.ID,
+		Name:       p.Name,
+		Image:      p.Image,
+		Tag:        p.Tag,
+		Status:     p.Status,
+		ResourceId: p.GetResourceID(),
 	}
 }
 
@@ -184,6 +186,45 @@ func (p *Pod) Delete() *apierror.ApiError {
 		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
 	}
 	//
+	return nil
+}
+
+func (p *Pod) Update(requested api.Pod) *apierror.ApiError {
+	// TODO - Validate the requestedPod
+
+	// Check if the pod already exists
+	uuid := ""
+	dberr := config.DB.QueryRow("SELECT uuid FROM project_pods WHERE id = $1 AND project_uuid = $2", requested.Id, p.Project.Uuid).Scan(&uuid)
+	// Errors other than no rows is a problem
+	// In good state
+	// dberr != nil
+	// dberr == sql.ErrNoRows
+	if dberr != nil {
+		log.Println("DB error checking if pod exists", dberr)
+		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+	}
+
+	// Start creating the pod
+
+	err := updateKubesDeployment(*p, requested)
+	if err != nil {
+		return apierror.New(http.StatusInternalServerError, err.Error())
+	}
+
+	// Update the pod in the database
+	dberr = config.DB.QueryRow("UPDATE project_pods SET name = $1, image = $2, tag = $3 WHERE uuid = $4 RETURNING uuid", requested.Name, requested.Image, requested.Tag, p.Uuid).Scan(&uuid)
+	// Check if insert was successful
+	if dberr != nil {
+		log.Println("DB error creating pod", dberr)
+		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+	}
+
+	// Update the elements of p that can change
+	p.Name = requested.Name
+	p.Image = requested.Image
+	p.Tag = requested.Tag
+	p.Status = "Updating"
+
 	return nil
 }
 

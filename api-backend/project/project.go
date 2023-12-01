@@ -9,6 +9,7 @@ import (
 	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
 	lh "github.com/johncave/podinate/api-backend/loghandler"
+	"github.com/lib/pq"
 )
 
 type Project struct {
@@ -104,6 +105,9 @@ func Create(new api.Project, inAccount account.Account) (Project, *apierror.ApiE
 	//res, dberr := config.DB.Exec("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", new.Id, new.Name, inAccount.Uuid)
 	dberr := config.DB.QueryRow("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", new.Id, new.Name, inAccount.GetUUID()).Scan(&out.Uuid)
 	// Check if insert was successful
+	if dberr != nil && dberr.(*pq.Error).Code.Name() == "unique_violation" {
+		return Project{}, &apierror.ApiError{Code: http.StatusConflict, Message: "Project ID already exists"}
+	}
 	if dberr != nil {
 		log.Println("DB error", dberr)
 		return Project{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}

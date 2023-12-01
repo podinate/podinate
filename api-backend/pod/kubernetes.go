@@ -90,7 +90,7 @@ func getKubesDeployment(theProject project.Project, id string) (*appsv1.Deployme
 	}
 
 	deployment, err := clientset.AppsV1().
-		Deployments(theProject.Account.ID+"-project-"+id).
+		Deployments(theProject.Account.ID+"-project-"+theProject.ID).
 		Get(context.Background(), id, metav1.GetOptions{})
 
 	if err != nil {
@@ -111,7 +111,43 @@ func createKubesDeployment(inns *corev1.Namespace, theProject project.Project, r
 
 	}
 
-	deploymentSpec := &appsv1.Deployment{
+	deploymentSpec := getDeploymentSpec(theProject, requested)
+
+	_, err = clientset.AppsV1().
+		Deployments(inns.Name).
+		Create(context.Background(), deploymentSpec, metav1.CreateOptions{})
+	if err != nil {
+		fmt.Printf("error creating deployment: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+// updateKubesDeployment updates a deployment in the specified namespace.
+func updateKubesDeployment(thePod Pod, requested api.Pod) error {
+	fmt.Println("Update Kubernetes deployment")
+
+	clientset, err := getKubesClient()
+	if err != nil {
+		log.Printf("error getting kubernetes client: %v\n", err)
+		return err
+	}
+
+	deploymentSpec := getDeploymentSpec(thePod.Project, thePod.ToAPI())
+
+	_, err = clientset.AppsV1().
+		Deployments(thePod.Project.Account.ID+"-project-"+thePod.Project.ID).
+		Update(context.Background(), deploymentSpec, metav1.UpdateOptions{})
+	if err != nil {
+		fmt.Printf("error updating deployment: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+// getDeploymentSpec returns a deployment spec for the specified pod.
+func getDeploymentSpec(theProject project.Project, requested api.Pod) *appsv1.Deployment {
+	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: requested.Id,
 		},
@@ -147,14 +183,6 @@ func createKubesDeployment(inns *corev1.Namespace, theProject project.Project, r
 			},
 		},
 	}
-	_, err = clientset.AppsV1().
-		Deployments(inns.Name).
-		Create(context.Background(), deploymentSpec, metav1.CreateOptions{})
-	if err != nil {
-		fmt.Printf("error creating deployment: %v\n", err)
-		return err
-	}
-	return nil
 }
 
 // getKubesClient returns a Kubernetes clientset.
@@ -193,7 +221,7 @@ func deleteKubesDeployment(thePod Pod) error {
 
 	deletePolicy := metav1.DeletePropagationForeground
 	err = clientset.AppsV1().
-		Deployments(thePod.Project.Account.ID+"-project-"+thePod.ID).
+		Deployments(thePod.Project.Account.ID+"-project-"+thePod.Project.ID).
 		Delete(context.Background(), thePod.ID, metav1.DeleteOptions{
 			PropagationPolicy: &deletePolicy,
 		})

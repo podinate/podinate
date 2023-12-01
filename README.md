@@ -5,7 +5,44 @@ A fast and easy way to get a project from development to prod, cli and OpenTofu-
 We use a monorepo, each top level folder here represents a single service, or holds some shared libraries. In the `api` folder is our API definition, if updated generate the updated client and server packages with the script `make api-generate`. It will ask you for a sudo password so it can update some weird permission issues from running the generator inside a Docker container. 
 
 ## Documentation
-There is a Readme.md file inside important package folders. Please make sure to read `api-backend/Readme.md` and `api-backend/iam/Readme.md`. 
+There is a Readme.md file inside important package folders. Please make sure to read `api-backend/Readme.md` and `api-backend/iam/Readme.md`.terraform {
+  required_providers {
+    podinate = {
+      source  = "podinate/podinate"
+      version = "0.0.1"
+    }
+  }
+}
+
+provider "podinate" {
+  # Configuration options
+    server_url = "http://localhost:3001/v0"
+    api_key_auth = var.podinate_api_key
+}
+
+resource "podinate_project" "wordpress_project" {
+  account = var.account_id
+  id      = replace(lower(var.project_name), " ", "-")
+  name    = var.project_name
+}
+
+resource "podinate_pod" "wordpress_pod" {
+  account = podinate_project.wordpress_project.account
+  project_id = podinate_project.wordpress_project.id
+  id         = "wordpress"
+  image      = "wordpress"
+  name       = "WordPress"
+  tag        = "6"
+}
+
+resource "podinate_pod" "database_pod" {
+  account = podinate_project.wordpress_project.account
+  project_id = podinate_project.wordpress_project.id
+  id         = "mariadb"
+  image      = "mariadb"
+  name       = "MySQL"
+  tag        = "10"
+}
 
 ## Getting started with development
 

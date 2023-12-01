@@ -49,10 +49,13 @@ func initConfig() {
 		viper.SetConfigFile("podinate.yaml")
 	}
 
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Can't read config:", err)
-		os.Exit(1)
-	}
+	viper.ReadInConfig()
+	// If error, that's fine, there may not be a config file
+
+	// if err := viper.ReadInConfig(); err != nil {
+	// 	fmt.Println("Can't read config:", err)
+	// 	os.Exit(1)
+	// }
 
 	// Find home directory.
 	home, err := homedir.Dir()

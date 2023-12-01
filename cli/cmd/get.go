@@ -35,10 +35,30 @@ var getPodsCmd = &cobra.Command{
 	Short:   "List pods on Podinate",
 	Long:    `Lists all pods on Podinate`,
 	Run: func(cmd *cobra.Command, args []string) {
-		resp, _, _ := apiclient.C.PodApi.ProjectProjectIdPodGet(cmd.Context(), viper.GetString("project")).Account(viper.GetString("account")).Execute()
-		//cobra.CheckErr(err)
+		if viper.GetBool("verbose") {
+			fmt.Printf("Getting pods from project %s and account %s\n", viper.GetString("project"), viper.GetString("account"))
+		}
+
+		if viper.GetString("project") == "" {
+			fmt.Println("Please specify a project with --project or -p")
+			os.Exit(1)
+		}
+
+		resp, _, err := apiclient.C.PodApi.ProjectProjectIdPodGet(cmd.Context(), viper.GetString("project")).Account(viper.GetString("account")).Execute()
+
+		if err != nil && err.Error() == "404 Not Found" {
+			fmt.Println("No pods found")
+			os.Exit(0)
+		}
+		//fmt.Printf("Error: %T\n", err)
+		cobra.CheckErr(err)
 		//out, _ := json.Marshal(resp)
 		//fmt.Printf("Response: %s, r: %+v\n", out, r)
+
+		if len(resp.Items) < 1 {
+			fmt.Println("No pods found")
+			os.Exit(0)
+		}
 
 		columns := []bubbletable.Column{
 			{Title: "ID", Width: 15},
@@ -73,8 +93,19 @@ var getProjectsCmd = &cobra.Command{
 	Long:    `Lists all projects on Podinate account`,
 	Run: func(cmd *cobra.Command, args []string) {
 		resp, _, err := apiclient.C.ProjectApi.ProjectGet(cmd.Context()).Account("my-second-account").Execute()
+
+		if err != nil && err.Error() == "404 Not Found" {
+			fmt.Println("No projects found")
+			os.Exit(0)
+		}
+
 		cobra.CheckErr(err)
 		// fmt.Printf("Response: %+v, r: %+v\n", resp, r)
+
+		if len(resp.Items) < 1 {
+			fmt.Println("No projects found")
+			os.Exit(0)
+		}
 
 		columns := []bubbletable.Column{
 			{Title: "ID", Width: 15},

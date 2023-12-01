@@ -103,9 +103,44 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdGet(ctx context.Context, project
 }
 
 // ProjectProjectIdPodPodIdPatch - Updates a pod for a project.
-func (s *PodAPIService) ProjectProjectIdPodPodIdPatch(ctx context.Context, id string, acc string, podId string, pod api.Pod) (api.ImplResponse, error) {
+func (s *PodAPIService) ProjectProjectIdPodPodIdPatch(ctx context.Context, projectID string, podID string, accountID string, podIn api.Pod) (api.ImplResponse, error) {
+
+	lh.Debug(ctx, "Updating pod", "project_id", projectID, "acc", accountID, "podId", podID, "pod", podIn)
+
+	// Get the account by ID
+	theAccount, apiErr := account.GetByID(accountID)
+	if apiErr != nil {
+		return responder.Response(apiErr.Code, apiErr.Message), nil
+	}
+
+	// Get the project this pod lives in by ID
+	theProject, apiErr := project.GetByID(theAccount, projectID)
+	if apiErr != nil {
+		return responder.Response(apiErr.Code, apiErr.Message), nil
+	}
+
+	// Get the pod by ID
+	thePod, apiErr := pod.GetByID(theProject, podID)
+	if apiErr != nil {
+		return responder.Response(apiErr.Code, apiErr.Message), nil
+	}
+
+	lh.Debug(ctx, "Got pod", "pod", thePod, "want", podIn)
+
+	// Check if the user can update the pod
+	if !iam.RequestorCan(ctx, theAccount, thePod, pod.ActionUpdate) {
+		return responder.Response(http.StatusForbidden, "You do not have permission to update this pod"), nil
+	}
+
+	err := thePod.Update(podIn)
+	if err != nil {
+		return responder.Response(err.Code, err.Message), nil
+	}
+
+	lh.Debug(ctx, "Updated pod", "pod", thePod, "want", podIn)
+
 	// TODO - Implement ProjectProjectIdPodPodIdPatch
-	return responder.Response(http.StatusNotImplemented, "ProjectProjectIdPodPodIdPatch needs to be implemented!"), nil
+	return responder.Response(http.StatusOK, thePod.ToAPI()), nil
 }
 
 // ProjectProjectIdPodPost - Creates a pod for a project.

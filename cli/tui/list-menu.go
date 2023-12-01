@@ -51,7 +51,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 type ListModel struct {
 	list     list.Model
 	choice   string
-	Fucking  string
+	QuitText string
 	quitting bool
 }
 
@@ -79,7 +79,6 @@ func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			i, ok := m.list.SelectedItem().(ListItem)
 			if ok {
 				m.choice = string(i)
-				m.Fucking = string(i)
 			}
 			return m, tea.Quit
 		}
@@ -92,7 +91,7 @@ func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ListModel) View() string {
 	if m.choice != "" {
-		return quitTextStyle.Render(fmt.Sprintf("Logging in with %s", m.Choice()))
+		return quitTextStyle.Render(fmt.Sprintf(m.QuitText, m.Choice()))
 	}
 	if m.quitting {
 		return quitTextStyle.Render("")
@@ -100,18 +99,19 @@ func (m ListModel) View() string {
 	return "\n" + m.list.View()
 }
 
-func NewList(items []list.Item, title string) ListModel {
+func NewList(items []list.Item, title string, quittext string) ListModel {
 	const defaultWidth = 20
 
 	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
 	l.Title = title
+
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
-	m := ListModel{list: l}
+	m := ListModel{list: l, QuitText: quittext}
 
 	return m
 	// if _, err := tea.NewProgram(m).Run(); err != nil {
