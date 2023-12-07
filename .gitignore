@@ -1,7 +1,8 @@
 ## Ignore the tmp folder
 tmp/
 
-
+testapp/*
+!testapp/Readme.md
 
 
 
