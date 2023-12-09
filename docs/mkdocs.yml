@@ -1,0 +1,15 @@
+site_name: Podinate Documentation
+site_url: https://docs.podinate.com
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started/index.md
+
+theme: 
+  name: material
+  palette: 
+    primary: deep purple
+    accent: cyan
+    toggle:
+      icon: menu
+      name: Menu
