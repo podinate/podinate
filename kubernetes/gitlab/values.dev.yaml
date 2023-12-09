@@ -4,6 +4,6 @@ global:
     https: false
   ingress:
     tls:
-      enabled: false
+      enabled: true
     configureCertmanager: false
   edition: ce
