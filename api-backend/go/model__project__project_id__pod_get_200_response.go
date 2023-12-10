@@ -10,21 +10,31 @@
 package openapi
 
 type ProjectProjectIdPodGet200Response struct {
-
 	Items []ProjectProjectIdPodGet200ResponseItemsInner `json:"items,omitempty"`
 
 	// The total number of pods
-	Total int32 `json:"total,omitempty"`
+	Total int32 `json:"total"`
 
 	// The current page number
-	Page int32 `json:"page,omitempty"`
+	Page int32 `json:"page"`
 
 	// The number of items per page
-	Limit int32 `json:"limit,omitempty"`
+	Limit int32 `json:"limit"`
 }
 
 // AssertProjectProjectIdPodGet200ResponseRequired checks if the required fields are not zero-ed
 func AssertProjectProjectIdPodGet200ResponseRequired(obj ProjectProjectIdPodGet200Response) error {
+	elements := map[string]interface{}{
+		"total": obj.Total,
+		"page":  obj.Page,
+		"limit": obj.Limit,
+	}
+	for name, el := range elements {
+		if isZero := IsZeroValue(el); isZero {
+			return &RequiredError{Field: name}
+		}
+	}
+
 	for _, el := range obj.Items {
 		if err := AssertProjectProjectIdPodGet200ResponseItemsInnerRequired(el); err != nil {
 			return err

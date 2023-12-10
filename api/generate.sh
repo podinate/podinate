@@ -7,12 +7,6 @@ docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
     -o /local/api-backend \
     --additional-properties outputAsLibrary=true,serverPort=3000
 
-# docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
-#     -i /local/api/openapi.yaml \
-#     -g typescript-axios \
-#     -o /local/dashboard/api_client \
-#     --additional-properties npmName=@podinate/client
-
 docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
     -i /local/api/openapi.yaml \
     -g go \
@@ -26,3 +20,14 @@ sudo chown $USER:$(id -g) -R ./lib/api_client ./api-backend/go
 # Wipe out the default go.mod and go.sum files
 rm ./lib/api_client/go.mod
 rm ./lib/api_client/go.sum
+
+echo "Running go fmt on generated code."
+
+# Run fmt on the code to fix errors that the generator creates
+go fmt ./lib/api_client/...
+go fmt ./api-backend/go/...
+
+echo "Generating Terraform SDK."
+
+# Generate the Terraform SDK 
+speakeasy generate sdk --lang terraform -o ./speakeasy/ -s ./api/openapi.yaml

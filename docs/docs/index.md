@@ -1,6 +1,6 @@
 # Welcome to Podinate
 
-Welcome to the Podinate documentation. Podinate is an easy to use cloud that is designed to just work. It provides just the services that most apps need, and aims to provide sensible defaults. Without having to worry about infrastructure, you can effortlessly deploy, interate, collaborate and scale your app. 
+Welcome to the Podinate documentation. Podinate is an easy to use cloud that is designed to just work. It provides just the services that most apps need, and aims to provide sensible defaults. Without having to worry about infrastructure, you can effortlessly deploy, interate, collaborate and scale. 
 
 ## Getting Started
 Our getting started guides allow you to hit the ground running. 

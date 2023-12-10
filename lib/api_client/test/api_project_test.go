@@ -11,10 +11,10 @@ package api_client
 
 import (
 	"context"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 )
 
 func Test_api_client_ProjectApiService(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_api_client_ProjectApiService(t *testing.T) {
 
 	t.Run("Test ProjectApiService ProjectGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.ProjectApi.ProjectGet(context.Background()).Execute()
 
@@ -36,7 +36,7 @@ func Test_api_client_ProjectApiService(t *testing.T) {
 
 	t.Run("Test ProjectApiService ProjectIdDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -50,7 +50,7 @@ func Test_api_client_ProjectApiService(t *testing.T) {
 
 	t.Run("Test ProjectApiService ProjectIdGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -64,7 +64,7 @@ func Test_api_client_ProjectApiService(t *testing.T) {
 
 	t.Run("Test ProjectApiService ProjectIdPatch", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var id string
 
@@ -78,7 +78,7 @@ func Test_api_client_ProjectApiService(t *testing.T) {
 
 	t.Run("Test ProjectApiService ProjectPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.ProjectApi.ProjectPost(context.Background()).Execute()
 

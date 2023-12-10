@@ -22,25 +22,32 @@ type Pod struct {
 	// The short name (slug/url) of the pod
 	Id *string `json:"id,omitempty"`
 	// The name of the pod
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 	// The container image to run for this pod
-	Image *string `json:"image,omitempty"`
+	Image string `json:"image"`
 	// The image tag to run for this pod
-	Tag *string `json:"tag,omitempty"`
+	Tag string `json:"tag"`
 	// The current status of the pod
 	Status *string `json:"status,omitempty"`
 	// The date and time the pod was created
 	CreatedAt *string `json:"created_at,omitempty"`
 	// The global Resource ID of the pod
 	ResourceId *string `json:"resource_id,omitempty"`
+	// The environment variables to pass to the pod
+	Environment []EnvironmentVariable `json:"environment,omitempty"`
+	// The services to expose for this pod
+	Services []Service `json:"services,omitempty"`
 }
 
 // NewPod instantiates a new Pod object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPod() *Pod {
+func NewPod(name string, image string, tag string) *Pod {
 	this := Pod{}
+	this.Name = name
+	this.Image = image
+	this.Tag = tag
 	return &this
 }
 
@@ -84,100 +91,76 @@ func (o *Pod) SetId(v string) {
 	o.Id = &v
 }
 
-// GetName returns the Name field value if set, zero value otherwise.
+// GetName returns the Name field value
 func (o *Pod) GetName() string {
-	if o == nil || IsNil(o.Name) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Name
+
+	return o.Name
 }
 
-// GetNameOk returns a tuple with the Name field value if set, nil otherwise
+// GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
 func (o *Pod) GetNameOk() (*string, bool) {
-	if o == nil || IsNil(o.Name) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Name, true
+	return &o.Name, true
 }
 
-// HasName returns a boolean if a field has been set.
-func (o *Pod) HasName() bool {
-	if o != nil && !IsNil(o.Name) {
-		return true
-	}
-
-	return false
-}
-
-// SetName gets a reference to the given string and assigns it to the Name field.
+// SetName sets field value
 func (o *Pod) SetName(v string) {
-	o.Name = &v
+	o.Name = v
 }
 
-// GetImage returns the Image field value if set, zero value otherwise.
+// GetImage returns the Image field value
 func (o *Pod) GetImage() string {
-	if o == nil || IsNil(o.Image) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Image
+
+	return o.Image
 }
 
-// GetImageOk returns a tuple with the Image field value if set, nil otherwise
+// GetImageOk returns a tuple with the Image field value
 // and a boolean to check if the value has been set.
 func (o *Pod) GetImageOk() (*string, bool) {
-	if o == nil || IsNil(o.Image) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Image, true
+	return &o.Image, true
 }
 
-// HasImage returns a boolean if a field has been set.
-func (o *Pod) HasImage() bool {
-	if o != nil && !IsNil(o.Image) {
-		return true
-	}
-
-	return false
-}
-
-// SetImage gets a reference to the given string and assigns it to the Image field.
+// SetImage sets field value
 func (o *Pod) SetImage(v string) {
-	o.Image = &v
+	o.Image = v
 }
 
-// GetTag returns the Tag field value if set, zero value otherwise.
+// GetTag returns the Tag field value
 func (o *Pod) GetTag() string {
-	if o == nil || IsNil(o.Tag) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Tag
+
+	return o.Tag
 }
 
-// GetTagOk returns a tuple with the Tag field value if set, nil otherwise
+// GetTagOk returns a tuple with the Tag field value
 // and a boolean to check if the value has been set.
 func (o *Pod) GetTagOk() (*string, bool) {
-	if o == nil || IsNil(o.Tag) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Tag, true
+	return &o.Tag, true
 }
 
-// HasTag returns a boolean if a field has been set.
-func (o *Pod) HasTag() bool {
-	if o != nil && !IsNil(o.Tag) {
-		return true
-	}
-
-	return false
-}
-
-// SetTag gets a reference to the given string and assigns it to the Tag field.
+// SetTag sets field value
 func (o *Pod) SetTag(v string) {
-	o.Tag = &v
+	o.Tag = v
 }
 
 // GetStatus returns the Status field value if set, zero value otherwise.
@@ -276,8 +259,72 @@ func (o *Pod) SetResourceId(v string) {
 	o.ResourceId = &v
 }
 
+// GetEnvironment returns the Environment field value if set, zero value otherwise.
+func (o *Pod) GetEnvironment() []EnvironmentVariable {
+	if o == nil || IsNil(o.Environment) {
+		var ret []EnvironmentVariable
+		return ret
+	}
+	return o.Environment
+}
+
+// GetEnvironmentOk returns a tuple with the Environment field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pod) GetEnvironmentOk() ([]EnvironmentVariable, bool) {
+	if o == nil || IsNil(o.Environment) {
+		return nil, false
+	}
+	return o.Environment, true
+}
+
+// HasEnvironment returns a boolean if a field has been set.
+func (o *Pod) HasEnvironment() bool {
+	if o != nil && !IsNil(o.Environment) {
+		return true
+	}
+
+	return false
+}
+
+// SetEnvironment gets a reference to the given []EnvironmentVariable and assigns it to the Environment field.
+func (o *Pod) SetEnvironment(v []EnvironmentVariable) {
+	o.Environment = v
+}
+
+// GetServices returns the Services field value if set, zero value otherwise.
+func (o *Pod) GetServices() []Service {
+	if o == nil || IsNil(o.Services) {
+		var ret []Service
+		return ret
+	}
+	return o.Services
+}
+
+// GetServicesOk returns a tuple with the Services field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pod) GetServicesOk() ([]Service, bool) {
+	if o == nil || IsNil(o.Services) {
+		return nil, false
+	}
+	return o.Services, true
+}
+
+// HasServices returns a boolean if a field has been set.
+func (o *Pod) HasServices() bool {
+	if o != nil && !IsNil(o.Services) {
+		return true
+	}
+
+	return false
+}
+
+// SetServices gets a reference to the given []Service and assigns it to the Services field.
+func (o *Pod) SetServices(v []Service) {
+	o.Services = v
+}
+
 func (o Pod) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -289,15 +336,9 @@ func (o Pod) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.Id) {
 		toSerialize["id"] = o.Id
 	}
-	if !IsNil(o.Name) {
-		toSerialize["name"] = o.Name
-	}
-	if !IsNil(o.Image) {
-		toSerialize["image"] = o.Image
-	}
-	if !IsNil(o.Tag) {
-		toSerialize["tag"] = o.Tag
-	}
+	toSerialize["name"] = o.Name
+	toSerialize["image"] = o.Image
+	toSerialize["tag"] = o.Tag
 	if !IsNil(o.Status) {
 		toSerialize["status"] = o.Status
 	}
@@ -306,6 +347,12 @@ func (o Pod) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.ResourceId) {
 		toSerialize["resource_id"] = o.ResourceId
+	}
+	if !IsNil(o.Environment) {
+		toSerialize["environment"] = o.Environment
+	}
+	if !IsNil(o.Services) {
+		toSerialize["services"] = o.Services
 	}
 	return toSerialize, nil
 }
@@ -345,5 +392,3 @@ func (v *NullablePod) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

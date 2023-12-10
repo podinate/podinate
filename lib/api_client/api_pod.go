@@ -19,17 +19,16 @@ import (
 	"strings"
 )
 
-
 // PodApiService PodApi service
 type PodApiService service
 
 type ApiProjectProjectIdPodGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *PodApiService
-	projectId string
-	account *string
-	page *int32
-	limit *int32
+	projectId  string
+	account    *string
+	page       *int32
+	limit      *int32
 }
 
 // The account to use for the request
@@ -59,26 +58,27 @@ ProjectProjectIdPodGet Get a list of pods for a given project
 
 Returns a list of pods for a given project. Pods are the individual running instances of a project, and are the smallest unit of deployment. For example, a project might have a pod running a Wordpress image, a Postgres Neon database, and a bucket for storing uploads.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId
- @return ApiProjectProjectIdPodGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId
+	@return ApiProjectProjectIdPodGetRequest
 */
 func (a *PodApiService) ProjectProjectIdPodGet(ctx context.Context, projectId string) ApiProjectProjectIdPodGetRequest {
 	return ApiProjectProjectIdPodGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
+		ctx:        ctx,
+		projectId:  projectId,
 	}
 }
 
 // Execute executes the request
-//  @return ProjectProjectIdPodGet200Response
+//
+//	@return ProjectProjectIdPodGet200Response
 func (a *PodApiService) ProjectProjectIdPodGetExecute(r ApiProjectProjectIdPodGetRequest) (*ProjectProjectIdPodGet200Response, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *ProjectProjectIdPodGet200Response
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *ProjectProjectIdPodGet200Response
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodGet")
@@ -163,8 +163,8 @@ func (a *PodApiService) ProjectProjectIdPodGetExecute(r ApiProjectProjectIdPodGe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -174,8 +174,8 @@ func (a *PodApiService) ProjectProjectIdPodGetExecute(r ApiProjectProjectIdPodGe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -185,8 +185,8 @@ func (a *PodApiService) ProjectProjectIdPodGetExecute(r ApiProjectProjectIdPodGe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -204,11 +204,11 @@ func (a *PodApiService) ProjectProjectIdPodGetExecute(r ApiProjectProjectIdPodGe
 }
 
 type ApiProjectProjectIdPodPodIdDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *PodApiService
-	projectId string
-	podId string
-	account *string
+	projectId  string
+	podId      string
+	account    *string
 }
 
 // The account to use for the request
@@ -226,26 +226,26 @@ ProjectProjectIdPodPodIdDelete Delete a pod
 
 Delete a pod
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId
- @param podId
- @return ApiProjectProjectIdPodPodIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId
+	@param podId
+	@return ApiProjectProjectIdPodPodIdDeleteRequest
 */
 func (a *PodApiService) ProjectProjectIdPodPodIdDelete(ctx context.Context, projectId string, podId string) ApiProjectProjectIdPodPodIdDeleteRequest {
 	return ApiProjectProjectIdPodPodIdDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
-		podId: podId,
+		ctx:        ctx,
+		projectId:  projectId,
+		podId:      podId,
 	}
 }
 
 // Execute executes the request
 func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjectIdPodPodIdDeleteRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodDelete
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodPodIdDelete")
@@ -325,8 +325,8 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjec
 				newErr.error = err.Error()
 				return localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -336,8 +336,8 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjec
 				newErr.error = err.Error()
 				return localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -347,8 +347,8 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjec
 				newErr.error = err.Error()
 				return localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarHTTPResponse, newErr
 	}
@@ -357,11 +357,11 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjec
 }
 
 type ApiProjectProjectIdPodPodIdGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *PodApiService
-	projectId string
-	podId string
-	account *string
+	projectId  string
+	podId      string
+	account    *string
 }
 
 // The account to use for the request
@@ -379,28 +379,29 @@ ProjectProjectIdPodPodIdGet Get a pod by ID
 
 Get a pod by ID
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId
- @param podId
- @return ApiProjectProjectIdPodPodIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId
+	@param podId
+	@return ApiProjectProjectIdPodPodIdGetRequest
 */
 func (a *PodApiService) ProjectProjectIdPodPodIdGet(ctx context.Context, projectId string, podId string) ApiProjectProjectIdPodPodIdGetRequest {
 	return ApiProjectProjectIdPodPodIdGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
-		podId: podId,
+		ctx:        ctx,
+		projectId:  projectId,
+		podId:      podId,
 	}
 }
 
 // Execute executes the request
-//  @return Pod
+//
+//	@return Pod
 func (a *PodApiService) ProjectProjectIdPodPodIdGetExecute(r ApiProjectProjectIdPodPodIdGetRequest) (*Pod, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Pod
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Pod
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodPodIdGet")
@@ -480,8 +481,8 @@ func (a *PodApiService) ProjectProjectIdPodPodIdGetExecute(r ApiProjectProjectId
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -491,8 +492,8 @@ func (a *PodApiService) ProjectProjectIdPodPodIdGetExecute(r ApiProjectProjectId
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -502,8 +503,8 @@ func (a *PodApiService) ProjectProjectIdPodPodIdGetExecute(r ApiProjectProjectId
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -521,12 +522,12 @@ func (a *PodApiService) ProjectProjectIdPodPodIdGetExecute(r ApiProjectProjectId
 }
 
 type ApiProjectProjectIdPodPodIdPatchRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *PodApiService
-	projectId string
-	podId string
-	account *string
-	pod *Pod
+	projectId  string
+	podId      string
+	account    *string
+	pod        *Pod
 }
 
 // The account to use for the request
@@ -550,28 +551,29 @@ ProjectProjectIdPodPodIdPatch Update a pod
 
 Update a pod
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId
- @param podId
- @return ApiProjectProjectIdPodPodIdPatchRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId
+	@param podId
+	@return ApiProjectProjectIdPodPodIdPatchRequest
 */
 func (a *PodApiService) ProjectProjectIdPodPodIdPatch(ctx context.Context, projectId string, podId string) ApiProjectProjectIdPodPodIdPatchRequest {
 	return ApiProjectProjectIdPodPodIdPatchRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
-		podId: podId,
+		ctx:        ctx,
+		projectId:  projectId,
+		podId:      podId,
 	}
 }
 
 // Execute executes the request
-//  @return Pod
+//
+//	@return Pod
 func (a *PodApiService) ProjectProjectIdPodPodIdPatchExecute(r ApiProjectProjectIdPodPodIdPatchRequest) (*Pod, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPatch
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Pod
+		localVarHTTPMethod  = http.MethodPatch
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Pod
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodPodIdPatch")
@@ -656,8 +658,8 @@ func (a *PodApiService) ProjectProjectIdPodPodIdPatchExecute(r ApiProjectProject
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -667,8 +669,8 @@ func (a *PodApiService) ProjectProjectIdPodPodIdPatchExecute(r ApiProjectProject
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -678,8 +680,8 @@ func (a *PodApiService) ProjectProjectIdPodPodIdPatchExecute(r ApiProjectProject
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -697,11 +699,11 @@ func (a *PodApiService) ProjectProjectIdPodPodIdPatchExecute(r ApiProjectProject
 }
 
 type ApiProjectProjectIdPodPostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *PodApiService
-	projectId string
-	account *string
-	pod *Pod
+	projectId  string
+	account    *string
+	pod        *Pod
 }
 
 // The account to use for the request
@@ -725,26 +727,27 @@ ProjectProjectIdPodPost Create a new pod
 
 Creating a new pod
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param projectId
- @return ApiProjectProjectIdPodPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId
+	@return ApiProjectProjectIdPodPostRequest
 */
 func (a *PodApiService) ProjectProjectIdPodPost(ctx context.Context, projectId string) ApiProjectProjectIdPodPostRequest {
 	return ApiProjectProjectIdPodPostRequest{
 		ApiService: a,
-		ctx: ctx,
-		projectId: projectId,
+		ctx:        ctx,
+		projectId:  projectId,
 	}
 }
 
 // Execute executes the request
-//  @return Pod
+//
+//	@return Pod
 func (a *PodApiService) ProjectProjectIdPodPostExecute(r ApiProjectProjectIdPodPostRequest) (*Pod, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Pod
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Pod
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodPost")
@@ -828,8 +831,8 @@ func (a *PodApiService) ProjectProjectIdPodPostExecute(r ApiProjectProjectIdPodP
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -839,8 +842,8 @@ func (a *PodApiService) ProjectProjectIdPodPostExecute(r ApiProjectProjectIdPodP
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}

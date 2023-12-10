@@ -10,6 +10,7 @@ client.go
 configuration.go
 docs/Account.md
 docs/AccountApi.md
+docs/EnvironmentVariable.md
 docs/Error.md
 docs/Pod.md
 docs/PodApi.md
@@ -19,6 +20,7 @@ docs/ProjectGet200Response.md
 docs/ProjectGet200ResponseItemsInner.md
 docs/ProjectProjectIdPodGet200Response.md
 docs/ProjectProjectIdPodGet200ResponseItemsInner.md
+docs/Service.md
 docs/User.md
 docs/UserApi.md
 docs/UserLoginCompleteGet200Response.md
@@ -33,9 +35,11 @@ model__project_get_200_response_items_inner.go
 model__user_login_complete_get_200_response.go
 model__user_login_initiate_get_200_response.go
 model_account.go
+model_environment_variable.go
 model_error.go
 model_pod.go
 model_project.go
+model_service.go
 model_user.go
 response.go
 utils.go

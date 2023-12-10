@@ -7,17 +7,21 @@ type Pod struct {
 	// The short name (slug/url) of the pod
 	ID *string `json:"id,omitempty"`
 	// The name of the pod
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 	// The container image to run for this pod
-	Image *string `json:"image,omitempty"`
+	Image string `json:"image"`
 	// The image tag to run for this pod
-	Tag *string `json:"tag,omitempty"`
+	Tag string `json:"tag"`
 	// The current status of the pod
 	Status *string `json:"status,omitempty"`
 	// The date and time the pod was created
 	CreatedAt *string `json:"created_at,omitempty"`
 	// The global Resource ID of the pod
 	ResourceID *string `json:"resource_id,omitempty"`
+	// The environment variables to pass to the pod
+	Environment []EnvironmentVariable `json:"environment,omitempty"`
+	// The services to expose for this pod
+	Services []Service `json:"services,omitempty"`
 }
 
 func (o *Pod) GetID() *string {
@@ -27,23 +31,23 @@ func (o *Pod) GetID() *string {
 	return o.ID
 }
 
-func (o *Pod) GetName() *string {
+func (o *Pod) GetName() string {
 	if o == nil {
-		return nil
+		return ""
 	}
 	return o.Name
 }
 
-func (o *Pod) GetImage() *string {
+func (o *Pod) GetImage() string {
 	if o == nil {
-		return nil
+		return ""
 	}
 	return o.Image
 }
 
-func (o *Pod) GetTag() *string {
+func (o *Pod) GetTag() string {
 	if o == nil {
-		return nil
+		return ""
 	}
 	return o.Tag
 }
@@ -67,4 +71,18 @@ func (o *Pod) GetResourceID() *string {
 		return nil
 	}
 	return o.ResourceID
+}
+
+func (o *Pod) GetEnvironment() []EnvironmentVariable {
+	if o == nil {
+		return nil
+	}
+	return o.Environment
+}
+
+func (o *Pod) GetServices() []Service {
+	if o == nil {
+		return nil
+	}
+	return o.Services
 }

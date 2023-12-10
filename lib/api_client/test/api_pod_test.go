@@ -11,10 +11,10 @@ package api_client
 
 import (
 	"context"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 )
 
 func Test_api_client_PodApiService(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_api_client_PodApiService(t *testing.T) {
 
 	t.Run("Test PodApiService ProjectProjectIdPodGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 
@@ -38,7 +38,7 @@ func Test_api_client_PodApiService(t *testing.T) {
 
 	t.Run("Test PodApiService ProjectProjectIdPodPodIdDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 		var podId string
@@ -53,7 +53,7 @@ func Test_api_client_PodApiService(t *testing.T) {
 
 	t.Run("Test PodApiService ProjectProjectIdPodPodIdGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 		var podId string
@@ -68,7 +68,7 @@ func Test_api_client_PodApiService(t *testing.T) {
 
 	t.Run("Test PodApiService ProjectProjectIdPodPodIdPatch", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 		var podId string
@@ -83,7 +83,7 @@ func Test_api_client_PodApiService(t *testing.T) {
 
 	t.Run("Test PodApiService ProjectProjectIdPodPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var projectId string
 

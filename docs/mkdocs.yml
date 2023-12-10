@@ -3,7 +3,16 @@ site_url: https://docs.podinate.com
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started/index.md
+  - Getting Started: 
+    - getting-started/index.md
+    - Quick Start: getting-started/quick-start.md
+    - Installation: getting-started/installation.md
+    - Run Your App: getting-started/your-app.md
+    - Add The Team: getting-started/collaborate.md
+
+plugins:
+  - tags
+#   - social
 
 theme: 
   name: material
@@ -13,3 +22,11 @@ theme:
     toggle:
       icon: menu
       name: Menu
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    #- navigation.sections
+    - navigation.indexes
+    - navigation.path
+    - search.suggest

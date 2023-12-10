@@ -20,8 +20,10 @@ go/model__project_get_200_response_items_inner.go
 go/model__user_login_complete_get_200_response.go
 go/model__user_login_initiate_get_200_response.go
 go/model_account.go
+go/model_environment_variable.go
 go/model_error.go
 go/model_pod.go
 go/model_project.go
+go/model_service.go
 go/model_user.go
 go/routers.go

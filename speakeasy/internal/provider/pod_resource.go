@@ -29,15 +29,17 @@ type PodResource struct {
 
 // PodResourceModel describes the resource data model.
 type PodResourceModel struct {
-	Account    types.String `tfsdk:"account"`
-	CreatedAt  types.String `tfsdk:"created_at"`
-	ID         types.String `tfsdk:"id"`
-	Image      types.String `tfsdk:"image"`
-	Name       types.String `tfsdk:"name"`
-	ProjectID  types.String `tfsdk:"project_id"`
-	ResourceID types.String `tfsdk:"resource_id"`
-	Status     types.String `tfsdk:"status"`
-	Tag        types.String `tfsdk:"tag"`
+	Account     types.String          `tfsdk:"account"`
+	CreatedAt   types.String          `tfsdk:"created_at"`
+	Environment []EnvironmentVariable `tfsdk:"environment"`
+	ID          types.String          `tfsdk:"id"`
+	Image       types.String          `tfsdk:"image"`
+	Name        types.String          `tfsdk:"name"`
+	ProjectID   types.String          `tfsdk:"project_id"`
+	ResourceID  types.String          `tfsdk:"resource_id"`
+	Services    []Service             `tfsdk:"services"`
+	Status      types.String          `tfsdk:"status"`
+	Tag         types.String          `tfsdk:"tag"`
 }
 
 func (r *PodResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -57,19 +59,39 @@ func (r *PodResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Computed:    true,
 				Description: `The date and time the pod was created`,
 			},
+			"environment": schema.ListNestedAttribute{
+				Computed: true,
+				Optional: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"key": schema.StringAttribute{
+							Required:    true,
+							Description: `The key of the environment variable`,
+						},
+						"secret": schema.BoolAttribute{
+							Computed:    true,
+							Optional:    true,
+							Description: `Whether the value of the environment variable is a secret or not. If it is a secret, it will not be returned in the API response.`,
+						},
+						"value": schema.StringAttribute{
+							Required:    true,
+							Description: `The value of the environment variable`,
+						},
+					},
+				},
+				Description: `The environment variables to pass to the pod`,
+			},
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Optional:    true,
 				Description: `The short name (slug/url) of the pod`,
 			},
 			"image": schema.StringAttribute{
-				Computed:    true,
-				Optional:    true,
+				Required:    true,
 				Description: `The container image to run for this pod`,
 			},
 			"name": schema.StringAttribute{
-				Computed:    true,
-				Optional:    true,
+				Required:    true,
 				Description: `The name of the pod`,
 			},
 			"project_id": schema.StringAttribute{
@@ -79,13 +101,43 @@ func (r *PodResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Computed:    true,
 				Description: `The global Resource ID of the pod`,
 			},
+			"services": schema.ListNestedAttribute{
+				Computed: true,
+				Optional: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"domain_name": schema.StringAttribute{
+							Computed:    true,
+							Optional:    true,
+							Description: `The domain name to use for the service. If left blank, the service will only be available internally. If set, the service will be available externally at the given domain name.`,
+						},
+						"name": schema.StringAttribute{
+							Required:    true,
+							Description: `The hostname of the service`,
+						},
+						"port": schema.Int64Attribute{
+							Required:    true,
+							Description: `The port to expose the service on`,
+						},
+						"protocol": schema.StringAttribute{
+							Required:    true,
+							Description: `The protocol to use for the service. Either http, tcp or udp.`,
+						},
+						"target_port": schema.Int64Attribute{
+							Computed:    true,
+							Optional:    true,
+							Description: `The port to forward traffic to, if different from the port. Can be left blank if the same as the port.`,
+						},
+					},
+				},
+				Description: `The services to expose for this pod`,
+			},
 			"status": schema.StringAttribute{
 				Computed:    true,
 				Description: `The current status of the pod`,
 			},
 			"tag": schema.StringAttribute{
-				Computed:    true,
-				Optional:    true,
+				Required:    true,
 				Description: `The image tag to run for this pod`,
 			},
 		},

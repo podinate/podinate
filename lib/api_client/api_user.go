@@ -19,12 +19,11 @@ import (
 	"strings"
 )
 
-
 // UserApiService UserApi service
 type UserApiService service
 
 type ApiUserGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *UserApiService
 }
 
@@ -37,24 +36,25 @@ UserGet Get the current user
 
 Get the current user
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiUserGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiUserGetRequest
 */
 func (a *UserApiService) UserGet(ctx context.Context) ApiUserGetRequest {
 	return ApiUserGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return User
+//
+//	@return User
 func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*User, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *User
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *User
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserApiService.UserGet")
@@ -128,8 +128,8 @@ func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*User, *http.Respo
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -139,8 +139,8 @@ func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*User, *http.Respo
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -150,8 +150,8 @@ func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*User, *http.Respo
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -169,9 +169,9 @@ func (a *UserApiService) UserGetExecute(r ApiUserGetRequest) (*User, *http.Respo
 }
 
 type ApiUserLoginCallbackProviderGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *UserApiService
-	provider string
+	provider   string
 }
 
 func (r ApiUserLoginCallbackProviderGetRequest) Execute() (string, *http.Response, error) {
@@ -183,26 +183,27 @@ UserLoginCallbackProviderGet User login callback URL for oauth providers
 
 This API endpoint is not intended to be accessed directly. It is used as the callback URL for oauth providers, and will redirect the user to the correct place once they have completed the login flow.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param provider The oauth provider to use. Valid options will be github / gitlab / podinate, during alpha only podinate is allowed.
- @return ApiUserLoginCallbackProviderGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param provider The oauth provider to use. Valid options will be github / gitlab / podinate, during alpha only podinate is allowed.
+	@return ApiUserLoginCallbackProviderGetRequest
 */
 func (a *UserApiService) UserLoginCallbackProviderGet(ctx context.Context, provider string) ApiUserLoginCallbackProviderGetRequest {
 	return ApiUserLoginCallbackProviderGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		provider: provider,
+		ctx:        ctx,
+		provider:   provider,
 	}
 }
 
 // Execute executes the request
-//  @return string
+//
+//	@return string
 func (a *UserApiService) UserLoginCallbackProviderGetExecute(r ApiUserLoginCallbackProviderGetRequest) (string, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  string
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue string
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserApiService.UserLoginCallbackProviderGet")
@@ -263,8 +264,8 @@ func (a *UserApiService) UserLoginCallbackProviderGetExecute(r ApiUserLoginCallb
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -274,8 +275,8 @@ func (a *UserApiService) UserLoginCallbackProviderGetExecute(r ApiUserLoginCallb
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -285,8 +286,8 @@ func (a *UserApiService) UserLoginCallbackProviderGetExecute(r ApiUserLoginCallb
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -304,10 +305,10 @@ func (a *UserApiService) UserLoginCallbackProviderGetExecute(r ApiUserLoginCallb
 }
 
 type ApiUserLoginCompleteGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *UserApiService
-	token *string
-	client *string
+	token      *string
+	client     *string
 }
 
 // The token given by /user/login/init to get the user&#39;s actual API key once they have completed the oauth flow
@@ -330,24 +331,25 @@ UserLoginCompleteGet Complete a user login
 
 Complete a user login and swap the given login token for an API key
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiUserLoginCompleteGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiUserLoginCompleteGetRequest
 */
 func (a *UserApiService) UserLoginCompleteGet(ctx context.Context) ApiUserLoginCompleteGetRequest {
 	return ApiUserLoginCompleteGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return UserLoginCompleteGet200Response
+//
+//	@return UserLoginCompleteGet200Response
 func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRequest) (*UserLoginCompleteGet200Response, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *UserLoginCompleteGet200Response
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *UserLoginCompleteGet200Response
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserApiService.UserLoginCompleteGet")
@@ -413,8 +415,8 @@ func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 403 {
@@ -424,8 +426,8 @@ func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -435,8 +437,8 @@ func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -446,8 +448,8 @@ func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -465,9 +467,9 @@ func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRe
 }
 
 type ApiUserLoginInitiateGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *UserApiService
-	provider *string
+	provider   *string
 }
 
 // The oauth provider to use. Valid options will be github / gitlab / podinate, during alpha only podinate is allowed.
@@ -485,24 +487,25 @@ UserLoginInitiateGet Get a login URL
 
 Get a login URL, which will redirect the user to the oauth provider to complete the login flow. To complete a full login, you should then call /user/login/complete with the token returned by this endpoint.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiUserLoginInitiateGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiUserLoginInitiateGetRequest
 */
 func (a *UserApiService) UserLoginInitiateGet(ctx context.Context) ApiUserLoginInitiateGetRequest {
 	return ApiUserLoginInitiateGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return UserLoginInitiateGet200Response
+//
+//	@return UserLoginInitiateGet200Response
 func (a *UserApiService) UserLoginInitiateGetExecute(r ApiUserLoginInitiateGetRequest) (*UserLoginInitiateGet200Response, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *UserLoginInitiateGet200Response
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *UserLoginInitiateGet200Response
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserApiService.UserLoginInitiateGet")
@@ -565,8 +568,8 @@ func (a *UserApiService) UserLoginInitiateGetExecute(r ApiUserLoginInitiateGetRe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -576,8 +579,8 @@ func (a *UserApiService) UserLoginInitiateGetExecute(r ApiUserLoginInitiateGetRe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -587,8 +590,8 @@ func (a *UserApiService) UserLoginInitiateGetExecute(r ApiUserLoginInitiateGetRe
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -606,9 +609,9 @@ func (a *UserApiService) UserLoginInitiateGetExecute(r ApiUserLoginInitiateGetRe
 }
 
 type ApiUserLoginRedirectTokenGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *UserApiService
-	token string
+	token      string
 }
 
 func (r ApiUserLoginRedirectTokenGetRequest) Execute() (string, *http.Response, error) {
@@ -620,26 +623,27 @@ UserLoginRedirectTokenGet User login redirect URL to oauth providers
 
 This API endpoint is not intended to be called directly. It is used as the redirect URL for oauth providers, and will redirect the user to the correct place once they have completed the login flow.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param token The token given by /user/login/init to get the user's actual API key once they have completed the oauth flow
- @return ApiUserLoginRedirectTokenGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param token The token given by /user/login/init to get the user's actual API key once they have completed the oauth flow
+	@return ApiUserLoginRedirectTokenGetRequest
 */
 func (a *UserApiService) UserLoginRedirectTokenGet(ctx context.Context, token string) ApiUserLoginRedirectTokenGetRequest {
 	return ApiUserLoginRedirectTokenGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		token: token,
+		ctx:        ctx,
+		token:      token,
 	}
 }
 
 // Execute executes the request
-//  @return string
+//
+//	@return string
 func (a *UserApiService) UserLoginRedirectTokenGetExecute(r ApiUserLoginRedirectTokenGetRequest) (string, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  string
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue string
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserApiService.UserLoginRedirectTokenGet")
@@ -700,8 +704,8 @@ func (a *UserApiService) UserLoginRedirectTokenGetExecute(r ApiUserLoginRedirect
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -711,8 +715,8 @@ func (a *UserApiService) UserLoginRedirectTokenGetExecute(r ApiUserLoginRedirect
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -722,8 +726,8 @@ func (a *UserApiService) UserLoginRedirectTokenGetExecute(r ApiUserLoginRedirect
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}

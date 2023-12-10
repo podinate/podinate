@@ -26,7 +26,10 @@ postgres-shell:
 api-generate:
 	bash api/generate.sh
 
-salt-apply:
+salt-sync:
 	ssh ubuntu@salt.podinate.com "rm -rf ~/salt/*"
-	scp -r infrastructure/control/salt/* ubuntu@salt.podinate.com:~/salt/
-	ssh ubuntu@salt.podinate.com "sudo cp -r ~/salt/* /srv/salt/ ; sudo salt '*' state.apply"
+	scp -r infrastructure/salt/* ubuntu@salt.podinate.com:~/salt/
+	ssh ubuntu@salt.podinate.com "sudo cp -r ~/salt/* /srv/salt/"
+
+salt-apply: salt-sync
+	ssh ubuntu@salt.podinate.com "sudo salt '*' state.apply"

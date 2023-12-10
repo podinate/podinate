@@ -19,7 +19,7 @@ import (
 
 // ProjectApiController binds http requests to an api service and writes the service results to the http response
 type ProjectApiController struct {
-	service ProjectApiServicer
+	service      ProjectApiServicer
 	errorHandler ErrorHandler
 }
 
@@ -49,7 +49,7 @@ func NewProjectApiController(s ProjectApiServicer, opts ...ProjectApiOption) Rou
 
 // Routes returns all the api routes for the ProjectApiController
 func (c *ProjectApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"ProjectGet",
 			strings.ToUpper("Get"),

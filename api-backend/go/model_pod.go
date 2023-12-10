@@ -16,13 +16,13 @@ type Pod struct {
 	Id string `json:"id,omitempty"`
 
 	// The name of the pod
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// The container image to run for this pod
-	Image string `json:"image,omitempty"`
+	Image string `json:"image"`
 
 	// The image tag to run for this pod
-	Tag string `json:"tag,omitempty"`
+	Tag string `json:"tag"`
 
 	// The current status of the pod
 	Status string `json:"status,omitempty"`
@@ -32,10 +32,37 @@ type Pod struct {
 
 	// The global Resource ID of the pod
 	ResourceId string `json:"resource_id,omitempty"`
+
+	// The environment variables to pass to the pod
+	Environment []EnvironmentVariable `json:"environment,omitempty"`
+
+	// The services to expose for this pod
+	Services []Service `json:"services,omitempty"`
 }
 
 // AssertPodRequired checks if the required fields are not zero-ed
 func AssertPodRequired(obj Pod) error {
+	elements := map[string]interface{}{
+		"name":  obj.Name,
+		"image": obj.Image,
+		"tag":   obj.Tag,
+	}
+	for name, el := range elements {
+		if isZero := IsZeroValue(el); isZero {
+			return &RequiredError{Field: name}
+		}
+	}
+
+	for _, el := range obj.Environment {
+		if err := AssertEnvironmentVariableRequired(el); err != nil {
+			return err
+		}
+	}
+	for _, el := range obj.Services {
+		if err := AssertServiceRequired(el); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

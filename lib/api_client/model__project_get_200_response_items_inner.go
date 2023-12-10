@@ -27,7 +27,6 @@ func ProjectAsProjectGet200ResponseItemsInner(v *Project) ProjectGet200ResponseI
 	}
 }
 
-
 // Unmarshal JSON data into one of the pointers in the struct
 func (dst *ProjectGet200ResponseItemsInner) UnmarshalJSON(data []byte) error {
 	var err error
@@ -67,7 +66,7 @@ func (src ProjectGet200ResponseItemsInner) MarshalJSON() ([]byte, error) {
 }
 
 // Get the actual instance
-func (obj *ProjectGet200ResponseItemsInner) GetActualInstance() (interface{}) {
+func (obj *ProjectGet200ResponseItemsInner) GetActualInstance() interface{} {
 	if obj == nil {
 		return nil
 	}
@@ -114,5 +113,3 @@ func (v *NullableProjectGet200ResponseItemsInner) UnmarshalJSON(src []byte) erro
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

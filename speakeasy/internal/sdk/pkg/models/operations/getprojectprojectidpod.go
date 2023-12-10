@@ -58,45 +58,84 @@ func (o *GetProjectProjectIDPodRequest) GetAccount() string {
 	return o.Account
 }
 
-type GetProjectProjectIDPodResponseBodyType string
+type GetProjectProjectIDPodItemsType string
 
 const (
-	GetProjectProjectIDPodResponseBodyTypePod GetProjectProjectIDPodResponseBodyType = "Pod"
+	GetProjectProjectIDPodItemsTypePod GetProjectProjectIDPodItemsType = "Pod"
 )
 
-type GetProjectProjectIDPodResponseBody struct {
+type GetProjectProjectIDPodItems struct {
 	Pod *shared.Pod
 
-	Type GetProjectProjectIDPodResponseBodyType
+	Type GetProjectProjectIDPodItemsType
 }
 
-func CreateGetProjectProjectIDPodResponseBodyPod(pod shared.Pod) GetProjectProjectIDPodResponseBody {
-	typ := GetProjectProjectIDPodResponseBodyTypePod
+func CreateGetProjectProjectIDPodItemsPod(pod shared.Pod) GetProjectProjectIDPodItems {
+	typ := GetProjectProjectIDPodItemsTypePod
 
-	return GetProjectProjectIDPodResponseBody{
+	return GetProjectProjectIDPodItems{
 		Pod:  &pod,
 		Type: typ,
 	}
 }
 
-func (u *GetProjectProjectIDPodResponseBody) UnmarshalJSON(data []byte) error {
+func (u *GetProjectProjectIDPodItems) UnmarshalJSON(data []byte) error {
 
 	pod := new(shared.Pod)
 	if err := utils.UnmarshalJSON(data, &pod, "", true, true); err == nil {
 		u.Pod = pod
-		u.Type = GetProjectProjectIDPodResponseBodyTypePod
+		u.Type = GetProjectProjectIDPodItemsTypePod
 		return nil
 	}
 
 	return errors.New("could not unmarshal into supported union types")
 }
 
-func (u GetProjectProjectIDPodResponseBody) MarshalJSON() ([]byte, error) {
+func (u GetProjectProjectIDPodItems) MarshalJSON() ([]byte, error) {
 	if u.Pod != nil {
 		return utils.MarshalJSON(u.Pod, "", true)
 	}
 
 	return nil, errors.New("could not marshal union type: all fields are null")
+}
+
+// GetProjectProjectIDPodResponseBody - A JSON array of pods
+type GetProjectProjectIDPodResponseBody struct {
+	Items []GetProjectProjectIDPodItems `json:"items,omitempty"`
+	// The total number of pods
+	Total int64 `json:"total"`
+	// The current page number
+	Page int64 `json:"page"`
+	// The number of items per page
+	Limit int64 `json:"limit"`
+}
+
+func (o *GetProjectProjectIDPodResponseBody) GetItems() []GetProjectProjectIDPodItems {
+	if o == nil {
+		return nil
+	}
+	return o.Items
+}
+
+func (o *GetProjectProjectIDPodResponseBody) GetTotal() int64 {
+	if o == nil {
+		return 0
+	}
+	return o.Total
+}
+
+func (o *GetProjectProjectIDPodResponseBody) GetPage() int64 {
+	if o == nil {
+		return 0
+	}
+	return o.Page
+}
+
+func (o *GetProjectProjectIDPodResponseBody) GetLimit() int64 {
+	if o == nil {
+		return 0
+	}
+	return o.Limit
 }
 
 type GetProjectProjectIDPodResponse struct {
@@ -107,7 +146,7 @@ type GetProjectProjectIDPodResponse struct {
 	// Raw HTTP response; suitable for custom response parsing
 	RawResponse *http.Response
 	// A JSON array of pods
-	Unions []GetProjectProjectIDPodResponseBody
+	Object *GetProjectProjectIDPodResponseBody
 	// Request issued incorrectly, for example missing parameters or wrong endpoint
 	Error *shared.Error
 }
@@ -133,11 +172,11 @@ func (o *GetProjectProjectIDPodResponse) GetRawResponse() *http.Response {
 	return o.RawResponse
 }
 
-func (o *GetProjectProjectIDPodResponse) GetUnions() []GetProjectProjectIDPodResponseBody {
+func (o *GetProjectProjectIDPodResponse) GetObject() *GetProjectProjectIDPodResponseBody {
 	if o == nil {
 		return nil
 	}
-	return o.Unions
+	return o.Object
 }
 
 func (o *GetProjectProjectIDPodResponse) GetError() *shared.Error {

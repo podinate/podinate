@@ -1,6 +1,7 @@
 package pod
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/johncave/podinate/api-backend/project"
 )
 
@@ -20,21 +22,22 @@ const (
 )
 
 type Pod struct {
-	Uuid    string
-	ID      string
-	Name    string
-	Image   string
-	Tag     string
-	Status  string // Creating, OK, Down
-	Count   int
-	Ram     int
-	Project project.Project
+	Uuid        string
+	ID          string
+	Name        string
+	Image       string
+	Tag         string
+	Environment EnvironmentSlice
+	Status      string // Creating, OK, Down
+	Count       int
+	Ram         int
+	Project     project.Project
 	// TODO - add CPU requests / limits
 }
 
 func GetByID(theProject project.Project, id string) (Pod, *apierror.ApiError) {
 	p := Pod{}
-	dberr := config.DB.QueryRow("SELECT uuid, id, name, image, tag FROM project_pods WHERE id = $1 AND project_uuid = $2", id, theProject.Uuid).Scan(&p.Uuid, &p.ID, &p.Name, &p.Image, &p.Tag)
+	dberr := config.DB.QueryRow("SELECT uuid, id, name, image, tag, environment FROM project_pods WHERE id = $1 AND project_uuid = $2", id, theProject.Uuid).Scan(&p.Uuid, &p.ID, &p.Name, &p.Image, &p.Tag, &p.Environment)
 	if dberr != nil && dberr != sql.ErrNoRows {
 		log.Println("DB error getting pod", dberr)
 		return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
@@ -65,10 +68,10 @@ func GetByID(theProject project.Project, id string) (Pod, *apierror.ApiError) {
 }
 
 func GetByProject(theProject project.Project, page int32, limit int32) ([]Pod, *apierror.ApiError) {
-	if limit < 1 {
+	if limit < 1 || limit > 125 {
 		limit = 25
 	}
-	rows, err := config.DB.Query("SELECT uuid, id, name, image, tag FROM project_pods WHERE project_uuid = $1 OFFSET $2 LIMIT $3", theProject.Uuid, page, limit)
+	rows, err := config.DB.Query("SELECT uuid, id, name, image, tag, environment FROM project_pods WHERE project_uuid = $1 OFFSET $2 LIMIT $3", theProject.Uuid, page, limit)
 	if err != nil {
 		return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve pods")
 	}
@@ -77,7 +80,7 @@ func GetByProject(theProject project.Project, page int32, limit int32) ([]Pod, *
 	pods := make([]Pod, 0)
 	for rows.Next() {
 		var pod Pod
-		err = rows.Scan(&pod.Uuid, &pod.ID, &pod.Name, &pod.Image, &pod.Tag)
+		err = rows.Scan(&pod.Uuid, &pod.ID, &pod.Name, &pod.Image, &pod.Tag, &pod.Environment)
 		if err != nil {
 			log.Println("DB error reading pods", err)
 			return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve pods")
@@ -103,7 +106,7 @@ func GetByProject(theProject project.Project, page int32, limit int32) ([]Pod, *
 }
 
 // Create performs the initial registration of a pod in the database and the kubernetes cluster
-func Create(theAccount account.Account, theProject project.Project, requestedPod api.Pod) (Pod, *apierror.ApiError) {
+func Create(ctx context.Context, theAccount account.Account, theProject project.Project, requestedPod api.Pod) (Pod, *apierror.ApiError) {
 
 	// TODO - Validate the requestedPod
 
@@ -123,6 +126,14 @@ func Create(theAccount account.Account, theProject project.Project, requestedPod
 		return Pod{}, &apierror.ApiError{Code: http.StatusConflict, Message: "A pod with this ID already exists"}
 	}
 
+	// Create the pod in the database
+	dberr = config.DB.QueryRow("INSERT INTO project_pods (uuid, id, name, image, tag, project_uuid, environment) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6) RETURNING uuid", requestedPod.Id, requestedPod.Name, requestedPod.Image, requestedPod.Tag, theProject.Uuid, EnvVarSliceFromAPI(requestedPod.Environment)).Scan(&uuid)
+	// Check if insert was successful
+	if dberr != nil {
+		lh.Error(ctx, "DB error creating pod", dberr)
+		return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+	}
+
 	// Start creating the pod
 
 	// The kubes logic
@@ -137,39 +148,33 @@ func Create(theAccount account.Account, theProject project.Project, requestedPod
 		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
 	}
 
-	// Create the pod in the database
-	dberr = config.DB.QueryRow("INSERT INTO project_pods (uuid, id, name, image, tag, project_uuid) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5) RETURNING uuid", requestedPod.Id, requestedPod.Name, requestedPod.Image, requestedPod.Tag, theProject.Uuid).Scan(&uuid)
-	// Check if insert was successful
-	if dberr != nil {
-		log.Println("DB error creating pod", dberr)
-		return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
-	}
-
 	out := Pod{
-		Uuid:    uuid,
-		ID:      requestedPod.Id,
-		Name:    requestedPod.Name,
-		Image:   requestedPod.Image,
-		Tag:     requestedPod.Tag,
-		Project: theProject,
-		Status:  "Creating",
+		Uuid:        uuid,
+		ID:          requestedPod.Id,
+		Name:        requestedPod.Name,
+		Image:       requestedPod.Image,
+		Tag:         requestedPod.Tag,
+		Project:     theProject,
+		Status:      "Creating",
+		Environment: EnvVarFromAPIMany(requestedPod.Environment),
 	}
 	return out, nil
 }
 
 func (p *Pod) ToAPI() api.Pod {
 	return api.Pod{
-		Id:         p.ID,
-		Name:       p.Name,
-		Image:      p.Image,
-		Tag:        p.Tag,
-		Status:     p.Status,
-		ResourceId: p.GetResourceID(),
+		Id:          p.ID,
+		Name:        p.Name,
+		Image:       p.Image,
+		Tag:         p.Tag,
+		Status:      p.Status,
+		Environment: EnvVarToAPIMany(p.Environment),
+		ResourceId:  p.GetResourceID(),
 	}
 }
 
 // Delete removes a pod from the database and the kubernetes cluster
-func (p *Pod) Delete() *apierror.ApiError {
+func (p *Pod) Delete(ctx context.Context) *apierror.ApiError {
 
 	// The kubes logic
 	err := deleteKubesDeployment(*p)
@@ -185,6 +190,8 @@ func (p *Pod) Delete() *apierror.ApiError {
 		log.Println("DB error deleting pod", dberr)
 		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
 	}
+
+	lh.Info(ctx, "pod deleted", "pod", p)
 	//
 	return nil
 }
@@ -212,7 +219,7 @@ func (p *Pod) Update(requested api.Pod) *apierror.ApiError {
 	}
 
 	// Update the pod in the database
-	dberr = config.DB.QueryRow("UPDATE project_pods SET name = $1, image = $2, tag = $3 WHERE uuid = $4 RETURNING uuid", requested.Name, requested.Image, requested.Tag, p.Uuid).Scan(&uuid)
+	dberr = config.DB.QueryRow("UPDATE project_pods SET name = $1, image = $2, tag = $3, environment = $4 WHERE uuid = $5 RETURNING uuid", requested.Name, requested.Image, requested.Tag, EnvVarFromAPIMany(requested.Environment), p.Uuid).Scan(&uuid)
 	// Check if insert was successful
 	if dberr != nil {
 		log.Println("DB error creating pod", dberr)

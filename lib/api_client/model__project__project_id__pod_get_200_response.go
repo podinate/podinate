@@ -21,19 +21,22 @@ var _ MappedNullable = &ProjectProjectIdPodGet200Response{}
 type ProjectProjectIdPodGet200Response struct {
 	Items []ProjectProjectIdPodGet200ResponseItemsInner `json:"items,omitempty"`
 	// The total number of pods
-	Total *int32 `json:"total,omitempty"`
+	Total int32 `json:"total"`
 	// The current page number
-	Page *int32 `json:"page,omitempty"`
+	Page int32 `json:"page"`
 	// The number of items per page
-	Limit *int32 `json:"limit,omitempty"`
+	Limit int32 `json:"limit"`
 }
 
 // NewProjectProjectIdPodGet200Response instantiates a new ProjectProjectIdPodGet200Response object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewProjectProjectIdPodGet200Response() *ProjectProjectIdPodGet200Response {
+func NewProjectProjectIdPodGet200Response(total int32, page int32, limit int32) *ProjectProjectIdPodGet200Response {
 	this := ProjectProjectIdPodGet200Response{}
+	this.Total = total
+	this.Page = page
+	this.Limit = limit
 	return &this
 }
 
@@ -77,104 +80,80 @@ func (o *ProjectProjectIdPodGet200Response) SetItems(v []ProjectProjectIdPodGet2
 	o.Items = v
 }
 
-// GetTotal returns the Total field value if set, zero value otherwise.
+// GetTotal returns the Total field value
 func (o *ProjectProjectIdPodGet200Response) GetTotal() int32 {
-	if o == nil || IsNil(o.Total) {
+	if o == nil {
 		var ret int32
 		return ret
 	}
-	return *o.Total
+
+	return o.Total
 }
 
-// GetTotalOk returns a tuple with the Total field value if set, nil otherwise
+// GetTotalOk returns a tuple with the Total field value
 // and a boolean to check if the value has been set.
 func (o *ProjectProjectIdPodGet200Response) GetTotalOk() (*int32, bool) {
-	if o == nil || IsNil(o.Total) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Total, true
+	return &o.Total, true
 }
 
-// HasTotal returns a boolean if a field has been set.
-func (o *ProjectProjectIdPodGet200Response) HasTotal() bool {
-	if o != nil && !IsNil(o.Total) {
-		return true
-	}
-
-	return false
-}
-
-// SetTotal gets a reference to the given int32 and assigns it to the Total field.
+// SetTotal sets field value
 func (o *ProjectProjectIdPodGet200Response) SetTotal(v int32) {
-	o.Total = &v
+	o.Total = v
 }
 
-// GetPage returns the Page field value if set, zero value otherwise.
+// GetPage returns the Page field value
 func (o *ProjectProjectIdPodGet200Response) GetPage() int32 {
-	if o == nil || IsNil(o.Page) {
+	if o == nil {
 		var ret int32
 		return ret
 	}
-	return *o.Page
+
+	return o.Page
 }
 
-// GetPageOk returns a tuple with the Page field value if set, nil otherwise
+// GetPageOk returns a tuple with the Page field value
 // and a boolean to check if the value has been set.
 func (o *ProjectProjectIdPodGet200Response) GetPageOk() (*int32, bool) {
-	if o == nil || IsNil(o.Page) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Page, true
+	return &o.Page, true
 }
 
-// HasPage returns a boolean if a field has been set.
-func (o *ProjectProjectIdPodGet200Response) HasPage() bool {
-	if o != nil && !IsNil(o.Page) {
-		return true
-	}
-
-	return false
-}
-
-// SetPage gets a reference to the given int32 and assigns it to the Page field.
+// SetPage sets field value
 func (o *ProjectProjectIdPodGet200Response) SetPage(v int32) {
-	o.Page = &v
+	o.Page = v
 }
 
-// GetLimit returns the Limit field value if set, zero value otherwise.
+// GetLimit returns the Limit field value
 func (o *ProjectProjectIdPodGet200Response) GetLimit() int32 {
-	if o == nil || IsNil(o.Limit) {
+	if o == nil {
 		var ret int32
 		return ret
 	}
-	return *o.Limit
+
+	return o.Limit
 }
 
-// GetLimitOk returns a tuple with the Limit field value if set, nil otherwise
+// GetLimitOk returns a tuple with the Limit field value
 // and a boolean to check if the value has been set.
 func (o *ProjectProjectIdPodGet200Response) GetLimitOk() (*int32, bool) {
-	if o == nil || IsNil(o.Limit) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Limit, true
+	return &o.Limit, true
 }
 
-// HasLimit returns a boolean if a field has been set.
-func (o *ProjectProjectIdPodGet200Response) HasLimit() bool {
-	if o != nil && !IsNil(o.Limit) {
-		return true
-	}
-
-	return false
-}
-
-// SetLimit gets a reference to the given int32 and assigns it to the Limit field.
+// SetLimit sets field value
 func (o *ProjectProjectIdPodGet200Response) SetLimit(v int32) {
-	o.Limit = &v
+	o.Limit = v
 }
 
 func (o ProjectProjectIdPodGet200Response) MarshalJSON() ([]byte, error) {
-	toSerialize,err := o.ToMap()
+	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
 	}
@@ -186,15 +165,9 @@ func (o ProjectProjectIdPodGet200Response) ToMap() (map[string]interface{}, erro
 	if !IsNil(o.Items) {
 		toSerialize["items"] = o.Items
 	}
-	if !IsNil(o.Total) {
-		toSerialize["total"] = o.Total
-	}
-	if !IsNil(o.Page) {
-		toSerialize["page"] = o.Page
-	}
-	if !IsNil(o.Limit) {
-		toSerialize["limit"] = o.Limit
-	}
+	toSerialize["total"] = o.Total
+	toSerialize["page"] = o.Page
+	toSerialize["limit"] = o.Limit
 	return toSerialize, nil
 }
 
@@ -233,5 +206,3 @@ func (v *NullableProjectProjectIdPodGet200Response) UnmarshalJSON(src []byte) er
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

@@ -50,45 +50,84 @@ func (o *GetProjectRequest) GetAccount() string {
 	return o.Account
 }
 
-type ResponseBodyType string
+type ItemsType string
 
 const (
-	ResponseBodyTypeProject ResponseBodyType = "Project"
+	ItemsTypeProject ItemsType = "Project"
 )
 
-type ResponseBody struct {
+type Items struct {
 	Project *shared.Project
 
-	Type ResponseBodyType
+	Type ItemsType
 }
 
-func CreateResponseBodyProject(project shared.Project) ResponseBody {
-	typ := ResponseBodyTypeProject
+func CreateItemsProject(project shared.Project) Items {
+	typ := ItemsTypeProject
 
-	return ResponseBody{
+	return Items{
 		Project: &project,
 		Type:    typ,
 	}
 }
 
-func (u *ResponseBody) UnmarshalJSON(data []byte) error {
+func (u *Items) UnmarshalJSON(data []byte) error {
 
 	project := new(shared.Project)
 	if err := utils.UnmarshalJSON(data, &project, "", true, true); err == nil {
 		u.Project = project
-		u.Type = ResponseBodyTypeProject
+		u.Type = ItemsTypeProject
 		return nil
 	}
 
 	return errors.New("could not unmarshal into supported union types")
 }
 
-func (u ResponseBody) MarshalJSON() ([]byte, error) {
+func (u Items) MarshalJSON() ([]byte, error) {
 	if u.Project != nil {
 		return utils.MarshalJSON(u.Project, "", true)
 	}
 
 	return nil, errors.New("could not marshal union type: all fields are null")
+}
+
+// GetProjectResponseBody - A JSON array of projects
+type GetProjectResponseBody struct {
+	Items []Items `json:"items,omitempty"`
+	// The total number of projects
+	Total *int64 `json:"total,omitempty"`
+	// The current page number
+	Page *int64 `json:"page,omitempty"`
+	// The number of items per page
+	Limit *int64 `json:"limit,omitempty"`
+}
+
+func (o *GetProjectResponseBody) GetItems() []Items {
+	if o == nil {
+		return nil
+	}
+	return o.Items
+}
+
+func (o *GetProjectResponseBody) GetTotal() *int64 {
+	if o == nil {
+		return nil
+	}
+	return o.Total
+}
+
+func (o *GetProjectResponseBody) GetPage() *int64 {
+	if o == nil {
+		return nil
+	}
+	return o.Page
+}
+
+func (o *GetProjectResponseBody) GetLimit() *int64 {
+	if o == nil {
+		return nil
+	}
+	return o.Limit
 }
 
 type GetProjectResponse struct {
@@ -99,7 +138,7 @@ type GetProjectResponse struct {
 	// Raw HTTP response; suitable for custom response parsing
 	RawResponse *http.Response
 	// A JSON array of projects
-	Unions []ResponseBody
+	Object *GetProjectResponseBody
 	// An internal server error
 	Error *shared.Error
 }
@@ -125,11 +164,11 @@ func (o *GetProjectResponse) GetRawResponse() *http.Response {
 	return o.RawResponse
 }
 
-func (o *GetProjectResponse) GetUnions() []ResponseBody {
+func (o *GetProjectResponse) GetObject() *GetProjectResponseBody {
 	if o == nil {
 		return nil
 	}
-	return o.Unions
+	return o.Object
 }
 
 func (o *GetProjectResponse) GetError() *shared.Error {

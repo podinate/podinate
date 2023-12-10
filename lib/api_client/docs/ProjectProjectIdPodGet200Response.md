@@ -5,15 +5,15 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Items** | Pointer to [**[]ProjectProjectIdPodGet200ResponseItemsInner**](ProjectProjectIdPodGet200ResponseItemsInner.md) |  | [optional] 
-**Total** | Pointer to **int32** | The total number of pods | [optional] 
-**Page** | Pointer to **int32** | The current page number | [optional] 
-**Limit** | Pointer to **int32** | The number of items per page | [optional] 
+**Total** | **int32** | The total number of pods | 
+**Page** | **int32** | The current page number | 
+**Limit** | **int32** | The number of items per page | 
 
 ## Methods
 
 ### NewProjectProjectIdPodGet200Response
 
-`func NewProjectProjectIdPodGet200Response() *ProjectProjectIdPodGet200Response`
+`func NewProjectProjectIdPodGet200Response(total int32, page int32, limit int32, ) *ProjectProjectIdPodGet200Response`
 
 NewProjectProjectIdPodGet200Response instantiates a new ProjectProjectIdPodGet200Response object
 This constructor will assign default values to properties that have it defined,
@@ -72,11 +72,6 @@ and a boolean to check if the value has been set.
 
 SetTotal sets Total field to given value.
 
-### HasTotal
-
-`func (o *ProjectProjectIdPodGet200Response) HasTotal() bool`
-
-HasTotal returns a boolean if a field has been set.
 
 ### GetPage
 
@@ -97,11 +92,6 @@ and a boolean to check if the value has been set.
 
 SetPage sets Page field to given value.
 
-### HasPage
-
-`func (o *ProjectProjectIdPodGet200Response) HasPage() bool`
-
-HasPage returns a boolean if a field has been set.
 
 ### GetLimit
 
@@ -122,11 +112,6 @@ and a boolean to check if the value has been set.
 
 SetLimit sets Limit field to given value.
 
-### HasLimit
-
-`func (o *ProjectProjectIdPodGet200Response) HasLimit() bool`
-
-HasLimit returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

@@ -1087,6 +1087,16 @@ components:
         tag: "6.0"
         status: running
         created_at: 2020-01-01T00:00:00Z
+        resource_id: account:podinate/project:super-cool-app/pod:hello-world
+        environment:
+        - key: DB_PASSWORD
+          value: abc1234
+          secret: true
+        services:
+        - name: my-blog
+          port: 80
+          protocol: http
+          domain_name: my-blog.podinate.app
       properties:
         id:
           description: The short name (slug/url) of the pod
@@ -1119,8 +1129,85 @@ components:
           example: account:podinate/project:hello-world/pod:my-blog
           type: string
           x-speakeasy-param-readonly: true
+        environment:
+          description: The environment variables to pass to the pod
+          example:
+          - key: DB_PASSWORD
+            value: abc1234
+            secret: true
+          items:
+            $ref: '#/components/schemas/EnvironmentVariable'
+          type: array
+        services:
+          description: The services to expose for this pod
+          example:
+          - name: my-blog
+            port: 80
+            protocol: http
+            domain_name: my-blog.podinate.app
+          items:
+            $ref: '#/components/schemas/Service'
+          type: array
+      required:
+      - image
+      - name
+      - tag
       type: object
       x-speakeasy-entity: Pod
+    EnvironmentVariable:
+      description: An environment variable is a key-value pair that is passed to the
+        container when it is run.
+      example:
+        key: DB_PASSWORD
+        value: abc1234
+      properties:
+        key:
+          description: The key of the environment variable
+          example: DB_PASSWORD
+          type: string
+        value:
+          description: The value of the environment variable
+          example: abc1234
+          type: string
+        secret:
+          description: "Whether the value of the environment variable is a secret\
+            \ or not. If it is a secret, it will not be returned in the API response."
+          example: true
+          type: boolean
+      required:
+      - key
+      - value
+      type: object
+    Service:
+      description: A service makes a Pod available to other Pods or to the internet
+      properties:
+        name:
+          description: The hostname of the service
+          example: my-blog
+          type: string
+        port:
+          description: The port to expose the service on
+          example: 80
+          type: integer
+        targetPort:
+          description: "The port to forward traffic to, if different from the port.\
+            \ Can be left blank if the same as the port."
+          example: 80
+          type: integer
+        protocol:
+          description: "The protocol to use for the service. Either http, tcp or udp."
+          example: http
+          type: string
+        domain_name:
+          description: "The domain name to use for the service. If left blank, the\
+            \ service will only be available internally. If set, the service will\
+            \ be available externally at the given domain name."
+          example: my-blog.podinate.app
+          type: string
+      required:
+      - name
+      - port
+      - protocol
     User:
       example:
         resource_id: user:podinate:mike
@@ -1213,6 +1300,10 @@ components:
           description: The number of items per page
           example: 20
           type: integer
+      required:
+      - limit
+      - page
+      - total
       type: object
     _user_login_initiate_get_200_response:
       example:

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	api "github.com/johncave/podinate/api-backend/go"
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/johncave/podinate/api-backend/project"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -147,7 +148,7 @@ func updateKubesDeployment(thePod Pod, requested api.Pod) error {
 
 // getDeploymentSpec returns a deployment spec for the specified pod.
 func getDeploymentSpec(theProject project.Project, requested api.Pod) *appsv1.Deployment {
-	return &appsv1.Deployment{
+	out := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: requested.Id,
 		},
@@ -183,6 +184,18 @@ func getDeploymentSpec(theProject project.Project, requested api.Pod) *appsv1.De
 			},
 		},
 	}
+
+	// Add environment variables to the pod spec
+	for _, envVar := range requested.Environment {
+		out.Spec.Template.Spec.Containers[0].Env = append(out.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+			Name:  envVar.Key,
+			Value: envVar.Value,
+		})
+	}
+
+	lh.Log.Infow("Deployment spec", "deployment", out)
+
+	return out
 }
 
 // getKubesClient returns a Kubernetes clientset.

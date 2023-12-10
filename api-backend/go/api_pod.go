@@ -19,7 +19,7 @@ import (
 
 // PodApiController binds http requests to an api service and writes the service results to the http response
 type PodApiController struct {
-	service PodApiServicer
+	service      PodApiServicer
 	errorHandler ErrorHandler
 }
 
@@ -49,7 +49,7 @@ func NewPodApiController(s PodApiServicer, opts ...PodApiOption) Router {
 
 // Routes returns all the api routes for the PodApiController
 func (c *PodApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"ProjectProjectIdPodGet",
 			strings.ToUpper("Get"),

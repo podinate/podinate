@@ -5,18 +5,20 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Id** | Pointer to **string** | The short name (slug/url) of the pod | [optional] 
-**Name** | Pointer to **string** | The name of the pod | [optional] 
-**Image** | Pointer to **string** | The container image to run for this pod | [optional] 
-**Tag** | Pointer to **string** | The image tag to run for this pod | [optional] 
+**Name** | **string** | The name of the pod | 
+**Image** | **string** | The container image to run for this pod | 
+**Tag** | **string** | The image tag to run for this pod | 
 **Status** | Pointer to **string** | The current status of the pod | [optional] 
 **CreatedAt** | Pointer to **string** | The date and time the pod was created | [optional] 
 **ResourceId** | Pointer to **string** | The global Resource ID of the pod | [optional] 
+**Environment** | Pointer to [**[]EnvironmentVariable**](EnvironmentVariable.md) | The environment variables to pass to the pod | [optional] 
+**Services** | Pointer to [**[]Service**](Service.md) | The services to expose for this pod | [optional] 
 
 ## Methods
 
 ### NewPod
 
-`func NewPod() *Pod`
+`func NewPod(name string, image string, tag string, ) *Pod`
 
 NewPod instantiates a new Pod object
 This constructor will assign default values to properties that have it defined,
@@ -75,11 +77,6 @@ and a boolean to check if the value has been set.
 
 SetName sets Name field to given value.
 
-### HasName
-
-`func (o *Pod) HasName() bool`
-
-HasName returns a boolean if a field has been set.
 
 ### GetImage
 
@@ -100,11 +97,6 @@ and a boolean to check if the value has been set.
 
 SetImage sets Image field to given value.
 
-### HasImage
-
-`func (o *Pod) HasImage() bool`
-
-HasImage returns a boolean if a field has been set.
 
 ### GetTag
 
@@ -125,11 +117,6 @@ and a boolean to check if the value has been set.
 
 SetTag sets Tag field to given value.
 
-### HasTag
-
-`func (o *Pod) HasTag() bool`
-
-HasTag returns a boolean if a field has been set.
 
 ### GetStatus
 
@@ -205,6 +192,56 @@ SetResourceId sets ResourceId field to given value.
 `func (o *Pod) HasResourceId() bool`
 
 HasResourceId returns a boolean if a field has been set.
+
+### GetEnvironment
+
+`func (o *Pod) GetEnvironment() []EnvironmentVariable`
+
+GetEnvironment returns the Environment field if non-nil, zero value otherwise.
+
+### GetEnvironmentOk
+
+`func (o *Pod) GetEnvironmentOk() (*[]EnvironmentVariable, bool)`
+
+GetEnvironmentOk returns a tuple with the Environment field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetEnvironment
+
+`func (o *Pod) SetEnvironment(v []EnvironmentVariable)`
+
+SetEnvironment sets Environment field to given value.
+
+### HasEnvironment
+
+`func (o *Pod) HasEnvironment() bool`
+
+HasEnvironment returns a boolean if a field has been set.
+
+### GetServices
+
+`func (o *Pod) GetServices() []Service`
+
+GetServices returns the Services field if non-nil, zero value otherwise.
+
+### GetServicesOk
+
+`func (o *Pod) GetServicesOk() (*[]Service, bool)`
+
+GetServicesOk returns a tuple with the Services field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetServices
+
+`func (o *Pod) SetServices(v []Service)`
+
+SetServices sets Services field to given value.
+
+### HasServices
+
+`func (o *Pod) HasServices() bool`
+
+HasServices returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

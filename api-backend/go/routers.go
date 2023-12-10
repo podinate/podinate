@@ -23,9 +23,9 @@ import (
 
 // A Route defines the parameters for an api endpoint
 type Route struct {
-	Name		string
-	Method	  string
-	Pattern	 string
+	Name        string
+	Method      string
+	Pattern     string
 	HandlerFunc http.HandlerFunc
 }
 
@@ -244,7 +244,6 @@ func parseFloat32ArrayParameter(param, delim string, required bool) ([]float32, 
 
 	return floats, nil
 }
-
 
 // parseInt64ArrayParameter parses a string parameter containing array of values to []int64.
 func parseInt64ArrayParameter(param, delim string, required bool) ([]int64, error) {

@@ -51,14 +51,16 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 	// Convert the pods to the API format
 	var apiPods []api.ProjectProjectIdPodGet200ResponseItemsInner
 	for _, p := range pods {
+		//lh.Debug(ctx, "Pod Environment", "env", p.Environment)
 		if iam.RequestorCan(ctx, theAccount, p, pod.ActionView) {
 			apiPods = append(apiPods, api.ProjectProjectIdPodGet200ResponseItemsInner{
-				Id:         p.ID,
-				Name:       p.Name,
-				ResourceId: p.GetResourceID(),
-				Image:      p.Image,
-				Tag:        p.Tag,
-				Status:     p.Status,
+				Id:          p.ID,
+				Name:        p.Name,
+				ResourceId:  p.GetResourceID(),
+				Image:       p.Image,
+				Tag:         p.Tag,
+				Status:      p.Status,
+				Environment: pod.EnvVarToAPIMany(p.Environment),
 			})
 		}
 	}
@@ -161,7 +163,7 @@ func (s *PodAPIService) ProjectProjectIdPodPost(ctx context.Context, projectId s
 		return responder.Response(http.StatusForbidden, "You do not have permission to create this pod in this project"), nil
 	}
 
-	thepod, err := pod.Create(theAccount, theProject, requestedPod)
+	thepod, err := pod.Create(ctx, theAccount, theProject, requestedPod)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}
@@ -199,7 +201,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 	}
 
 	// Delete the pod
-	apiErr = thePod.Delete()
+	apiErr = thePod.Delete(ctx)
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}

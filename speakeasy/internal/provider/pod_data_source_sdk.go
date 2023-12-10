@@ -13,34 +13,70 @@ func (r *PodDataSourceModel) RefreshFromGetResponse(resp *shared.Pod) {
 	} else {
 		r.CreatedAt = types.StringNull()
 	}
+	if len(r.Environment) > len(resp.Environment) {
+		r.Environment = r.Environment[:len(resp.Environment)]
+	}
+	for environmentCount, environmentItem := range resp.Environment {
+		var environment1 EnvironmentVariable
+		environment1.Key = types.StringValue(environmentItem.Key)
+		environment1.Value = types.StringValue(environmentItem.Value)
+		if environmentItem.Secret != nil {
+			environment1.Secret = types.BoolValue(*environmentItem.Secret)
+		} else {
+			environment1.Secret = types.BoolNull()
+		}
+		if environmentCount+1 > len(r.Environment) {
+			r.Environment = append(r.Environment, environment1)
+		} else {
+			r.Environment[environmentCount].Key = environment1.Key
+			r.Environment[environmentCount].Value = environment1.Value
+			r.Environment[environmentCount].Secret = environment1.Secret
+		}
+	}
 	if resp.ID != nil {
 		r.ID = types.StringValue(*resp.ID)
 	} else {
 		r.ID = types.StringNull()
 	}
-	if resp.Image != nil {
-		r.Image = types.StringValue(*resp.Image)
-	} else {
-		r.Image = types.StringNull()
-	}
-	if resp.Name != nil {
-		r.Name = types.StringValue(*resp.Name)
-	} else {
-		r.Name = types.StringNull()
-	}
+	r.Image = types.StringValue(resp.Image)
+	r.Name = types.StringValue(resp.Name)
 	if resp.ResourceID != nil {
 		r.ResourceID = types.StringValue(*resp.ResourceID)
 	} else {
 		r.ResourceID = types.StringNull()
+	}
+	if len(r.Services) > len(resp.Services) {
+		r.Services = r.Services[:len(resp.Services)]
+	}
+	for servicesCount, servicesItem := range resp.Services {
+		var services1 Service
+		services1.Name = types.StringValue(servicesItem.Name)
+		services1.Port = types.Int64Value(servicesItem.Port)
+		if servicesItem.TargetPort != nil {
+			services1.TargetPort = types.Int64Value(*servicesItem.TargetPort)
+		} else {
+			services1.TargetPort = types.Int64Null()
+		}
+		services1.Protocol = types.StringValue(servicesItem.Protocol)
+		if servicesItem.DomainName != nil {
+			services1.DomainName = types.StringValue(*servicesItem.DomainName)
+		} else {
+			services1.DomainName = types.StringNull()
+		}
+		if servicesCount+1 > len(r.Services) {
+			r.Services = append(r.Services, services1)
+		} else {
+			r.Services[servicesCount].Name = services1.Name
+			r.Services[servicesCount].Port = services1.Port
+			r.Services[servicesCount].TargetPort = services1.TargetPort
+			r.Services[servicesCount].Protocol = services1.Protocol
+			r.Services[servicesCount].DomainName = services1.DomainName
+		}
 	}
 	if resp.Status != nil {
 		r.Status = types.StringValue(*resp.Status)
 	} else {
 		r.Status = types.StringNull()
 	}
-	if resp.Tag != nil {
-		r.Tag = types.StringValue(*resp.Tag)
-	} else {
-		r.Tag = types.StringNull()
-	}
+	r.Tag = types.StringValue(resp.Tag)
 }

@@ -10,7 +10,6 @@
 package openapi
 
 type ProjectGet200Response struct {
-
 	Items []ProjectGet200ResponseItemsInner `json:"items,omitempty"`
 
 	// The total number of projects

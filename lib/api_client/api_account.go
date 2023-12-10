@@ -18,14 +18,13 @@ import (
 	"net/url"
 )
 
-
 // AccountApiService AccountApi service
 type AccountApiService service
 
 type ApiAccountDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *AccountApiService
-	account *string
+	account    *string
 }
 
 // The account to use for the request
@@ -43,24 +42,25 @@ AccountDelete Delete the account and all associated resources!
 
 Deletes the account and all associated resources! This is irreversible and may be used for example when a client project has finished or a migration is complete.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiAccountDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiAccountDeleteRequest
 */
 func (a *AccountApiService) AccountDelete(ctx context.Context) ApiAccountDeleteRequest {
 	return ApiAccountDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return Account
+//
+//	@return Account
 func (a *AccountApiService) AccountDeleteExecute(r ApiAccountDeleteRequest) (*Account, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Account
+		localVarHTTPMethod  = http.MethodDelete
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Account
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AccountApiService.AccountDelete")
@@ -138,8 +138,8 @@ func (a *AccountApiService) AccountDeleteExecute(r ApiAccountDeleteRequest) (*Ac
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -149,8 +149,8 @@ func (a *AccountApiService) AccountDeleteExecute(r ApiAccountDeleteRequest) (*Ac
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -160,8 +160,8 @@ func (a *AccountApiService) AccountDeleteExecute(r ApiAccountDeleteRequest) (*Ac
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -179,9 +179,9 @@ func (a *AccountApiService) AccountDeleteExecute(r ApiAccountDeleteRequest) (*Ac
 }
 
 type ApiAccountGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *AccountApiService
-	account *string
+	account    *string
 }
 
 // The account to use for the request
@@ -199,24 +199,25 @@ AccountGet Get information about the current account.
 
 Accounts are logically separate, distinct containers for different customers or teams. For example you might have an account for your marketing and product teams, or you might have an account for each client to separate their workloads. Accounts can have their own security settings applied.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiAccountGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiAccountGetRequest
 */
 func (a *AccountApiService) AccountGet(ctx context.Context) ApiAccountGetRequest {
 	return ApiAccountGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return Account
+//
+//	@return Account
 func (a *AccountApiService) AccountGetExecute(r ApiAccountGetRequest) (*Account, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Account
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Account
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AccountApiService.AccountGet")
@@ -294,8 +295,8 @@ func (a *AccountApiService) AccountGetExecute(r ApiAccountGetRequest) (*Account,
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -305,8 +306,8 @@ func (a *AccountApiService) AccountGetExecute(r ApiAccountGetRequest) (*Account,
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 409 {
@@ -316,8 +317,8 @@ func (a *AccountApiService) AccountGetExecute(r ApiAccountGetRequest) (*Account,
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -335,10 +336,10 @@ func (a *AccountApiService) AccountGetExecute(r ApiAccountGetRequest) (*Account,
 }
 
 type ApiAccountPatchRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *AccountApiService
-	account *string
-	account2 *Account
+	account    *string
+	account2   *Account
 }
 
 // The account to use for the request
@@ -361,24 +362,25 @@ AccountPatch Update an existing account
 
 Update an existing account, for example to change the display name
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiAccountPatchRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiAccountPatchRequest
 */
 func (a *AccountApiService) AccountPatch(ctx context.Context) ApiAccountPatchRequest {
 	return ApiAccountPatchRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return Account
+//
+//	@return Account
 func (a *AccountApiService) AccountPatchExecute(r ApiAccountPatchRequest) (*Account, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPatch
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Account
+		localVarHTTPMethod  = http.MethodPatch
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Account
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AccountApiService.AccountPatch")
@@ -458,8 +460,8 @@ func (a *AccountApiService) AccountPatchExecute(r ApiAccountPatchRequest) (*Acco
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -469,8 +471,8 @@ func (a *AccountApiService) AccountPatchExecute(r ApiAccountPatchRequest) (*Acco
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -488,9 +490,9 @@ func (a *AccountApiService) AccountPatchExecute(r ApiAccountPatchRequest) (*Acco
 }
 
 type ApiAccountPostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *AccountApiService
-	account *Account
+	account    *Account
 }
 
 func (r ApiAccountPostRequest) Account(account Account) ApiAccountPostRequest {
@@ -507,24 +509,25 @@ AccountPost Create a new account
 
 Create a new logically separate account, for example for a given client or team.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiAccountPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiAccountPostRequest
 */
 func (a *AccountApiService) AccountPost(ctx context.Context) ApiAccountPostRequest {
 	return ApiAccountPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return Account
+//
+//	@return Account
 func (a *AccountApiService) AccountPostExecute(r ApiAccountPostRequest) (*Account, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Account
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Account
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AccountApiService.AccountPost")
@@ -600,8 +603,8 @@ func (a *AccountApiService) AccountPostExecute(r ApiAccountPostRequest) (*Accoun
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -611,8 +614,8 @@ func (a *AccountApiService) AccountPostExecute(r ApiAccountPostRequest) (*Accoun
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}

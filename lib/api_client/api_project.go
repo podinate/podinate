@@ -19,16 +19,15 @@ import (
 	"strings"
 )
 
-
 // ProjectApiService ProjectApi service
 type ProjectApiService service
 
 type ApiProjectGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *ProjectApiService
-	account *string
-	page *int32
-	limit *int32
+	account    *string
+	page       *int32
+	limit      *int32
 }
 
 // The account to use for the request
@@ -58,24 +57,25 @@ ProjectGet Returns a list of projects.
 
 Projects are a container for individual resources. For example the my-cool-blog project might contain a pod running a Wordpress image, a Postgres Neon database, and a bucket for storing uploads.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiProjectGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiProjectGetRequest
 */
 func (a *ProjectApiService) ProjectGet(ctx context.Context) ApiProjectGetRequest {
 	return ApiProjectGetRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return ProjectGet200Response
+//
+//	@return ProjectGet200Response
 func (a *ProjectApiService) ProjectGetExecute(r ApiProjectGetRequest) (*ProjectGet200Response, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *ProjectGet200Response
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *ProjectGet200Response
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectApiService.ProjectGet")
@@ -159,8 +159,8 @@ func (a *ProjectApiService) ProjectGetExecute(r ApiProjectGetRequest) (*ProjectG
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -178,10 +178,10 @@ func (a *ProjectApiService) ProjectGetExecute(r ApiProjectGetRequest) (*ProjectG
 }
 
 type ApiProjectIdDeleteRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *ProjectApiService
-	id string
-	account *string
+	id         string
+	account    *string
 }
 
 // The account to use for the request
@@ -199,24 +199,24 @@ ProjectIdDelete Delete an existing project
 
 Allows you to delete an existing project. This will delete all associated resources, and is irreversible. Use with caution!
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id
- @return ApiProjectIdDeleteRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id
+	@return ApiProjectIdDeleteRequest
 */
 func (a *ProjectApiService) ProjectIdDelete(ctx context.Context, id string) ApiProjectIdDeleteRequest {
 	return ApiProjectIdDeleteRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
 func (a *ProjectApiService) ProjectIdDeleteExecute(r ApiProjectIdDeleteRequest) (*http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodDelete
-		localVarPostBody     interface{}
-		formFiles            []formFile
+		localVarHTTPMethod = http.MethodDelete
+		localVarPostBody   interface{}
+		formFiles          []formFile
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectApiService.ProjectIdDelete")
@@ -295,8 +295,8 @@ func (a *ProjectApiService) ProjectIdDeleteExecute(r ApiProjectIdDeleteRequest) 
 				newErr.error = err.Error()
 				return localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -306,8 +306,8 @@ func (a *ProjectApiService) ProjectIdDeleteExecute(r ApiProjectIdDeleteRequest) 
 				newErr.error = err.Error()
 				return localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -317,8 +317,8 @@ func (a *ProjectApiService) ProjectIdDeleteExecute(r ApiProjectIdDeleteRequest) 
 				newErr.error = err.Error()
 				return localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarHTTPResponse, newErr
 	}
@@ -327,10 +327,10 @@ func (a *ProjectApiService) ProjectIdDeleteExecute(r ApiProjectIdDeleteRequest) 
 }
 
 type ApiProjectIdGetRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *ProjectApiService
-	id string
-	account *string
+	id         string
+	account    *string
 }
 
 // The account to use for the request
@@ -348,26 +348,27 @@ ProjectIdGet Get an existing project given by ID
 
 Allows you to see an existing project's configuration
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id
- @return ApiProjectIdGetRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id
+	@return ApiProjectIdGetRequest
 */
 func (a *ProjectApiService) ProjectIdGet(ctx context.Context, id string) ApiProjectIdGetRequest {
 	return ApiProjectIdGetRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Project
+//
+//	@return Project
 func (a *ProjectApiService) ProjectIdGetExecute(r ApiProjectIdGetRequest) (*Project, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodGet
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Project
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Project
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectApiService.ProjectIdGet")
@@ -446,8 +447,8 @@ func (a *ProjectApiService) ProjectIdGetExecute(r ApiProjectIdGetRequest) (*Proj
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
@@ -457,8 +458,8 @@ func (a *ProjectApiService) ProjectIdGetExecute(r ApiProjectIdGetRequest) (*Proj
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -468,8 +469,8 @@ func (a *ProjectApiService) ProjectIdGetExecute(r ApiProjectIdGetRequest) (*Proj
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -487,11 +488,11 @@ func (a *ProjectApiService) ProjectIdGetExecute(r ApiProjectIdGetRequest) (*Proj
 }
 
 type ApiProjectIdPatchRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *ProjectApiService
-	id string
-	account *string
-	project *Project
+	id         string
+	account    *string
+	project    *Project
 }
 
 // The account to use for the request
@@ -514,26 +515,27 @@ ProjectIdPatch Update an existing project
 
 Allows you to update or edit an existing project. For example, you can update the tag to deploy when you have made and pushed a new build, or change the image to run entirely.
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @param id
- @return ApiProjectIdPatchRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param id
+	@return ApiProjectIdPatchRequest
 */
 func (a *ProjectApiService) ProjectIdPatch(ctx context.Context, id string) ApiProjectIdPatchRequest {
 	return ApiProjectIdPatchRequest{
 		ApiService: a,
-		ctx: ctx,
-		id: id,
+		ctx:        ctx,
+		id:         id,
 	}
 }
 
 // Execute executes the request
-//  @return Project
+//
+//	@return Project
 func (a *ProjectApiService) ProjectIdPatchExecute(r ApiProjectIdPatchRequest) (*Project, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPatch
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Project
+		localVarHTTPMethod  = http.MethodPatch
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Project
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectApiService.ProjectIdPatch")
@@ -614,8 +616,8 @@ func (a *ProjectApiService) ProjectIdPatchExecute(r ApiProjectIdPatchRequest) (*
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
@@ -633,10 +635,10 @@ func (a *ProjectApiService) ProjectIdPatchExecute(r ApiProjectIdPatchRequest) (*
 }
 
 type ApiProjectPostRequest struct {
-	ctx context.Context
+	ctx        context.Context
 	ApiService *ProjectApiService
-	account *string
-	project *Project
+	account    *string
+	project    *Project
 }
 
 // The account to use for the request
@@ -660,24 +662,25 @@ ProjectPost Create a new project
 
 Creating a new project
 
- @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- @return ApiProjectPostRequest
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiProjectPostRequest
 */
 func (a *ProjectApiService) ProjectPost(ctx context.Context) ApiProjectPostRequest {
 	return ApiProjectPostRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
 // Execute executes the request
-//  @return Project
+//
+//	@return Project
 func (a *ProjectApiService) ProjectPostExecute(r ApiProjectPostRequest) (*Project, *http.Response, error) {
 	var (
-		localVarHTTPMethod   = http.MethodPost
-		localVarPostBody     interface{}
-		formFiles            []formFile
-		localVarReturnValue  *Project
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *Project
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectApiService.ProjectPost")
@@ -760,8 +763,8 @@ func (a *ProjectApiService) ProjectPostExecute(r ApiProjectPostRequest) (*Projec
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 			return localVarReturnValue, localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
@@ -771,8 +774,8 @@ func (a *ProjectApiService) ProjectPostExecute(r ApiProjectPostRequest) (*Projec
 				newErr.error = err.Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
-					newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
-					newErr.model = v
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}

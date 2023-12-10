@@ -29,15 +29,17 @@ type PodDataSource struct {
 
 // PodDataSourceModel describes the data model.
 type PodDataSourceModel struct {
-	Account    types.String `tfsdk:"account"`
-	CreatedAt  types.String `tfsdk:"created_at"`
-	ID         types.String `tfsdk:"id"`
-	Image      types.String `tfsdk:"image"`
-	Name       types.String `tfsdk:"name"`
-	ProjectID  types.String `tfsdk:"project_id"`
-	ResourceID types.String `tfsdk:"resource_id"`
-	Status     types.String `tfsdk:"status"`
-	Tag        types.String `tfsdk:"tag"`
+	Account     types.String          `tfsdk:"account"`
+	CreatedAt   types.String          `tfsdk:"created_at"`
+	Environment []EnvironmentVariable `tfsdk:"environment"`
+	ID          types.String          `tfsdk:"id"`
+	Image       types.String          `tfsdk:"image"`
+	Name        types.String          `tfsdk:"name"`
+	ProjectID   types.String          `tfsdk:"project_id"`
+	ResourceID  types.String          `tfsdk:"resource_id"`
+	Services    []Service             `tfsdk:"services"`
+	Status      types.String          `tfsdk:"status"`
+	Tag         types.String          `tfsdk:"tag"`
 }
 
 // Metadata returns the data source type name.
@@ -59,6 +61,26 @@ func (r *PodDataSource) Schema(ctx context.Context, req datasource.SchemaRequest
 				Computed:    true,
 				Description: `The date and time the pod was created`,
 			},
+			"environment": schema.ListNestedAttribute{
+				Computed: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"key": schema.StringAttribute{
+							Computed:    true,
+							Description: `The key of the environment variable`,
+						},
+						"value": schema.StringAttribute{
+							Computed:    true,
+							Description: `The value of the environment variable`,
+						},
+						"secret": schema.BoolAttribute{
+							Computed:    true,
+							Description: `Whether the value of the environment variable is a secret or not. If it is a secret, it will not be returned in the API response.`,
+						},
+					},
+				},
+				Description: `The environment variables to pass to the pod`,
+			},
 			"id": schema.StringAttribute{
 				Required: true,
 			},
@@ -76,6 +98,34 @@ func (r *PodDataSource) Schema(ctx context.Context, req datasource.SchemaRequest
 			"resource_id": schema.StringAttribute{
 				Computed:    true,
 				Description: `The global Resource ID of the pod`,
+			},
+			"services": schema.ListNestedAttribute{
+				Computed: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Computed:    true,
+							Description: `The hostname of the service`,
+						},
+						"port": schema.Int64Attribute{
+							Computed:    true,
+							Description: `The port to expose the service on`,
+						},
+						"target_port": schema.Int64Attribute{
+							Computed:    true,
+							Description: `The port to forward traffic to, if different from the port. Can be left blank if the same as the port.`,
+						},
+						"protocol": schema.StringAttribute{
+							Computed:    true,
+							Description: `The protocol to use for the service. Either http, tcp or udp.`,
+						},
+						"domain_name": schema.StringAttribute{
+							Computed:    true,
+							Description: `The domain name to use for the service. If left blank, the service will only be available internally. If set, the service will be available externally at the given domain name.`,
+						},
+					},
+				},
+				Description: `The services to expose for this pod`,
 			},
 			"status": schema.StringAttribute{
 				Computed:    true,

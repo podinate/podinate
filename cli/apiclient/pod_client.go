@@ -51,9 +51,9 @@ func (p *Project) GetPods() ([]*Pod, error) {
 func getPodFromApi(p *Project, in *api_client.Pod) *Pod {
 	return &Pod{
 		ID:         *in.Id,
-		Name:       *in.Name,
-		Image:      *in.Image,
-		Tag:        *in.Tag,
+		Name:       in.Name,
+		Image:      in.Image,
+		Tag:        in.Tag,
 		Status:     *in.Status,
 		CreatedAt:  *in.CreatedAt,
 		ResourceID: *in.ResourceId,

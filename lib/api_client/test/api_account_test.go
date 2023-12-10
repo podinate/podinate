@@ -11,10 +11,10 @@ package api_client
 
 import (
 	"context"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 )
 
 func Test_api_client_AccountApiService(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_api_client_AccountApiService(t *testing.T) {
 
 	t.Run("Test AccountApiService AccountDelete", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.AccountApi.AccountDelete(context.Background()).Execute()
 
@@ -36,7 +36,7 @@ func Test_api_client_AccountApiService(t *testing.T) {
 
 	t.Run("Test AccountApiService AccountGet", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.AccountApi.AccountGet(context.Background()).Execute()
 
@@ -48,7 +48,7 @@ func Test_api_client_AccountApiService(t *testing.T) {
 
 	t.Run("Test AccountApiService AccountPatch", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.AccountApi.AccountPatch(context.Background()).Execute()
 
@@ -60,7 +60,7 @@ func Test_api_client_AccountApiService(t *testing.T) {
 
 	t.Run("Test AccountApiService AccountPost", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.AccountApi.AccountPost(context.Background()).Execute()
 

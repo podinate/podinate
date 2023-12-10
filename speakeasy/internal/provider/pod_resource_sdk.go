@@ -14,24 +14,9 @@ func (r *PodResourceModel) ToCreateSDKType() *shared.Pod {
 	} else {
 		id = nil
 	}
-	name := new(string)
-	if !r.Name.IsUnknown() && !r.Name.IsNull() {
-		*name = r.Name.ValueString()
-	} else {
-		name = nil
-	}
-	image := new(string)
-	if !r.Image.IsUnknown() && !r.Image.IsNull() {
-		*image = r.Image.ValueString()
-	} else {
-		image = nil
-	}
-	tag := new(string)
-	if !r.Tag.IsUnknown() && !r.Tag.IsNull() {
-		*tag = r.Tag.ValueString()
-	} else {
-		tag = nil
-	}
+	name := r.Name.ValueString()
+	image := r.Image.ValueString()
+	tag := r.Tag.ValueString()
 	status := new(string)
 	if !r.Status.IsUnknown() && !r.Status.IsNull() {
 		*status = r.Status.ValueString()
@@ -50,14 +35,57 @@ func (r *PodResourceModel) ToCreateSDKType() *shared.Pod {
 	} else {
 		resourceID = nil
 	}
+	var environment []shared.EnvironmentVariable = nil
+	for _, environmentItem := range r.Environment {
+		key := environmentItem.Key.ValueString()
+		value := environmentItem.Value.ValueString()
+		secret := new(bool)
+		if !environmentItem.Secret.IsUnknown() && !environmentItem.Secret.IsNull() {
+			*secret = environmentItem.Secret.ValueBool()
+		} else {
+			secret = nil
+		}
+		environment = append(environment, shared.EnvironmentVariable{
+			Key:    key,
+			Value:  value,
+			Secret: secret,
+		})
+	}
+	var services []shared.Service = nil
+	for _, servicesItem := range r.Services {
+		name1 := servicesItem.Name.ValueString()
+		port := servicesItem.Port.ValueInt64()
+		targetPort := new(int64)
+		if !servicesItem.TargetPort.IsUnknown() && !servicesItem.TargetPort.IsNull() {
+			*targetPort = servicesItem.TargetPort.ValueInt64()
+		} else {
+			targetPort = nil
+		}
+		protocol := servicesItem.Protocol.ValueString()
+		domainName := new(string)
+		if !servicesItem.DomainName.IsUnknown() && !servicesItem.DomainName.IsNull() {
+			*domainName = servicesItem.DomainName.ValueString()
+		} else {
+			domainName = nil
+		}
+		services = append(services, shared.Service{
+			Name:       name1,
+			Port:       port,
+			TargetPort: targetPort,
+			Protocol:   protocol,
+			DomainName: domainName,
+		})
+	}
 	out := shared.Pod{
-		ID:         id,
-		Name:       name,
-		Image:      image,
-		Tag:        tag,
-		Status:     status,
-		CreatedAt:  createdAt,
-		ResourceID: resourceID,
+		ID:          id,
+		Name:        name,
+		Image:       image,
+		Tag:         tag,
+		Status:      status,
+		CreatedAt:   createdAt,
+		ResourceID:  resourceID,
+		Environment: environment,
+		Services:    services,
 	}
 	return &out
 }
@@ -83,36 +111,72 @@ func (r *PodResourceModel) RefreshFromGetResponse(resp *shared.Pod) {
 	} else {
 		r.CreatedAt = types.StringNull()
 	}
+	if len(r.Environment) > len(resp.Environment) {
+		r.Environment = r.Environment[:len(resp.Environment)]
+	}
+	for environmentCount, environmentItem := range resp.Environment {
+		var environment1 EnvironmentVariable
+		environment1.Key = types.StringValue(environmentItem.Key)
+		if environmentItem.Secret != nil {
+			environment1.Secret = types.BoolValue(*environmentItem.Secret)
+		} else {
+			environment1.Secret = types.BoolNull()
+		}
+		environment1.Value = types.StringValue(environmentItem.Value)
+		if environmentCount+1 > len(r.Environment) {
+			r.Environment = append(r.Environment, environment1)
+		} else {
+			r.Environment[environmentCount].Key = environment1.Key
+			r.Environment[environmentCount].Secret = environment1.Secret
+			r.Environment[environmentCount].Value = environment1.Value
+		}
+	}
 	if resp.ID != nil {
 		r.ID = types.StringValue(*resp.ID)
 	} else {
 		r.ID = types.StringNull()
 	}
-	if resp.Image != nil {
-		r.Image = types.StringValue(*resp.Image)
-	} else {
-		r.Image = types.StringNull()
-	}
-	if resp.Name != nil {
-		r.Name = types.StringValue(*resp.Name)
-	} else {
-		r.Name = types.StringNull()
-	}
+	r.Image = types.StringValue(resp.Image)
+	r.Name = types.StringValue(resp.Name)
 	if resp.ResourceID != nil {
 		r.ResourceID = types.StringValue(*resp.ResourceID)
 	} else {
 		r.ResourceID = types.StringNull()
+	}
+	if len(r.Services) > len(resp.Services) {
+		r.Services = r.Services[:len(resp.Services)]
+	}
+	for servicesCount, servicesItem := range resp.Services {
+		var services1 Service
+		if servicesItem.DomainName != nil {
+			services1.DomainName = types.StringValue(*servicesItem.DomainName)
+		} else {
+			services1.DomainName = types.StringNull()
+		}
+		services1.Name = types.StringValue(servicesItem.Name)
+		services1.Port = types.Int64Value(servicesItem.Port)
+		services1.Protocol = types.StringValue(servicesItem.Protocol)
+		if servicesItem.TargetPort != nil {
+			services1.TargetPort = types.Int64Value(*servicesItem.TargetPort)
+		} else {
+			services1.TargetPort = types.Int64Null()
+		}
+		if servicesCount+1 > len(r.Services) {
+			r.Services = append(r.Services, services1)
+		} else {
+			r.Services[servicesCount].DomainName = services1.DomainName
+			r.Services[servicesCount].Name = services1.Name
+			r.Services[servicesCount].Port = services1.Port
+			r.Services[servicesCount].Protocol = services1.Protocol
+			r.Services[servicesCount].TargetPort = services1.TargetPort
+		}
 	}
 	if resp.Status != nil {
 		r.Status = types.StringValue(*resp.Status)
 	} else {
 		r.Status = types.StringNull()
 	}
-	if resp.Tag != nil {
-		r.Tag = types.StringValue(*resp.Tag)
-	} else {
-		r.Tag = types.StringNull()
-	}
+	r.Tag = types.StringValue(resp.Tag)
 }
 
 func (r *PodResourceModel) RefreshFromCreateResponse(resp *shared.Pod) {
