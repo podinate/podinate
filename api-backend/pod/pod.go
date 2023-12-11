@@ -257,7 +257,7 @@ func (p *Pod) Delete(ctx context.Context) *apierror.ApiError {
 	return nil
 }
 
-func (p *Pod) Update(requested api.Pod) *apierror.ApiError {
+func (p *Pod) Update(ctx context.Context, requested api.Pod) *apierror.ApiError {
 	// TODO - Validate the requestedPod
 
 	// Check if the pod already exists
@@ -284,11 +284,38 @@ func (p *Pod) Update(requested api.Pod) *apierror.ApiError {
 	}
 
 	// Update the pod in the database
-	dberr = config.DB.QueryRow("UPDATE project_pods SET name = $1, image = $2, tag = $3, environment = $4 WHERE uuid = $5 RETURNING uuid", requested.Name, requested.Image, requested.Tag, EnvVarFromAPIMany(requested.Environment), p.Uuid).Scan(&uuid)
+	dberr = config.DB.QueryRow("UPDATE project_pods SET name = $1, image = $2, tag = $3, environment = $4 WHERE uuid = $5 RETURNING uuid", requested.Name, requested.Image, requested.Tag, EnvVarSliceFromAPI(requested.Environment), p.Uuid).Scan(&uuid)
 	// Check if insert was successful
 	if dberr != nil {
 		log.Println("DB error creating pod", dberr)
 		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+	}
+
+	//Update or create services
+	for _, service := range requested.Services {
+		// See if the service already exists
+		exists, err := p.serviceExists(service.Name)
+		if err != nil {
+			lh.Error(ctx, "DB error checking if service exists", dberr)
+			return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+		}
+		if exists {
+			_, dberr = config.DB.Exec("UPDATE pod_services SET port = $3, target_port = $4, protocol = $5, domain_name = $6 WHERE pod_uuid = $1 AND name = $2", p.Uuid, service.Name, service.Port, service.TargetPort, service.Protocol, service.DomainName)
+			if dberr != nil {
+				lh.Error(ctx, "DB error updating pod service", dberr)
+				return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+			}
+			continue
+		}
+
+		// Finally, try create the service
+		_, dberr = config.DB.Exec("INSERT INTO pod_services (uuid, pod_uuid, name, port, target_port, protocol, domain_name) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6) ON CONFLICT (pod_uuid, name) DO UPDATE SET port = $3, target_port = $4, protocol = $5, domain_name = $6", p.Uuid, service.Name, service.Port, service.TargetPort, service.Protocol, service.DomainName)
+		// If the service already exists, update it
+
+		if dberr != nil {
+			lh.Error(ctx, "DB error creating pod service", dberr)
+			return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+		}
 	}
 
 	// Update the elements of p that can change
@@ -296,6 +323,8 @@ func (p *Pod) Update(requested api.Pod) *apierror.ApiError {
 	p.Image = requested.Image
 	p.Tag = requested.Tag
 	p.Status = "Updating"
+	p.Environment = EnvVarFromAPIMany(requested.Environment)
+	p.Services = servicesFromAPI(requested.Services)
 
 	return nil
 }

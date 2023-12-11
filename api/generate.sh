@@ -31,3 +31,5 @@ echo "Generating Terraform SDK."
 
 # Generate the Terraform SDK 
 speakeasy generate sdk --lang terraform -o ./speakeasy/ -s ./api/openapi.yaml
+cd ./speakeasy
+go build -o terraform-provider-podinate

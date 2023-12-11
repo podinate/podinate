@@ -94,6 +94,11 @@ func loggingMiddleware(next http.Handler) http.Handler {
 
 		requestID := lh.GetRequestID(r.Context())
 		w.Header().Add("X-Request-ID", string(requestID))
+		// body, err := r.GetBody()
+		// if err != nil {
+		// 	body = nil
+		// 	lh.Error(r.Context(), "Error getting body", "error", err)
+		// }
 		lh.Log.Infow("request", "request_id", requestID, "method", r.Method, "url", r.URL, "remote", r.Header.Get("x-forwarded-for"), "user-agent", r.UserAgent(), "referer", r.Referer(), "requestor", requestor)
 
 		next.ServeHTTP(w, r)

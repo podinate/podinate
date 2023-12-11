@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
@@ -54,13 +55,17 @@ func servicesFromAPI(apiServices []api.Service) ServiceSlice {
 
 // serviceFromAPI converts an API Service to a pod Service
 func serviceFromAPI(apiService api.Service) Service {
-	return Service{
+	if apiService.Protocol == "" {
+		apiService.Protocol = "tcp"
+	}
+	out := Service{
 		Name:       apiService.Name,
 		Port:       int(apiService.Port),
 		TargetPort: int(apiService.TargetPort),
 		Protocol:   apiService.Protocol,
 		DomainName: apiService.DomainName,
 	}
+	return out
 }
 
 // servicesToAPI converts a pod ServiceSlice to an API Service array
@@ -95,7 +100,7 @@ func (p *Pod) getServiceSpec() *[]corev1.Service {
 		}
 		services[i] = corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      p.ID + "-" + service.Name,
+				Name:      service.Name,
 				Namespace: p.getNamespaceName(),
 			},
 			Spec: corev1.ServiceSpec{
@@ -108,7 +113,7 @@ func (p *Pod) getServiceSpec() *[]corev1.Service {
 						Name:       service.Name,
 						Port:       int32(service.Port),
 						TargetPort: intstr.FromInt(service.TargetPort),
-						Protocol:   corev1.Protocol(service.Protocol),
+						Protocol:   corev1.Protocol(strings.ToUpper(service.Protocol)),
 					},
 				},
 			},
@@ -158,4 +163,13 @@ func (p *Pod) ensureServices() error {
 	}
 
 	return nil
+}
+
+func (p *Pod) serviceExists(serviceName string) (bool, error) {
+	var count int
+	err := config.DB.QueryRow("SELECT COUNT(*) FROM pod_services WHERE pod_uuid = $1 AND name = $2", p.Uuid, serviceName).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

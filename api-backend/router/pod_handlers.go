@@ -135,7 +135,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdPatch(ctx context.Context, proje
 		return responder.Response(http.StatusForbidden, "You do not have permission to update this pod"), nil
 	}
 
-	err := thePod.Update(podIn)
+	err := thePod.Update(ctx, podIn)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}
