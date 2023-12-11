@@ -47,7 +47,7 @@ func callKubes() {
 
 }
 
-func createKubesNamespace(name string) (*corev1.Namespace, error) {
+func (p *Pod) ensureNamespace() (*corev1.Namespace, error) {
 	fmt.Println("Create Kubernetes namespace")
 
 	clientset, err := getKubesClient()
@@ -58,7 +58,7 @@ func createKubesNamespace(name string) (*corev1.Namespace, error) {
 
 	nsSpec := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name: p.getNamespaceName(),
 		},
 	}
 	ns, err := clientset.CoreV1().
@@ -66,7 +66,7 @@ func createKubesNamespace(name string) (*corev1.Namespace, error) {
 		Create(context.Background(), nsSpec, metav1.CreateOptions{})
 	if errors.IsAlreadyExists(err) {
 		// Get the ns instead
-		ns, err := clientset.CoreV1().Namespaces().Get(context.Background(), name, metav1.GetOptions{})
+		ns, err := clientset.CoreV1().Namespaces().Get(context.Background(), p.getNamespaceName(), metav1.GetOptions{})
 		if err != nil {
 			fmt.Printf("error getting existing kubernetes namespace: %v\n", err)
 			return ns, err
@@ -78,6 +78,10 @@ func createKubesNamespace(name string) (*corev1.Namespace, error) {
 		return nil, err
 	}
 	return ns, nil
+}
+
+func (p *Pod) getNamespaceName() string {
+	return p.Project.Account.ID + "-project-" + p.Project.ID
 }
 
 // getKubesDeployment returns a deployment in the specified namespace.
@@ -156,15 +160,15 @@ func getDeploymentSpec(theProject project.Project, requested api.Pod) *appsv1.De
 			Replicas: func(val int32) *int32 { return &val }(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"podinate": requested.Id,
-					"project":  theProject.ID,
+					"podinate.com/pod":     requested.Id,
+					"podinate.com/project": theProject.ID,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"podinate": requested.Id,
-						"project":  theProject.ID,
+						"podinate.com/pod":     requested.Id,
+						"podinate.com/project": theProject.ID,
 					},
 				},
 				Spec: corev1.PodSpec{

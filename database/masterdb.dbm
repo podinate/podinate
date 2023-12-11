@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,321" last-zoom="1" max-obj-count="12"
+<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,389" last-zoom="1" max-obj-count="13"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -79,10 +79,10 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</constraint>
 </table>
 
-<table name="project_pods" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+<table name="project_pods" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="1560" y="880"/>
+	<position x="980" y="920"/>
 	<column name="uuid" not-null="true">
 		<type name="uuid" length="0"/>
 	</column>
@@ -101,6 +101,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="tag">
 		<type name="text" length="0"/>
 		<comment> <![CDATA[The image tag to run]]> </comment>
+	</column>
+	<column name="environment">
+		<type name="jsonb" length="0"/>
 	</column>
 	<constraint name="project_pods_pk" type="pk-constr" table="public.project_pods">
 		<columns names="uuid" ref-type="src-columns"/>
@@ -345,6 +348,39 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</constraint>
 </table>
 
+<table name="pod_services" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1540" y="900"/>
+	<column name="uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="pod_uuid">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="name">
+		<type name="text" length="0"/>
+	</column>
+	<column name="port" not-null="true">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="target_port">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="protocol">
+		<type name="varchar" length="4"/>
+	</column>
+	<column name="domain_name">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="primary" type="pk-constr" table="public.pod_services">
+		<columns names="uuid" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="unique_domain_name" type="uq-constr" table="public.pod_services">
+		<columns names="domain_name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
 <constraint name="owner_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
 	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.&quot;user&quot;" table="public.account">
 	<columns names="owner_uuid" ref-type="src-columns"/>
@@ -387,6 +423,12 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<columns names="uuid" ref-type="dst-columns"/>
 </constraint>
 
+<constraint name="pod_uuid_fk" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="NO ACTION" del-action="CASCADE" ref-table="public.project_pods" table="public.pod_services">
+	<columns names="pod_uuid" ref-type="src-columns"/>
+	<columns names="uuid" ref-type="dst-columns"/>
+</constraint>
+
 <relationship name="rel_account_user" type="relfk" layers="0"
 	 src-table="public.account"
 	 dst-table="public.&quot;user&quot;" reference-fk="owner_uuid"
@@ -420,6 +462,11 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <relationship name="rel_policy_account" type="relfk" layers="0"
 	 src-table="public.policy"
 	 dst-table="public.account" reference-fk="account_uuid_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_pod_services_project_pods" type="relfk" layers="0"
+	 src-table="public.pod_services"
+	 dst-table="public.project_pods" reference-fk="pod_uuid_fk"
 	 src-required="false" dst-required="false"/>
 
 </dbmodel>

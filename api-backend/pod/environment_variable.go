@@ -62,11 +62,12 @@ func EnvVarFromAPIMany(apiEnvVars []api.EnvironmentVariable) []EnvironmentVariab
 
 // func ToAPI converts a pod EnvironmentVariable to an API EnvironmentVariable
 func EnvVarToAPI(envVar EnvironmentVariable) api.EnvironmentVariable {
-	return api.EnvironmentVariable{
+	out := api.EnvironmentVariable{
 		Key:    envVar.Key,
 		Value:  envVar.Value,
 		Secret: envVar.Secret,
 	}
+	return out
 }
 
 // ToAPIMany converts an array of pod EnvironmentVariables to an array of API EnvironmentVariables

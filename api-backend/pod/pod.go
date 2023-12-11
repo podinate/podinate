@@ -28,6 +28,7 @@ type Pod struct {
 	Image       string
 	Tag         string
 	Environment EnvironmentSlice
+	Services    ServiceSlice
 	Status      string // Creating, OK, Down
 	Count       int
 	Ram         int
@@ -35,7 +36,7 @@ type Pod struct {
 	// TODO - add CPU requests / limits
 }
 
-func GetByID(theProject project.Project, id string) (Pod, *apierror.ApiError) {
+func GetByID(ctx context.Context, theProject project.Project, id string) (Pod, *apierror.ApiError) {
 	p := Pod{}
 	dberr := config.DB.QueryRow("SELECT uuid, id, name, image, tag, environment FROM project_pods WHERE id = $1 AND project_uuid = $2", id, theProject.Uuid).Scan(&p.Uuid, &p.ID, &p.Name, &p.Image, &p.Tag, &p.Environment)
 	if dberr != nil && dberr != sql.ErrNoRows {
@@ -44,11 +45,16 @@ func GetByID(theProject project.Project, id string) (Pod, *apierror.ApiError) {
 	}
 
 	if dberr == sql.ErrNoRows {
+		lh.Error(ctx, "Pod not found", "project", theProject, "id", id)
 		return Pod{}, &apierror.ApiError{Code: http.StatusNotFound, Message: "Pod not found"}
 	}
 
 	p.Project = theProject
 
+	// Get the services for the pod
+	p.loadServices()
+
+	// Get the status of the pod from kubernetes
 	dep, err := getKubesDeployment(theProject, id)
 	if err != nil {
 		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
@@ -56,53 +62,83 @@ func GetByID(theProject project.Project, id string) (Pod, *apierror.ApiError) {
 
 	status := "Creating"
 	if dep.Status.AvailableReplicas == dep.Status.Replicas {
-		status = "OK"
+		status = "Ready"
 	} else if dep.Status.AvailableReplicas == 0 {
 		status = "Down"
 	}
-
 	p.Status = status
 
 	return p, nil
 
 }
 
-func GetByProject(theProject project.Project, page int32, limit int32) ([]Pod, *apierror.ApiError) {
+func GetByProject(ctx context.Context, theProject project.Project, page int32, limit int32) ([]Pod, *apierror.ApiError) {
 	if limit < 1 || limit > 125 {
 		limit = 25
 	}
-	rows, err := config.DB.Query("SELECT uuid, id, name, image, tag, environment FROM project_pods WHERE project_uuid = $1 OFFSET $2 LIMIT $3", theProject.Uuid, page, limit)
+
+	// Get the uuid of all pods in the project
+
+	rows, err := config.DB.Query("SELECT uuid, id FROM project_pods WHERE project_uuid = $1", theProject.Uuid)
 	if err != nil {
 		return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve pods")
 	}
 	defer rows.Close()
+
 	// Read all the pods for the project
 	pods := make([]Pod, 0)
 	for rows.Next() {
-		var pod Pod
-		err = rows.Scan(&pod.Uuid, &pod.ID, &pod.Name, &pod.Image, &pod.Tag, &pod.Environment)
+		var uuid string
+		var id string
+		err = rows.Scan(&uuid, &id)
+		pod, err := GetByID(ctx, theProject, id)
 		if err != nil {
-			log.Println("DB error reading pods", err)
+			lh.Log.Errorw("Error getting pod", "error", err)
 			return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve pods")
 		}
-		pod.Project = theProject
-		dep, err := getKubesDeployment(theProject, pod.ID)
-		if err != nil {
-			return nil, apierror.New(http.StatusInternalServerError, err.Error())
-		}
-
-		status := "Creating"
-		if dep.Status.AvailableReplicas == dep.Status.Replicas {
-			status = "OK"
-		} else if dep.Status.AvailableReplicas == 0 {
-			status = "Down"
-		}
-
-		pod.Status = status
-
 		pods = append(pods, pod)
 	}
+
+	lh.Info(ctx, "Pods retrieved", "project", theProject, "count", len(pods), "pods", pods)
+
 	return pods, nil
+	// rows, err := config.DB.Query("SELECT uuid, id, name, image, tag, environment FROM project_pods WHERE project_uuid = $1 OFFSET $2 LIMIT $3", theProject.Uuid, page, limit)
+	// if err != nil {
+	// 	return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve pods")
+	// }
+	// defer rows.Close()
+	// // Read all the pods for the project
+	// pods := make([]Pod, 0)
+	// for rows.Next() {
+	// 	var pod Pod
+	// 	err = rows.Scan(&pod.Uuid, &pod.ID, &pod.Name, &pod.Image, &pod.Tag, &pod.Environment)
+	// 	if err != nil {
+	// 		log.Println("DB error reading pods", err)
+	// 		return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve pods")
+	// 	}
+	// 	pod.Project = theProject
+
+	// 	// Get the services for the pod
+	// 	pod.loadServices()
+
+	// 	// Get the status of the pod from kubernetes
+	// 	dep, err := getKubesDeployment(theProject, pod.ID)
+	// 	if err != nil {
+	// 		return nil, apierror.New(http.StatusInternalServerError, err.Error())
+	// 	}
+
+	// 	status := "Creating"
+	// 	if dep.Status.AvailableReplicas == dep.Status.Replicas {
+	// 		status = "OK"
+	// 	} else if dep.Status.AvailableReplicas == 0 {
+	// 		status = "Down"
+	// 	}
+
+	// 	pod.Status = status
+
+	// 	pods = append(pods, pod)
+	// }
+	// return pods, nil
 }
 
 // Create performs the initial registration of a pod in the database and the kubernetes cluster
@@ -134,10 +170,32 @@ func Create(ctx context.Context, theAccount account.Account, theProject project.
 		return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
 	}
 
-	// Start creating the pod
+	// Add the services to the database if it exists
+	if len(requestedPod.Services) > 0 {
+		for _, service := range requestedPod.Services {
+			_, dberr = config.DB.Exec("INSERT INTO pod_services (uuid, pod_uuid, name, port, target_port, protocol, domain_name) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)", uuid, service.Name, service.Port, service.TargetPort, service.Protocol, service.DomainName)
+			if dberr != nil {
+				lh.Error(ctx, "DB error creating pod service", dberr)
+				return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+			}
+		}
+	}
 
-	// The kubes logic
-	ns, err := createKubesNamespace(theAccount.ID + "-project-" + theProject.ID)
+	// Start creating the pod
+	out := Pod{
+		Uuid:        uuid,
+		ID:          requestedPod.Id,
+		Name:        requestedPod.Name,
+		Image:       requestedPod.Image,
+		Tag:         requestedPod.Tag,
+		Project:     theProject,
+		Status:      "Creating",
+		Environment: EnvVarFromAPIMany(requestedPod.Environment),
+		Services:    servicesFromAPI(requestedPod.Services),
+	}
+
+	// Ensure namespace exists
+	ns, err := out.ensureNamespace()
 	//ns, err := createKubesNamespace(theProject.GetResourceID())
 	if err != nil {
 		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
@@ -148,16 +206,11 @@ func Create(ctx context.Context, theAccount account.Account, theProject project.
 		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
 	}
 
-	out := Pod{
-		Uuid:        uuid,
-		ID:          requestedPod.Id,
-		Name:        requestedPod.Name,
-		Image:       requestedPod.Image,
-		Tag:         requestedPod.Tag,
-		Project:     theProject,
-		Status:      "Creating",
-		Environment: EnvVarFromAPIMany(requestedPod.Environment),
+	err = out.ensureServices()
+	if err != nil {
+		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
 	}
+
 	return out, nil
 }
 
@@ -170,6 +223,7 @@ func (p *Pod) ToAPI() api.Pod {
 		Status:      p.Status,
 		Environment: EnvVarToAPIMany(p.Environment),
 		ResourceId:  p.GetResourceID(),
+		Services:    ServicesToAPI(p.Services),
 	}
 }
 
@@ -188,6 +242,13 @@ func (p *Pod) Delete(ctx context.Context) *apierror.ApiError {
 
 	if dberr != nil {
 		log.Println("DB error deleting pod", dberr)
+		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+	}
+
+	// Delete the services from the database
+	_, dberr = config.DB.Exec("DELETE FROM pod_services WHERE pod_uuid = $1", p.Uuid)
+	if dberr != nil {
+		lh.Error(ctx, "DB error deleting pod services", "err", dberr)
 		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
 	}
 
@@ -214,6 +275,10 @@ func (p *Pod) Update(requested api.Pod) *apierror.ApiError {
 	// Start creating the pod
 
 	err := updateKubesDeployment(*p, requested)
+	if err != nil {
+		return apierror.New(http.StatusInternalServerError, err.Error())
+	}
+	err = p.ensureServices()
 	if err != nil {
 		return apierror.New(http.StatusInternalServerError, err.Error())
 	}

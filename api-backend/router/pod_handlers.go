@@ -43,7 +43,7 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 	}
 
 	// Get the pods for the project
-	pods, apiErr := pod.GetByProject(theProject, page, limit)
+	pods, apiErr := pod.GetByProject(ctx, theProject, page, limit)
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
@@ -61,6 +61,7 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 				Tag:         p.Tag,
 				Status:      p.Status,
 				Environment: pod.EnvVarToAPIMany(p.Environment),
+				Services:    pod.ServicesToAPI(p.Services),
 			})
 		}
 	}
@@ -92,7 +93,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdGet(ctx context.Context, project
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
 
-	p, apiErr := pod.GetByID(theProject, podID)
+	p, apiErr := pod.GetByID(ctx, theProject, podID)
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
@@ -122,7 +123,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdPatch(ctx context.Context, proje
 	}
 
 	// Get the pod by ID
-	thePod, apiErr := pod.GetByID(theProject, podID)
+	thePod, apiErr := pod.GetByID(ctx, theProject, podID)
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
@@ -190,7 +191,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 	}
 
 	// Get the pod by ID
-	thePod, apiErr := pod.GetByID(theProject, podID)
+	thePod, apiErr := pod.GetByID(ctx, theProject, podID)
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}

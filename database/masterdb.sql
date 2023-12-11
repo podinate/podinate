@@ -60,6 +60,7 @@ CREATE TABLE public.project_pods (
 	image text,
 	tag text,
 	project_uuid uuid,
+	environment jsonb,
 	CONSTRAINT project_pods_pk PRIMARY KEY (uuid)
 );
 -- ddl-end --
@@ -227,6 +228,23 @@ COMMENT ON COLUMN public.policy_version.user_uuid IS E'User who made the revisio
 ALTER TABLE public.policy_version OWNER TO postgres;
 -- ddl-end --
 
+-- object: public.pod_services | type: TABLE --
+-- DROP TABLE IF EXISTS public.pod_services CASCADE;
+CREATE TABLE public.pod_services (
+	uuid uuid NOT NULL,
+	pod_uuid uuid,
+	name text,
+	port smallint NOT NULL,
+	target_port smallint,
+	protocol varchar(4),
+	domain_name text,
+	CONSTRAINT "primary" PRIMARY KEY (uuid),
+	CONSTRAINT unique_domain_name UNIQUE (domain_name)
+);
+-- ddl-end --
+ALTER TABLE public.pod_services OWNER TO postgres;
+-- ddl-end --
+
 -- object: owner_uuid | type: CONSTRAINT --
 -- ALTER TABLE public.account DROP CONSTRAINT IF EXISTS owner_uuid CASCADE;
 ALTER TABLE public.account ADD CONSTRAINT owner_uuid FOREIGN KEY (owner_uuid)
@@ -262,10 +280,24 @@ REFERENCES public.policy (uuid) MATCH SIMPLE
 ON DELETE CASCADE ON UPDATE CASCADE;
 -- ddl-end --
 
+-- object: account_uuid_fk | type: CONSTRAINT --
+-- ALTER TABLE public.policy DROP CONSTRAINT IF EXISTS account_uuid_fk CASCADE;
+ALTER TABLE public.policy ADD CONSTRAINT account_uuid_fk FOREIGN KEY (account_uuid)
+REFERENCES public.account (uuid) MATCH SIMPLE
+ON DELETE CASCADE ON UPDATE CASCADE;
+-- ddl-end --
+
 -- object: policy_uuid | type: CONSTRAINT --
 -- ALTER TABLE public.policy_version DROP CONSTRAINT IF EXISTS policy_uuid CASCADE;
 ALTER TABLE public.policy_version ADD CONSTRAINT policy_uuid FOREIGN KEY (policy_uuid)
 REFERENCES public.policy (uuid) MATCH SIMPLE
+ON DELETE NO ACTION ON UPDATE NO ACTION;
+-- ddl-end --
+
+-- object: pod_uuid_fk | type: CONSTRAINT --
+-- ALTER TABLE public.pod_services DROP CONSTRAINT IF EXISTS pod_uuid_fk CASCADE;
+ALTER TABLE public.pod_services ADD CONSTRAINT pod_uuid_fk FOREIGN KEY (pod_uuid)
+REFERENCES public.project_pods (uuid) MATCH SIMPLE
 ON DELETE NO ACTION ON UPDATE NO ACTION;
 -- ddl-end --
 

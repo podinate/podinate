@@ -117,6 +117,9 @@ rules:
   resources: ["deployments/status"]
   verbs: ["get", "update", "patch"]
 - apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
   resources: ["namespaces"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
