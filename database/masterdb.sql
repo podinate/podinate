@@ -239,7 +239,7 @@ CREATE TABLE public.pod_services (
 	protocol varchar(4),
 	domain_name text,
 	CONSTRAINT "primary" PRIMARY KEY (uuid),
-	CONSTRAINT unique_domain_name UNIQUE (domain_name)
+	CONSTRAINT unique_domain_name UNIQUE NULLS NOT DISTINCT (domain_name)
 );
 -- ddl-end --
 ALTER TABLE public.pod_services OWNER TO postgres;

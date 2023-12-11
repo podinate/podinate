@@ -8,7 +8,9 @@ import (
 
 	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
+	lh "github.com/johncave/podinate/api-backend/loghandler"
 	corev1 "k8s.io/api/core/v1"
+	v1networking "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -102,6 +104,11 @@ func (p *Pod) getServiceSpec() *[]corev1.Service {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      service.Name,
 				Namespace: p.getNamespaceName(),
+				Annotations: map[string]string{
+					"podinate.com/project":     p.Project.ID,
+					"podinate.com/pod":         p.ID,
+					"podinate.com/domain-name": service.DomainName,
+				},
 			},
 			Spec: corev1.ServiceSpec{
 				Selector: map[string]string{
@@ -122,7 +129,111 @@ func (p *Pod) getServiceSpec() *[]corev1.Service {
 	return &services
 }
 
-func (p *Pod) ensureServices() error {
+// getIngressSpec returns the kubernetes ingress spec for a pod
+func (p *Pod) getIngressSpec() *[]v1networking.Ingress {
+	if len(p.Services) == 0 {
+		return nil
+	}
+	ingresses := make([]v1networking.Ingress, 0)
+	for _, service := range p.Services {
+		//lh.Log.Debugw("getIngressSpec", "service", service)
+		if service.DomainName == "" {
+			continue
+		}
+		if service.Protocol != "http" {
+			continue
+		}
+		new := v1networking.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        service.Name,
+				Namespace:   p.getNamespaceName(),
+				Annotations: p.getAnnotations(),
+			},
+			Spec: v1networking.IngressSpec{
+				Rules: []v1networking.IngressRule{
+					{
+						Host: service.DomainName,
+						IngressRuleValue: v1networking.IngressRuleValue{
+							HTTP: &v1networking.HTTPIngressRuleValue{
+								Paths: []v1networking.HTTPIngressPath{
+									{
+										Path:     "/",
+										PathType: func() *v1networking.PathType { p := v1networking.PathTypePrefix; return &p }(),
+										Backend: v1networking.IngressBackend{
+											Service: &v1networking.IngressServiceBackend{
+												Name: service.Name,
+												Port: v1networking.ServiceBackendPort{
+													Number: int32(service.Port),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		ingresses = append(ingresses, new)
+	}
+
+	lh.Log.Infow("getIngressSpec", "ingresses", ingresses)
+
+	return &ingresses
+}
+
+// ensureIngresses ensures that the ingresses for a pod exist
+func (p *Pod) ensureIngresses(ctx context.Context) error {
+
+	clientset, err := getKubesClient()
+	if err != nil {
+		log.Printf("error getting kubernetes client: %v\n", err)
+		return err
+	}
+
+	// TODO - Figure out how to get the service port from the pod
+	ingressSpec := p.getIngressSpec()
+
+	if ingressSpec == nil {
+		return nil
+	}
+
+	// Loop over the ingresses and create them if they don't exist, or update them if they do
+	for _, ingress := range *ingressSpec {
+		_, err := clientset.NetworkingV1().
+			Ingresses(p.getNamespaceName()).
+			Get(context.Background(), ingress.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			lh.Log.Infow("error getting ingress: %v\n", err)
+			_, err := clientset.NetworkingV1().
+				Ingresses(p.getNamespaceName()).
+				Create(context.Background(), &ingress, metav1.CreateOptions{})
+			if err != nil {
+				lh.Log.Errorw("error creating ingress", "err", err, "ingres_object", ingress)
+				return err
+			}
+			lh.Info(ctx, "Created ingress", "ingress", ingress)
+		} else {
+			_, err := clientset.NetworkingV1().
+				Ingresses(p.getNamespaceName()).
+				Update(context.Background(), &ingress, metav1.UpdateOptions{})
+			if err != nil {
+				lh.Log.Errorw("error updating ingress: %v\n", err)
+				return err
+			}
+			lh.Info(ctx, "Updated ingress", "ingress", ingress)
+		}
+
+		// If the service has a domain name, add an ingress for it
+
+	}
+
+	return nil
+}
+
+// ensureServices ensures that the services for a pod exist
+func (p *Pod) ensureServices(ctx context.Context) error {
 
 	clientset, err := getKubesClient()
 	if err != nil {
@@ -151,6 +262,7 @@ func (p *Pod) ensureServices() error {
 				fmt.Printf("error creating service: %v\n", err)
 				return err
 			}
+			lh.Info(ctx, "Created service", "service", service.ObjectMeta.Name)
 		} else {
 			_, err := clientset.CoreV1().
 				Services(p.getNamespaceName()).
@@ -159,7 +271,16 @@ func (p *Pod) ensureServices() error {
 				fmt.Printf("error updating service: %v\n", err)
 				return err
 			}
+			lh.Info(ctx, "Updated service", "service", service.ObjectMeta.Name)
 		}
+
+		// If the service has a domain name, add an ingress for it
+
+	}
+
+	err = p.ensureIngresses(ctx)
+	if err != nil {
+		return err
 	}
 
 	return nil

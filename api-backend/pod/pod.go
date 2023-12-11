@@ -206,7 +206,7 @@ func Create(ctx context.Context, theAccount account.Account, theProject project.
 		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
 	}
 
-	err = out.ensureServices()
+	err = out.ensureServices(ctx)
 	if err != nil {
 		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
 	}
@@ -236,8 +236,15 @@ func (p *Pod) Delete(ctx context.Context) *apierror.ApiError {
 		return apierror.New(http.StatusInternalServerError, err.Error())
 	}
 
+	// Delete any services from the database
+	_, dberr := config.DB.Exec("DELETE FROM pod_services WHERE pod_uuid = $1", p.Uuid)
+	if dberr != nil {
+		lh.Error(ctx, "DB error deleting pod services", "err", dberr)
+		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+	}
+
 	// Delete the pod from the database
-	_, dberr := config.DB.Exec("DELETE FROM project_pods WHERE project_uuid = $1 AND id = $2", p.Project.Uuid, p.ID)
+	_, dberr = config.DB.Exec("DELETE FROM project_pods WHERE project_uuid = $1 AND id = $2", p.Project.Uuid, p.ID)
 	// Check if delete was successful
 
 	if dberr != nil {
@@ -272,13 +279,21 @@ func (p *Pod) Update(ctx context.Context, requested api.Pod) *apierror.ApiError 
 		return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
 	}
 
+	// Update the elements of p that can change
+	p.Name = requested.Name
+	p.Image = requested.Image
+	p.Tag = requested.Tag
+	p.Status = "Updating"
+	p.Environment = EnvVarFromAPIMany(requested.Environment)
+	p.Services = servicesFromAPI(requested.Services)
+
 	// Start creating the pod
 
 	err := updateKubesDeployment(*p, requested)
 	if err != nil {
 		return apierror.New(http.StatusInternalServerError, err.Error())
 	}
-	err = p.ensureServices()
+	err = p.ensureServices(ctx)
 	if err != nil {
 		return apierror.New(http.StatusInternalServerError, err.Error())
 	}
@@ -309,7 +324,7 @@ func (p *Pod) Update(ctx context.Context, requested api.Pod) *apierror.ApiError 
 		}
 
 		// Finally, try create the service
-		_, dberr = config.DB.Exec("INSERT INTO pod_services (uuid, pod_uuid, name, port, target_port, protocol, domain_name) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6) ON CONFLICT (pod_uuid, name) DO UPDATE SET port = $3, target_port = $4, protocol = $5, domain_name = $6", p.Uuid, service.Name, service.Port, service.TargetPort, service.Protocol, service.DomainName)
+		_, dberr = config.DB.Exec("INSERT INTO pod_services (uuid, pod_uuid, name, port, target_port, protocol, domain_name) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)", p.Uuid, service.Name, service.Port, service.TargetPort, service.Protocol, service.DomainName)
 		// If the service already exists, update it
 
 		if dberr != nil {
@@ -318,17 +333,17 @@ func (p *Pod) Update(ctx context.Context, requested api.Pod) *apierror.ApiError 
 		}
 	}
 
-	// Update the elements of p that can change
-	p.Name = requested.Name
-	p.Image = requested.Image
-	p.Tag = requested.Tag
-	p.Status = "Updating"
-	p.Environment = EnvVarFromAPIMany(requested.Environment)
-	p.Services = servicesFromAPI(requested.Services)
-
 	return nil
 }
 
 func (p Pod) GetResourceID() string {
 	return p.Project.GetResourceID() + "/pod:" + p.ID
+}
+
+func (p *Pod) getAnnotations() map[string]string {
+	return map[string]string{
+		"podinate.io/project": p.Project.GetResourceID(),
+		"podinate.io/pod":     p.GetResourceID(),
+	}
+
 }
