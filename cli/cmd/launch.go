@@ -78,8 +78,8 @@ terraform {
 }
 
 provider "podinate" {
-# Configuration options
-	server_url = "http://localhost:3001/v0"
+	# Configuration options
+	server_url   = "http://localhost:3001/v0"
 	api_key_auth = var.podinate_api_key
 }
 
@@ -90,48 +90,106 @@ resource "podinate_project" "wordpress_project" {
 }
 
 resource "podinate_pod" "wordpress_pod" {
-	account = podinate_project.wordpress_project.account
+	account    = podinate_project.wordpress_project.account
 	project_id = podinate_project.wordpress_project.id
 	id         = "wordpress"
 	image      = "wordpress"
 	name       = "WordPress"
 	tag        = "6"
+	environment = [
+		{
+		key   = "WORDPRESS_DB_HOST"
+		value = "mysql"
+		},
+		{
+		key   = "WORDPRESS_DB_USER"
+		value = "wordpress"
+		},
+		{
+		key    = "WORDPRESS_DB_PASSWORD"
+		value  = var.db_pass
+		secret = true
+		},
+		{
+			key = "WORDPRESS_DB_NAME"
+			value = "wordpress"
+		}
+	]
+	services = [
+		{
+			name     = "wordpress"
+			port     = 80
+			protocol = "http"
+			domain_name = "john-blog.podinate.app"
+		}
+	]
 }
 
 resource "podinate_pod" "database_pod" {
-	account = podinate_project.wordpress_project.account
+	account    = podinate_project.wordpress_project.account
 	project_id = podinate_project.wordpress_project.id
 	id         = "mariadb"
 	image      = "mariadb"
 	name       = "MySQL"
 	tag        = "10"
+	environment = [
+		{
+		key   = "MARIADB_USER"
+		value = "wordpress"
+		},
+		{
+		key    = "MARIADB_PASSWORD"
+		value  = var.db_pass
+		secret = true
+		},
+		{
+		key   = "MARIADB_DATABASE"
+		value = "wordpress"
+		},
+		{
+			key = "MARIADB_RANDOM_ROOT_PASSWORD"
+			value = "yesn't'd've"
+		}
+	]
+	services = [
+		{
+			name     = "mysql"
+			port     = 3306
+			protocol = "tcp"
+		}
+	]
 }
+		  
 		`)
 
 		tfvars := `
-		variable "podinate_api_key" {
-			type = string 
-			description = "API key for Podinate"
-		}
-		
-		variable "account_id" {
-			type = string
-			description = "Account ID for Podinate"
-		}
-		
-		variable "project_name" {
-			type = string
-			default = "WordPress Blog"
-			description = "Project name for Podinate"
-		}
+variable "podinate_api_key" {
+	type = string 
+	description = "API key for Podinate"
+}
+
+variable "account_id" {
+	type = string
+	description = "Account ID for Podinate"
+}
+
+variable "project_name" {
+	type = string
+	default = "WordPress Blog"
+	description = "Project name for Podinate"
+}
+variable "db_pass" {
+	type = string
+	description = "Password for the WordPress database"
+}
 		`
 
-		tfvals := "project_name = \"WordPress Blog\""
+		tfvals := "project_name = \"WordPress Blog\"\ndb_pass = \"awD7iw!vNTEgP^!qa%fq\""
 		podinateYaml := "project: \"wordpress-blog\""
 
 		os.WriteFile("./podinate.tf", wptf, 0644)
 		os.WriteFile("./variables.tf", []byte(tfvars), 0644)
-		os.WriteFile("./podinate.tfvars", []byte(tfvals), 0644)
+		os.WriteFile("./terraform.tfvars", []byte(tfvals), 0644)
 		os.WriteFile("./podinate.yaml", []byte(podinateYaml), 0644)
 
 		fmt.Println("Wrote Terraform files, when you're ready, run 'podinate tf apply' to launch your app")

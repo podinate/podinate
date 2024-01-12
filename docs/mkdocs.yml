@@ -5,6 +5,8 @@ nav:
   - Home: index.md
   - Getting Started: 
     - getting-started/index.md
+    - Overview: getting-started/overview.md
+    - Concepts: getting-started/concepts.md
     - Quick Start: getting-started/quick-start.md
     - Installation: getting-started/installation.md
     - Run Your App: getting-started/your-app.md
@@ -13,6 +15,10 @@ nav:
     - application-reference/index.md
     - WordPress: application-reference/WordPress.md
     - MariaDB: application-reference/MariaDB.md
+  - Packages:
+    - packages/packages-overview.md
+    - Package Structure: packages/package-structure.md
+    - Publishing: packages/publishing.md
 
 plugins:
   - tags
@@ -21,6 +27,7 @@ plugins:
 theme: 
   name: material
   palette: 
+    scheme: slate
     primary: deep purple
     accent: cyan
     toggle:
