@@ -7,7 +7,8 @@ Method | HTTP request | Description
 [**UserGet**](UserApi.md#UserGet) | **Get** /user | Get the current user
 [**UserLoginCallbackProviderGet**](UserApi.md#UserLoginCallbackProviderGet) | **Get** /user/login/callback/{provider} | User login callback URL for oauth providers
 [**UserLoginCompleteGet**](UserApi.md#UserLoginCompleteGet) | **Get** /user/login/complete | Complete a user login
-[**UserLoginInitiateGet**](UserApi.md#UserLoginInitiateGet) | **Get** /user/login/initiate | Get a login URL
+[**UserLoginInitiateGet**](UserApi.md#UserLoginInitiateGet) | **Get** /user/login/initiate | Get a login URL for oauth login
+[**UserLoginPost**](UserApi.md#UserLoginPost) | **Post** /user/login | Login to Podinate
 [**UserLoginRedirectTokenGet**](UserApi.md#UserLoginRedirectTokenGet) | **Get** /user/login/redirect/{token} | User login redirect URL to oauth providers
 
 
@@ -145,7 +146,7 @@ No authorization required
 
 ## UserLoginCompleteGet
 
-> UserLoginCompleteGet200Response UserLoginCompleteGet(ctx).Token(token).Client(client).Execute()
+> UserLoginPost200Response UserLoginCompleteGet(ctx).Token(token).Client(client).Execute()
 
 Complete a user login
 
@@ -174,7 +175,7 @@ func main() {
         fmt.Fprintf(os.Stderr, "Error when calling `UserApi.UserLoginCompleteGet``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `UserLoginCompleteGet`: UserLoginCompleteGet200Response
+    // response from `UserLoginCompleteGet`: UserLoginPost200Response
     fmt.Fprintf(os.Stdout, "Response from `UserApi.UserLoginCompleteGet`: %v\n", resp)
 }
 ```
@@ -195,7 +196,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**UserLoginCompleteGet200Response**](UserLoginCompleteGet200Response.md)
+[**UserLoginPost200Response**](UserLoginPost200Response.md)
 
 ### Authorization
 
@@ -215,7 +216,7 @@ No authorization required
 
 > UserLoginInitiateGet200Response UserLoginInitiateGet(ctx).Provider(provider).Execute()
 
-Get a login URL
+Get a login URL for oauth login
 
 
 
@@ -270,6 +271,72 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## UserLoginPost
+
+> UserLoginPost200Response UserLoginPost(ctx).UserLoginPostRequest(userLoginPostRequest).Execute()
+
+Login to Podinate
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+    userLoginPostRequest := *openapiclient.NewUserLoginPostRequest("michael", "abc1234") // UserLoginPostRequest |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.UserApi.UserLoginPost(context.Background()).UserLoginPostRequest(userLoginPostRequest).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UserApi.UserLoginPost``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `UserLoginPost`: UserLoginPost200Response
+    fmt.Fprintf(os.Stdout, "Response from `UserApi.UserLoginPost`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiUserLoginPostRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **userLoginPostRequest** | [**UserLoginPostRequest**](UserLoginPostRequest.md) |  | 
+
+### Return type
+
+[**UserLoginPost200Response**](UserLoginPost200Response.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)

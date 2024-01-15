@@ -178,6 +178,33 @@ func (s *UserAPIService) UserLoginInitiateGet(ctx context.Context, providerName 
 	return responder.Response(200, out), nil
 }
 
+// userLoginPost - Login the user
+func (s *UserAPIService) UserLoginPost(ctx context.Context, body api.UserLoginPostRequest) (api.ImplResponse, error) {
+	lh.Info(ctx, "User login requested", "body", body)
+
+	u, err := myuser.CheckInternalLogin(body.Username, body.Password)
+	if err != nil {
+		lh.Error(ctx, "Error checking internal login", "error", err, "user", body.Username)
+		return responder.Response(403, "Invalid username or password"), nil
+	}
+
+	// Issue an API key for the user
+	api_key, err := u.IssueAPIKey(body.Client)
+	if err != nil {
+		lh.Error(ctx, "Error issuing API key", "error", err, "user", body.Username)
+		return responder.Response(500, err.Error()), nil
+	}
+
+	resp := api.UserLoginPost200Response{
+		ApiKey:   api_key,
+		LoggedIn: true,
+	}
+
+	lh.Info(ctx, "User login successful", "user", body.Username)
+
+	return api.Response(http.StatusOK, resp), nil
+}
+
 // SetUpGoth sets up the Goth library and registers the providers
 func SetUpGoth() {
 

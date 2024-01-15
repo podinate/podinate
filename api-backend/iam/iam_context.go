@@ -42,7 +42,7 @@ func AddRequestorToRequest(r *http.Request) (*http.Request, error) {
 	// Get the user from the database
 	theUser, err := user.GetFromAPIKey(r.Header.Get("Authorization"))
 	if err != nil {
-		lh.Log.Errorw("Could not get requestor from API key", "error", err, "request_id", lh.GetRequestID(r.Context()))
+		lh.Log.Errorw("Could not get requestor from API key ", "error", err, "request_id", lh.GetRequestID(r.Context()))
 		return r, err
 	}
 

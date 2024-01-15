@@ -23,6 +23,15 @@ type ProjectProjectIdPodGet200ResponseItemsInner struct {
 	// The image tag to run for this pod
 	Tag string `json:"tag"`
 
+	// The storage volumes attached to this pod
+	Storage []Storage `json:"storage,omitempty"`
+
+	// The environment variables to pass to the pod
+	Environment []EnvironmentVariable `json:"environment,omitempty"`
+
+	// The services to expose for this pod
+	Services []Service `json:"services,omitempty"`
+
 	// The current status of the pod
 	Status string `json:"status,omitempty"`
 
@@ -31,12 +40,6 @@ type ProjectProjectIdPodGet200ResponseItemsInner struct {
 
 	// The global Resource ID of the pod
 	ResourceId string `json:"resource_id,omitempty"`
-
-	// The environment variables to pass to the pod
-	Environment []EnvironmentVariable `json:"environment,omitempty"`
-
-	// The services to expose for this pod
-	Services []Service `json:"services,omitempty"`
 }
 
 // AssertProjectProjectIdPodGet200ResponseItemsInnerRequired checks if the required fields are not zero-ed
@@ -52,6 +55,11 @@ func AssertProjectProjectIdPodGet200ResponseItemsInnerRequired(obj ProjectProjec
 		}
 	}
 
+	for _, el := range obj.Storage {
+		if err := AssertStorageRequired(el); err != nil {
+			return err
+		}
+	}
 	for _, el := range obj.Environment {
 		if err := AssertEnvironmentVariableRequired(el); err != nil {
 			return err

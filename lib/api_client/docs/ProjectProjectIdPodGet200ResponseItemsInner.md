@@ -8,11 +8,12 @@ Name | Type | Description | Notes
 **Name** | **string** | The name of the pod | 
 **Image** | **string** | The container image to run for this pod | 
 **Tag** | **string** | The image tag to run for this pod | 
+**Storage** | Pointer to [**[]Storage**](Storage.md) | The storage volumes attached to this pod | [optional] 
+**Environment** | Pointer to [**[]EnvironmentVariable**](EnvironmentVariable.md) | The environment variables to pass to the pod | [optional] 
+**Services** | Pointer to [**[]Service**](Service.md) | The services to expose for this pod | [optional] 
 **Status** | Pointer to **string** | The current status of the pod | [optional] 
 **CreatedAt** | Pointer to **string** | The date and time the pod was created | [optional] 
 **ResourceId** | Pointer to **string** | The global Resource ID of the pod | [optional] 
-**Environment** | Pointer to [**[]EnvironmentVariable**](EnvironmentVariable.md) | The environment variables to pass to the pod | [optional] 
-**Services** | Pointer to [**[]Service**](Service.md) | The services to expose for this pod | [optional] 
 
 ## Methods
 
@@ -118,6 +119,81 @@ and a boolean to check if the value has been set.
 SetTag sets Tag field to given value.
 
 
+### GetStorage
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetStorage() []Storage`
+
+GetStorage returns the Storage field if non-nil, zero value otherwise.
+
+### GetStorageOk
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetStorageOk() (*[]Storage, bool)`
+
+GetStorageOk returns a tuple with the Storage field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetStorage
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetStorage(v []Storage)`
+
+SetStorage sets Storage field to given value.
+
+### HasStorage
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasStorage() bool`
+
+HasStorage returns a boolean if a field has been set.
+
+### GetEnvironment
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetEnvironment() []EnvironmentVariable`
+
+GetEnvironment returns the Environment field if non-nil, zero value otherwise.
+
+### GetEnvironmentOk
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetEnvironmentOk() (*[]EnvironmentVariable, bool)`
+
+GetEnvironmentOk returns a tuple with the Environment field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetEnvironment
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetEnvironment(v []EnvironmentVariable)`
+
+SetEnvironment sets Environment field to given value.
+
+### HasEnvironment
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasEnvironment() bool`
+
+HasEnvironment returns a boolean if a field has been set.
+
+### GetServices
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetServices() []Service`
+
+GetServices returns the Services field if non-nil, zero value otherwise.
+
+### GetServicesOk
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetServicesOk() (*[]Service, bool)`
+
+GetServicesOk returns a tuple with the Services field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetServices
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetServices(v []Service)`
+
+SetServices sets Services field to given value.
+
+### HasServices
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasServices() bool`
+
+HasServices returns a boolean if a field has been set.
+
 ### GetStatus
 
 `func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetStatus() string`
@@ -192,56 +268,6 @@ SetResourceId sets ResourceId field to given value.
 `func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasResourceId() bool`
 
 HasResourceId returns a boolean if a field has been set.
-
-### GetEnvironment
-
-`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetEnvironment() []EnvironmentVariable`
-
-GetEnvironment returns the Environment field if non-nil, zero value otherwise.
-
-### GetEnvironmentOk
-
-`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetEnvironmentOk() (*[]EnvironmentVariable, bool)`
-
-GetEnvironmentOk returns a tuple with the Environment field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetEnvironment
-
-`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetEnvironment(v []EnvironmentVariable)`
-
-SetEnvironment sets Environment field to given value.
-
-### HasEnvironment
-
-`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasEnvironment() bool`
-
-HasEnvironment returns a boolean if a field has been set.
-
-### GetServices
-
-`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetServices() []Service`
-
-GetServices returns the Services field if non-nil, zero value otherwise.
-
-### GetServicesOk
-
-`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetServicesOk() (*[]Service, bool)`
-
-GetServicesOk returns a tuple with the Services field if it's non-nil, zero value otherwise
-and a boolean to check if the value has been set.
-
-### SetServices
-
-`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetServices(v []Service)`
-
-SetServices sets Services field to given value.
-
-### HasServices
-
-`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasServices() bool`
-
-HasServices returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

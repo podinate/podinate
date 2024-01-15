@@ -745,6 +745,50 @@ paths:
       tags:
       - Pod
       x-speakeasy-entity-operation: Pod#update
+  /user/login:
+    post:
+      description: Login to Podinate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_user_login_post_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_user_login_post_200_response'
+          description: An array of pods
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid username or password
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      security: []
+      summary: Login to Podinate
+      tags:
+      - User
   /user/login/initiate:
     get:
       description: "Get a login URL, which will redirect the user to the oauth provider\
@@ -790,7 +834,7 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: An internal server error
       security: []
-      summary: Get a login URL
+      summary: Get a login URL for oauth login
       tags:
       - User
   /user/login/redirect/{token}:
@@ -916,7 +960,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_user_login_complete_get_200_response'
+                $ref: '#/components/schemas/_user_login_post_200_response'
           description: An array of pods
         "204":
           description: "The login is still in progress, check back soon"
@@ -1078,8 +1122,8 @@ components:
       type: object
       x-speakeasy-entity: Project
     Pod:
-      description: "A pod is a group of containers with the same lifecycle, and are\
-        \ the basic unit of deployment on Podinate"
+      description: "A pod is a group of container instances with identical settings,\
+        \ and are the basic unit of deployment on Podinate"
       example:
         id: hello-world
         name: Hello World
@@ -1114,21 +1158,15 @@ components:
           description: The image tag to run for this pod
           example: "6.0"
           type: string
-        status:
-          description: The current status of the pod
-          example: running
-          type: string
-          x-speakeasy-param-readonly: true
-        created_at:
-          description: The date and time the pod was created
-          example: 2020-01-01T00:00:00Z
-          type: string
-          x-speakeasy-param-readonly: true
-        resource_id:
-          description: The global Resource ID of the pod
-          example: account:podinate/project:hello-world/pod:my-blog
-          type: string
-          x-speakeasy-param-readonly: true
+        storage:
+          description: The storage volumes attached to this pod
+          example:
+          - name: blog-images
+            size: 10
+            mount_path: /var/www/html/images
+          items:
+            $ref: '#/components/schemas/Storage'
+          type: array
         environment:
           description: The environment variables to pass to the pod
           example:
@@ -1148,6 +1186,21 @@ components:
           items:
             $ref: '#/components/schemas/Service'
           type: array
+        status:
+          description: The current status of the pod
+          example: running
+          type: string
+          x-speakeasy-param-readonly: true
+        created_at:
+          description: The date and time the pod was created
+          example: 2020-01-01T00:00:00Z
+          type: string
+          x-speakeasy-param-readonly: true
+        resource_id:
+          description: The global Resource ID of the pod
+          example: account:podinate/project:hello-world/pod:my-blog
+          type: string
+          x-speakeasy-param-readonly: true
       required:
       - image
       - name
@@ -1231,6 +1284,31 @@ components:
           description: The URL of the user's avatar
           example: https://avatars.githubusercontent.com/u/1234?v=4
           type: string
+    Storage:
+      description: A storage volume that is attached to each instance of a pod.
+      properties:
+        name:
+          description: The name of the volume
+          example: blog-data
+          type: string
+        size:
+          description: The size of the volume in GB
+          example: 10
+          type: integer
+        mount_path:
+          description: The path to mount the volume at
+          example: /var/www/html
+          type: string
+        resource_id:
+          description: The global Resource ID of the volume
+          example: account:podinate/project:hello-world/volume:my-blog
+          type: string
+          x-speakeasy-param-readonly: true
+      required:
+      - mount_path
+      - name
+      - size
+      type: object
     Error:
       properties:
         code:
@@ -1305,6 +1383,38 @@ components:
       - page
       - total
       type: object
+    _user_login_post_request:
+      properties:
+        username:
+          description: The user's email address
+          example: michael
+          type: string
+        password:
+          description: The user's password
+          example: abc1234
+          type: string
+        client:
+          description: The client name to use for the login
+          example: Podinate CLI on James' Macbook Pro
+          type: string
+      required:
+      - password
+      - username
+      type: object
+    _user_login_post_200_response:
+      example:
+        api_key: abc1234
+        logged_in: true
+      properties:
+        logged_in:
+          description: Whether the user is logged in or not
+          example: true
+          type: boolean
+        api_key:
+          description: "The user's API key, if they are logged in"
+          example: abc1234
+          type: string
+      type: object
     _user_login_initiate_get_200_response:
       example:
         url: https://auth.podinate.com/login?state=1234&client_id=1234&redirect_uri=https://api.podinate.com/v0/user/login/callback
@@ -1317,20 +1427,6 @@ components:
         token:
           description: The token to use to get the user's actual API key once they
             have completed the oauth flow
-          example: abc1234
-          type: string
-      type: object
-    _user_login_complete_get_200_response:
-      example:
-        api_key: abc1234
-        logged_in: true
-      properties:
-        logged_in:
-          description: Whether the user is logged in or not
-          example: true
-          type: boolean
-        api_key:
-          description: "The user's API key, if they are logged in"
           example: abc1234
           type: string
       type: object

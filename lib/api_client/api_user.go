@@ -322,7 +322,7 @@ func (r ApiUserLoginCompleteGetRequest) Client(client string) ApiUserLoginComple
 	return r
 }
 
-func (r ApiUserLoginCompleteGetRequest) Execute() (*UserLoginCompleteGet200Response, *http.Response, error) {
+func (r ApiUserLoginCompleteGetRequest) Execute() (*UserLoginPost200Response, *http.Response, error) {
 	return r.ApiService.UserLoginCompleteGetExecute(r)
 }
 
@@ -343,13 +343,13 @@ func (a *UserApiService) UserLoginCompleteGet(ctx context.Context) ApiUserLoginC
 
 // Execute executes the request
 //
-//	@return UserLoginCompleteGet200Response
-func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRequest) (*UserLoginCompleteGet200Response, *http.Response, error) {
+//	@return UserLoginPost200Response
+func (a *UserApiService) UserLoginCompleteGetExecute(r ApiUserLoginCompleteGetRequest) (*UserLoginPost200Response, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
 		localVarPostBody    interface{}
 		formFiles           []formFile
-		localVarReturnValue *UserLoginCompleteGet200Response
+		localVarReturnValue *UserLoginPost200Response
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserApiService.UserLoginCompleteGet")
@@ -483,7 +483,7 @@ func (r ApiUserLoginInitiateGetRequest) Execute() (*UserLoginInitiateGet200Respo
 }
 
 /*
-UserLoginInitiateGet Get a login URL
+UserLoginInitiateGet Get a login URL for oauth login
 
 Get a login URL, which will redirect the user to the oauth provider to complete the login flow. To complete a full login, you should then call /user/login/complete with the token returned by this endpoint.
 
@@ -562,6 +562,157 @@ func (a *UserApiService) UserLoginInitiateGetExecute(r ApiUserLoginInitiateGetRe
 			error: localVarHTTPResponse.Status,
 		}
 		if localVarHTTPResponse.StatusCode == 400 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
+type ApiUserLoginPostRequest struct {
+	ctx                  context.Context
+	ApiService           *UserApiService
+	userLoginPostRequest *UserLoginPostRequest
+}
+
+func (r ApiUserLoginPostRequest) UserLoginPostRequest(userLoginPostRequest UserLoginPostRequest) ApiUserLoginPostRequest {
+	r.userLoginPostRequest = &userLoginPostRequest
+	return r
+}
+
+func (r ApiUserLoginPostRequest) Execute() (*UserLoginPost200Response, *http.Response, error) {
+	return r.ApiService.UserLoginPostExecute(r)
+}
+
+/*
+UserLoginPost Login to Podinate
+
+Login to Podinate
+
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@return ApiUserLoginPostRequest
+*/
+func (a *UserApiService) UserLoginPost(ctx context.Context) ApiUserLoginPostRequest {
+	return ApiUserLoginPostRequest{
+		ApiService: a,
+		ctx:        ctx,
+	}
+}
+
+// Execute executes the request
+//
+//	@return UserLoginPost200Response
+func (a *UserApiService) UserLoginPostExecute(r ApiUserLoginPostRequest) (*UserLoginPost200Response, *http.Response, error) {
+	var (
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue *UserLoginPost200Response
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "UserApiService.UserLoginPost")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/user/login"
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	// body params
+	localVarPostBody = r.userLoginPostRequest
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
 			var v Error
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {

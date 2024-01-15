@@ -7,20 +7,18 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
+	"strconv"
 	"time"
 
 	"github.com/avast/retry-go"
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/johncave/podinate/cli/tui"
-	"github.com/johncave/podinate/cli/tui/spinner"
 	api "github.com/johncave/podinate/lib/api_client"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/yaml.v3"
 )
 
@@ -46,11 +44,47 @@ func SetupUser() {
 		return
 	}
 
+	// Find the profile
+	// fmt.Printf("Config: %+v\n", viper.GetStringMap("profiles"))
+	//m := viper.GetStringMap("profiles")
+	//m := viper.GetStringMapString("profiles")
+	//fmt.Printf("Config: %+v\n", m)
+
+	var profiles GlobalConfigFile
+	err := viper.Unmarshal(&profiles)
+	if err != nil {
+		fmt.Println("Error unmarshalling config:", err)
+		os.Exit(1)
+	}
+	//fmt.Printf("Profiles: %+v\n", profiles.Profiles)
+
+	for i, p := range profiles.Profiles {
+		if p.Name == viper.GetString("profile") {
+			// I don't know why tf the apikey isn't in the profile, but this works
+			apiKey := viper.GetString("profiles." + strconv.Itoa(i) + ".api_key")
+			config.DefaultHeader["Authorization"] = apiKey
+			viper.Set("api_key", apiKey)
+			return
+		}
+	}
+
+	fmt.Printf("Profile not found: %s\n", viper.GetString("profile"))
+	os.Exit(1)
+	return
+
+	// baseURL := viper.GetString("api_url")
+	// u, err := url.Parse(baseURL)
+	// if err != nil {
+	// 	fmt.Println("Error parsing API URL in profile:", err)
+	// 	os.Exit(1)
+	// }
+
 	// fmt.Printf("Config: %+v\n", viper.AllKeys())
 	// fmt.Printf("Config: %+v\n", )
 
-	config.DefaultHeader["Authorization"] = viper.GetString("profiles.0.api_key")
-	viper.Set("api_key", viper.GetString("profiles.0.api_key"))
+	// fmt.Printf("API Key: %s\n", viper.GetString("profiles.0.api_key"))
+	// config.DefaultHeader["Authorization"] = viper.GetString("profiles.0.api_key")
+	// viper.Set("api_key", viper.GetString("profiles.0.api_key"))
 }
 
 // InitLogin starts the login process
@@ -60,10 +94,10 @@ func InitLogin(provider string) (*api.UserLoginInitiateGet200Response, *http.Res
 }
 
 // AwaitCompleteLogin waits for the user to complete the login process
-func AwaitCompleteLogin(initresp *api.UserLoginInitiateGet200Response) (*api.UserLoginCompleteGet200Response, *http.Response, error) {
+func AwaitCompleteLogin(initresp *api.UserLoginInitiateGet200Response) (*api.UserLoginPost200Response, *http.Response, error) {
 	hostname, _ := os.Hostname()
 	clientId := "podinate-cli on " + hostname
-	var resp *api.UserLoginCompleteGet200Response
+	var resp *api.UserLoginPost200Response
 	var r *http.Response
 	var err error
 
@@ -90,7 +124,7 @@ func AwaitCompleteLogin(initresp *api.UserLoginInitiateGet200Response) (*api.Use
 	fmt.Printf("%+v\n", viper.AllKeys())
 
 	// Save the token to the config file
-	err = SaveProfile("default", *resp.ApiKey)
+	err = SaveProfile("http://localhost:3001", "default", *resp.ApiKey)
 	if err != nil {
 		fmt.Println("Error saving profile:", err)
 		os.Exit(1)
@@ -109,10 +143,11 @@ type GlobalConfigFile struct {
 type Profile struct {
 	Name   string `yaml:"name"`
 	APIKey string `yaml:"api_key"`
+	APIUrl string `yaml:"api_url"`
 }
 
 // SaveProfile saves the profile to the config file
-func SaveProfile(profileName string, apiKey string) error {
+func SaveProfile(apiURL string, profileName string, apiKey string) error {
 	// TODO: Check for existing profiles
 
 	yamlContent, err := yaml.Marshal(GlobalConfigFile{
@@ -120,6 +155,7 @@ func SaveProfile(profileName string, apiKey string) error {
 			{
 				Name:   profileName,
 				APIKey: apiKey,
+				APIUrl: apiURL,
 			},
 		},
 	})
@@ -151,52 +187,109 @@ func SaveProfile(profileName string, apiKey string) error {
 	return nil
 }
 
-func DoLogin() {
-	// Determine which login provider to use
-	m := tui.NewList([]list.Item{
-		//tui.ListItem("GitHub"),
-		//tui.ListItem("GitLab"),
-		tui.ListItem("Podinate's GitLab"),
-	}, "Welcome to Podinate. How would you like to log in?", "Logging in with %s")
+func StartLogin() {
+	// This is all related to oauth login which we are canning for now
+	// // Determine which login provider to use
+	// m := tui.NewList([]list.Item{
+	// 	//tui.ListItem("GitHub"),
+	// 	//tui.ListItem("GitLab"),
+	// 	tui.ListItem("Podinate's GitLab"),
+	// }, "Welcome to Podinate. How would you like to log in?", "Logging in with %s")
 
-	fm, err := tea.NewProgram(m).Run()
-	if err != nil {
-		fmt.Println("Error running program:", err)
-		os.Exit(1)
-	}
+	// fm, err := tea.NewProgram(m).Run()
+	// if err != nil {
+	// 	fmt.Println("Error running program:", err)
+	// 	os.Exit(1)
+	// }
 
-	// User has chosen how to log in, now start the login process
-	provider := strings.ToLower(fm.(tui.ListModel).Choice())
-	if provider == "podinate's gitlab" {
-		provider = "podinate"
-	}
+	// // User has chosen how to log in, now start the login process
+	// provider := strings.ToLower(fm.(tui.ListModel).Choice())
+	// if provider == "podinate's gitlab" {
+	// 	provider = "podinate"
+	// }
 
-	resp, r, err := InitLogin(provider)
-	if err != nil {
-		fmt.Println("Error:", err, r)
-		os.Exit(1)
-	}
+	// resp, r, err := InitLogin(provider)
+	// if err != nil {
+	// 	fmt.Println("Error:", err, r)
+	// 	os.Exit(1)
+	// }
 
-	err = openBrowser(*resp.Url)
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
+	// err = openBrowser(*resp.Url)
+	// if err != nil {
+	// 	fmt.Println("Error:", err)
+	// 	os.Exit(1)
+	// }
 
-	sp := tea.NewProgram(spinner.New("Awaiting login, check your browser...", "points"))
-	go sp.Run()
+	// sp := tea.NewProgram(spinner.New("Awaiting login, check your browser...", "points"))
+	// go sp.Run()
 
-	completeResp, r, err := AwaitCompleteLogin(resp)
+	// completeResp, r, err := AwaitCompleteLogin(resp)
 
-	if e := new(string); completeResp.ApiKey == e {
-		fmt.Println("Error: Timed out getting api key")
-		os.Exit(1)
-	}
+	// if e := new(string); completeResp.ApiKey == e {
+	// 	fmt.Println("Error: Timed out getting api key")
+	// 	os.Exit(1)
+	// }
 
-	sp.Quit()
+	// sp.Quit()
 	//fmt.Println("Finished retrying")
 	// fmt.Printf("Done! API Key is: %s", *completeResp.ApiKey)
+
+	// input := tea.NewProgram(textinput.New("Podinate API URL", "https://localhost:31337"))
+	// input.Run()
+
+	var apiURL string
+	var username string
+
+	fmt.Print("Enter your Podinate API URL: ")
+	fmt.Scanln(&apiURL)
+
+	fmt.Print("Username: ")
+	fmt.Scanln(&username)
+
+	fmt.Print("Password: ")
+	pass, err := terminal.ReadPassword(0)
+	if err != nil {
+		fmt.Println("Error reading password:", err)
+		os.Exit(1)
+	}
+
+	doLogin(apiURL, username, string(pass))
+
 	fmt.Println("You are logged in")
+}
+
+func doLogin(apiURL string, username string, password string) {
+	u, err := url.Parse(apiURL)
+	if err != nil {
+		fmt.Println("Error parsing URL:", err)
+		os.Exit(1)
+	}
+	config = api.NewConfiguration()
+	config.Host = u.Host
+	config.Scheme = u.Scheme
+	config.UserAgent = "Podinate CLI"
+
+	client := api.NewAPIClient(config)
+	C = client
+
+	userLoginRequest := *api.NewUserLoginPostRequest(username, password)
+	hostname, _ := os.Hostname()
+	clientId := "podinate-cli on " + hostname
+	userLoginRequest.Client = &clientId
+
+	resp, _, err := C.UserApi.UserLoginPost(nil).UserLoginPostRequest(userLoginRequest).Execute()
+	if err != nil {
+		fmt.Println("Error signing in", err)
+		os.Exit(1)
+	}
+
+	SaveProfile(apiURL, viper.GetString("profile"), *resp.ApiKey)
+
+	// resp, r, err := C.UserApi.UserLoginPostRequest(context.Background()).UserLoginPostRequest(api.UserLoginPostRequest{
+	// 	Username: username,
+	// 	Password: password,
+	// }).Execute()
+
 }
 
 // https://stackoverflow.com/questions/39320371/how-start-web-server-to-open-page-in-browser-in-golang

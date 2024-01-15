@@ -168,9 +168,9 @@ func (p *Policy) UpdatePolicy(content string, comment string) error {
 }
 
 // AttachToResource attaches a policy to a resource
-func (p *Policy) AttachToResource(requestor Resource, resource Resource) *apierror.ApiError {
+func (p *Policy) AttachToRequestor(requestor Resource, resource Resource) *apierror.ApiError {
 	// Attach the policy to the resource in the account using the policy_attachment table
-	_, err := config.DB.Exec("INSERT INTO policy_attachment(policy_uuid, account_uuid, resource_id, attached_by) VALUES($1, $2, $3, $4)", p.UUID, p.Account.GetUUID(), resource.GetResourceID(), requestor.GetResourceID())
+	_, err := config.DB.Exec("INSERT INTO policy_attachment(policy_uuid, account_uuid, requestor_id, attached_by) VALUES($1, $2, $3, $4)", p.UUID, p.Account.GetUUID(), resource.GetResourceID(), requestor.GetResourceID())
 	if err != nil {
 		lh.Log.Errorw("Error attaching policy to resource", "error", err, "policy", p.UUID, "resource", resource.GetResourceID(), "requestor", requestor.GetResourceID())
 		return apierror.New(500, "Error attaching policy to resource")

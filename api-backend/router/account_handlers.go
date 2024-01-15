@@ -82,7 +82,7 @@ statements:
     actions: ["**"]
     resources: ["**"]`
 	superAdminPolicy, err := iam.CreatePolicyForAccount(newAcc, "super-administrator", superAdminPolicyDocument, "Default policy created during initial account creation")
-	err = superAdminPolicy.AttachToResource(u, u)
+	err = superAdminPolicy.AttachToRequestor(u, u)
 	if err != nil {
 		// We can pass this error directly to the API response
 		return responder.Response(err.Code, err.Error()), nil

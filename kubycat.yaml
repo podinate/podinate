@@ -5,13 +5,13 @@ kubycat:
   interval: 1000
   sync: 
     - name: code
-      namespace: api
-      pod-label: app=api-backend
+      namespace: podinate
+      pod-label: app=podinate-controller
       enabled: true
       notify: true
       shell: /bin/sh
       config: ~/.kube/config
-      context: k3d-podinate-dev
+      context: k3d-podinate
       base: /home/john/Code/podinate
       from:
         - api-backend

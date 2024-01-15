@@ -64,7 +64,12 @@ func authMiddleware(next http.Handler) http.Handler {
 
 		// Check if the request is to the login endpoints
 		currentRoute := mux.CurrentRoute(r).GetName()
-		if currentRoute == "UserLoginInitiateGet" || currentRoute == "UserLoginCallbackProviderGet" || currentRoute == "UserLoginCompleteGet" || currentRoute == "UserLoginRedirectTokenGet" {
+		if currentRoute == "UserLoginInitiateGet" ||
+			currentRoute == "UserLoginCallbackProviderGet" ||
+			currentRoute == "UserLoginCompleteGet" ||
+			currentRoute == "UserLoginRedirectTokenGet" ||
+			currentRoute == "UserLoginPost" {
+
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -73,7 +78,17 @@ func authMiddleware(next http.Handler) http.Handler {
 
 		if err != nil {
 			//out := api.EncodeJSONResponse(responder.Response(http.StatusUnauthorized, "Invalid Key"), nil, w)
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+
+			out, err := json.Marshal(api.Error{
+				Code:    http.StatusUnauthorized,
+				Message: "Invalid API Key",
+			})
+			if err != nil {
+				http.Error(w, "Invalid API Key", http.StatusUnauthorized)
+				return
+			}
+			http.Error(w, string(out), http.StatusUnauthorized)
+
 			return
 		}
 

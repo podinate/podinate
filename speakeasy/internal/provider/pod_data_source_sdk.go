@@ -78,5 +78,27 @@ func (r *PodDataSourceModel) RefreshFromGetResponse(resp *shared.Pod) {
 	} else {
 		r.Status = types.StringNull()
 	}
+	if len(r.Storage) > len(resp.Storage) {
+		r.Storage = r.Storage[:len(resp.Storage)]
+	}
+	for storageCount, storageItem := range resp.Storage {
+		var storage1 Storage
+		storage1.Name = types.StringValue(storageItem.Name)
+		storage1.Size = types.Int64Value(storageItem.Size)
+		storage1.MountPath = types.StringValue(storageItem.MountPath)
+		if storageItem.ResourceID != nil {
+			storage1.ResourceID = types.StringValue(*storageItem.ResourceID)
+		} else {
+			storage1.ResourceID = types.StringNull()
+		}
+		if storageCount+1 > len(r.Storage) {
+			r.Storage = append(r.Storage, storage1)
+		} else {
+			r.Storage[storageCount].Name = storage1.Name
+			r.Storage[storageCount].Size = storage1.Size
+			r.Storage[storageCount].MountPath = storage1.MountPath
+			r.Storage[storageCount].ResourceID = storage1.ResourceID
+		}
+	}
 	r.Tag = types.StringValue(resp.Tag)
 }

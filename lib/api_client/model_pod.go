@@ -17,7 +17,7 @@ import (
 // checks if the Pod type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &Pod{}
 
-// Pod A pod is a group of containers with the same lifecycle, and are the basic unit of deployment on Podinate
+// Pod A pod is a group of container instances with identical settings, and are the basic unit of deployment on Podinate
 type Pod struct {
 	// The short name (slug/url) of the pod
 	Id *string `json:"id,omitempty"`
@@ -27,16 +27,18 @@ type Pod struct {
 	Image string `json:"image"`
 	// The image tag to run for this pod
 	Tag string `json:"tag"`
+	// The storage volumes attached to this pod
+	Storage []Storage `json:"storage,omitempty"`
+	// The environment variables to pass to the pod
+	Environment []EnvironmentVariable `json:"environment,omitempty"`
+	// The services to expose for this pod
+	Services []Service `json:"services,omitempty"`
 	// The current status of the pod
 	Status *string `json:"status,omitempty"`
 	// The date and time the pod was created
 	CreatedAt *string `json:"created_at,omitempty"`
 	// The global Resource ID of the pod
 	ResourceId *string `json:"resource_id,omitempty"`
-	// The environment variables to pass to the pod
-	Environment []EnvironmentVariable `json:"environment,omitempty"`
-	// The services to expose for this pod
-	Services []Service `json:"services,omitempty"`
 }
 
 // NewPod instantiates a new Pod object
@@ -163,6 +165,102 @@ func (o *Pod) SetTag(v string) {
 	o.Tag = v
 }
 
+// GetStorage returns the Storage field value if set, zero value otherwise.
+func (o *Pod) GetStorage() []Storage {
+	if o == nil || IsNil(o.Storage) {
+		var ret []Storage
+		return ret
+	}
+	return o.Storage
+}
+
+// GetStorageOk returns a tuple with the Storage field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pod) GetStorageOk() ([]Storage, bool) {
+	if o == nil || IsNil(o.Storage) {
+		return nil, false
+	}
+	return o.Storage, true
+}
+
+// HasStorage returns a boolean if a field has been set.
+func (o *Pod) HasStorage() bool {
+	if o != nil && !IsNil(o.Storage) {
+		return true
+	}
+
+	return false
+}
+
+// SetStorage gets a reference to the given []Storage and assigns it to the Storage field.
+func (o *Pod) SetStorage(v []Storage) {
+	o.Storage = v
+}
+
+// GetEnvironment returns the Environment field value if set, zero value otherwise.
+func (o *Pod) GetEnvironment() []EnvironmentVariable {
+	if o == nil || IsNil(o.Environment) {
+		var ret []EnvironmentVariable
+		return ret
+	}
+	return o.Environment
+}
+
+// GetEnvironmentOk returns a tuple with the Environment field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pod) GetEnvironmentOk() ([]EnvironmentVariable, bool) {
+	if o == nil || IsNil(o.Environment) {
+		return nil, false
+	}
+	return o.Environment, true
+}
+
+// HasEnvironment returns a boolean if a field has been set.
+func (o *Pod) HasEnvironment() bool {
+	if o != nil && !IsNil(o.Environment) {
+		return true
+	}
+
+	return false
+}
+
+// SetEnvironment gets a reference to the given []EnvironmentVariable and assigns it to the Environment field.
+func (o *Pod) SetEnvironment(v []EnvironmentVariable) {
+	o.Environment = v
+}
+
+// GetServices returns the Services field value if set, zero value otherwise.
+func (o *Pod) GetServices() []Service {
+	if o == nil || IsNil(o.Services) {
+		var ret []Service
+		return ret
+	}
+	return o.Services
+}
+
+// GetServicesOk returns a tuple with the Services field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pod) GetServicesOk() ([]Service, bool) {
+	if o == nil || IsNil(o.Services) {
+		return nil, false
+	}
+	return o.Services, true
+}
+
+// HasServices returns a boolean if a field has been set.
+func (o *Pod) HasServices() bool {
+	if o != nil && !IsNil(o.Services) {
+		return true
+	}
+
+	return false
+}
+
+// SetServices gets a reference to the given []Service and assigns it to the Services field.
+func (o *Pod) SetServices(v []Service) {
+	o.Services = v
+}
+
 // GetStatus returns the Status field value if set, zero value otherwise.
 func (o *Pod) GetStatus() string {
 	if o == nil || IsNil(o.Status) {
@@ -259,70 +357,6 @@ func (o *Pod) SetResourceId(v string) {
 	o.ResourceId = &v
 }
 
-// GetEnvironment returns the Environment field value if set, zero value otherwise.
-func (o *Pod) GetEnvironment() []EnvironmentVariable {
-	if o == nil || IsNil(o.Environment) {
-		var ret []EnvironmentVariable
-		return ret
-	}
-	return o.Environment
-}
-
-// GetEnvironmentOk returns a tuple with the Environment field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *Pod) GetEnvironmentOk() ([]EnvironmentVariable, bool) {
-	if o == nil || IsNil(o.Environment) {
-		return nil, false
-	}
-	return o.Environment, true
-}
-
-// HasEnvironment returns a boolean if a field has been set.
-func (o *Pod) HasEnvironment() bool {
-	if o != nil && !IsNil(o.Environment) {
-		return true
-	}
-
-	return false
-}
-
-// SetEnvironment gets a reference to the given []EnvironmentVariable and assigns it to the Environment field.
-func (o *Pod) SetEnvironment(v []EnvironmentVariable) {
-	o.Environment = v
-}
-
-// GetServices returns the Services field value if set, zero value otherwise.
-func (o *Pod) GetServices() []Service {
-	if o == nil || IsNil(o.Services) {
-		var ret []Service
-		return ret
-	}
-	return o.Services
-}
-
-// GetServicesOk returns a tuple with the Services field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *Pod) GetServicesOk() ([]Service, bool) {
-	if o == nil || IsNil(o.Services) {
-		return nil, false
-	}
-	return o.Services, true
-}
-
-// HasServices returns a boolean if a field has been set.
-func (o *Pod) HasServices() bool {
-	if o != nil && !IsNil(o.Services) {
-		return true
-	}
-
-	return false
-}
-
-// SetServices gets a reference to the given []Service and assigns it to the Services field.
-func (o *Pod) SetServices(v []Service) {
-	o.Services = v
-}
-
 func (o Pod) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -339,6 +373,15 @@ func (o Pod) ToMap() (map[string]interface{}, error) {
 	toSerialize["name"] = o.Name
 	toSerialize["image"] = o.Image
 	toSerialize["tag"] = o.Tag
+	if !IsNil(o.Storage) {
+		toSerialize["storage"] = o.Storage
+	}
+	if !IsNil(o.Environment) {
+		toSerialize["environment"] = o.Environment
+	}
+	if !IsNil(o.Services) {
+		toSerialize["services"] = o.Services
+	}
 	if !IsNil(o.Status) {
 		toSerialize["status"] = o.Status
 	}
@@ -347,12 +390,6 @@ func (o Pod) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.ResourceId) {
 		toSerialize["resource_id"] = o.ResourceId
-	}
-	if !IsNil(o.Environment) {
-		toSerialize["environment"] = o.Environment
-	}
-	if !IsNil(o.Services) {
-		toSerialize["services"] = o.Services
 	}
 	return toSerialize, nil
 }

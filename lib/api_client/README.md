@@ -94,7 +94,8 @@ Class | Method | HTTP request | Description
 *UserApi* | [**UserGet**](docs/UserApi.md#userget) | **Get** /user | Get the current user
 *UserApi* | [**UserLoginCallbackProviderGet**](docs/UserApi.md#userlogincallbackproviderget) | **Get** /user/login/callback/{provider} | User login callback URL for oauth providers
 *UserApi* | [**UserLoginCompleteGet**](docs/UserApi.md#userlogincompleteget) | **Get** /user/login/complete | Complete a user login
-*UserApi* | [**UserLoginInitiateGet**](docs/UserApi.md#userlogininitiateget) | **Get** /user/login/initiate | Get a login URL
+*UserApi* | [**UserLoginInitiateGet**](docs/UserApi.md#userlogininitiateget) | **Get** /user/login/initiate | Get a login URL for oauth login
+*UserApi* | [**UserLoginPost**](docs/UserApi.md#userloginpost) | **Post** /user/login | Login to Podinate
 *UserApi* | [**UserLoginRedirectTokenGet**](docs/UserApi.md#userloginredirecttokenget) | **Get** /user/login/redirect/{token} | User login redirect URL to oauth providers
 
 
@@ -110,9 +111,11 @@ Class | Method | HTTP request | Description
  - [ProjectProjectIdPodGet200Response](docs/ProjectProjectIdPodGet200Response.md)
  - [ProjectProjectIdPodGet200ResponseItemsInner](docs/ProjectProjectIdPodGet200ResponseItemsInner.md)
  - [Service](docs/Service.md)
+ - [Storage](docs/Storage.md)
  - [User](docs/User.md)
- - [UserLoginCompleteGet200Response](docs/UserLoginCompleteGet200Response.md)
  - [UserLoginInitiateGet200Response](docs/UserLoginInitiateGet200Response.md)
+ - [UserLoginPost200Response](docs/UserLoginPost200Response.md)
+ - [UserLoginPostRequest](docs/UserLoginPostRequest.md)
 
 
 ## Documentation For Authorization

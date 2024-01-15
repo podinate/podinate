@@ -20,5 +20,13 @@ resource "podinate_pod" "my_pod" {
       target_port = 80
     },
   ]
+  storage = [
+    {
+      mount_path  = "/var/www/html"
+      name        = "blog-data"
+      resource_id = "account:podinate/project:hello-world/volume:my-blog"
+      size        = 10
+    },
+  ]
   tag = "6.0"
 }

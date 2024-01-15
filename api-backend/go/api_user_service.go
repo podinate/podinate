@@ -74,8 +74,8 @@ func (s *UserApiService) UserLoginCompleteGet(ctx context.Context, token string,
 	// TODO - update UserLoginCompleteGet with the required logic for this service method.
 	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	//TODO: Uncomment the next line to return response Response(200, UserLoginCompleteGet200Response{}) or use other options such as http.Ok ...
-	//return Response(200, UserLoginCompleteGet200Response{}), nil
+	//TODO: Uncomment the next line to return response Response(200, UserLoginPost200Response{}) or use other options such as http.Ok ...
+	//return Response(200, UserLoginPost200Response{}), nil
 
 	//TODO: Uncomment the next line to return response Response(204, {}) or use other options such as http.Ok ...
 	//return Response(204, nil),nil
@@ -95,7 +95,7 @@ func (s *UserApiService) UserLoginCompleteGet(ctx context.Context, token string,
 	return Response(http.StatusNotImplemented, nil), errors.New("UserLoginCompleteGet method not implemented")
 }
 
-// UserLoginInitiateGet - Get a login URL
+// UserLoginInitiateGet - Get a login URL for oauth login
 func (s *UserApiService) UserLoginInitiateGet(ctx context.Context, provider string) (ImplResponse, error) {
 	// TODO - update UserLoginInitiateGet with the required logic for this service method.
 	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -113,6 +113,29 @@ func (s *UserApiService) UserLoginInitiateGet(ctx context.Context, provider stri
 	//return Response(500, Error{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("UserLoginInitiateGet method not implemented")
+}
+
+// UserLoginPost - Login to Podinate
+func (s *UserApiService) UserLoginPost(ctx context.Context, userLoginPostRequest UserLoginPostRequest) (ImplResponse, error) {
+	// TODO - update UserLoginPost with the required logic for this service method.
+	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, UserLoginPost200Response{}) or use other options such as http.Ok ...
+	//return Response(200, UserLoginPost200Response{}), nil
+
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(403, Error{}) or use other options such as http.Ok ...
+	//return Response(403, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(404, Error{}) or use other options such as http.Ok ...
+	//return Response(404, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("UserLoginPost method not implemented")
 }
 
 // UserLoginRedirectTokenGet - User login redirect URL to oauth providers

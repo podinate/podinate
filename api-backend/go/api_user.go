@@ -10,6 +10,7 @@
 package openapi
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -74,6 +75,12 @@ func (c *UserApiController) Routes() Routes {
 			c.UserLoginInitiateGet,
 		},
 		{
+			"UserLoginPost",
+			strings.ToUpper("Post"),
+			"/v0/user/login",
+			c.UserLoginPost,
+		},
+		{
 			"UserLoginRedirectTokenGet",
 			strings.ToUpper("Get"),
 			"/v0/user/login/redirect/{token}",
@@ -126,11 +133,35 @@ func (c *UserApiController) UserLoginCompleteGet(w http.ResponseWriter, r *http.
 
 }
 
-// UserLoginInitiateGet - Get a login URL
+// UserLoginInitiateGet - Get a login URL for oauth login
 func (c *UserApiController) UserLoginInitiateGet(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	providerParam := query.Get("provider")
 	result, err := c.service.UserLoginInitiateGet(r.Context(), providerParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// UserLoginPost - Login to Podinate
+func (c *UserApiController) UserLoginPost(w http.ResponseWriter, r *http.Request) {
+	userLoginPostRequestParam := UserLoginPostRequest{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&userLoginPostRequestParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertUserLoginPostRequestRequired(userLoginPostRequestParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.UserLoginPost(r.Context(), userLoginPostRequestParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

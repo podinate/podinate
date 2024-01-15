@@ -92,17 +92,12 @@ var getProjectsCmd = &cobra.Command{
 	Short:   "List projects on Podinate",
 	Long:    `Lists all projects on Podinate account`,
 	Run: func(cmd *cobra.Command, args []string) {
-		resp, _, err := apiclient.C.ProjectApi.ProjectGet(cmd.Context()).Account("my-second-account").Execute()
+		projects, err := apiclient.GetAllProjects(viper.GetString("account"))
 
-		if err != nil && err.Error() == "404 Not Found" {
-			fmt.Println("No projects found")
-			os.Exit(0)
-		}
-
+		//fmt.Printf("Response: %+v, r: %+v\n", resp, r)
 		cobra.CheckErr(err)
-		// fmt.Printf("Response: %+v, r: %+v\n", resp, r)
 
-		if len(resp.Items) < 1 {
+		if len(projects) < 1 {
 			fmt.Println("No projects found")
 			os.Exit(0)
 		}
@@ -114,11 +109,10 @@ var getProjectsCmd = &cobra.Command{
 
 		var rows []bubbletable.Row
 
-		for _, i := range resp.Items {
-			p := i.Project
+		for _, p := range projects {
 
 			rows = append(rows, bubbletable.Row{
-				*p.Id, *p.Name,
+				p.ID, p.Name,
 			})
 		}
 

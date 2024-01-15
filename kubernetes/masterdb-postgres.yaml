@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: masterdb-secret
-  namespace: api
+  namespace: podinate
 type: Opaque
 stringData:
   superUserPassword: postgresSuperUserPsw
@@ -12,7 +12,7 @@ apiVersion: kubegres.reactive-tech.io/v1
 kind: Kubegres
 metadata:
   name: masterdb
-  namespace: api
+  namespace: podinate
 
 spec:
 

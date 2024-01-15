@@ -98,9 +98,10 @@ ALTER TABLE public.project ADD CONSTRAINT unique_project_slug_per_account UNIQUE
 -- DROP TABLE IF EXISTS public."user" CASCADE;
 CREATE TABLE public."user" (
 	uuid uuid NOT NULL DEFAULT gen_random_uuid(),
-	main_provider text NOT NULL,
+	main_provider text,
 	id text NOT NULL,
 	display_name text,
+	password_hash text,
 	avatar_url text,
 	created timestamp DEFAULT CURRENT_TIMESTAMP,
 	email text NOT NULL,
@@ -168,13 +169,15 @@ ALTER TABLE public.login_session OWNER TO postgres;
 -- DROP TABLE IF EXISTS public.policy_attachment CASCADE;
 CREATE TABLE public.policy_attachment (
 	account_uuid uuid NOT NULL,
-	resource_id text NOT NULL,
+	requestor_id text NOT NULL,
 	policy_uuid uuid NOT NULL,
 	date_attached timestamp DEFAULT CURRENT_TIMESTAMP,
 	valid_until timestamp,
 	attached_by uuid,
-	CONSTRAINT compound_primary PRIMARY KEY (account_uuid,resource_id,policy_uuid)
+	CONSTRAINT compound_primary PRIMARY KEY (account_uuid,requestor_id,policy_uuid)
 );
+-- ddl-end --
+COMMENT ON COLUMN public.policy_attachment.requestor_id IS E'The resource (actor) that is requesting the action.';
 -- ddl-end --
 COMMENT ON COLUMN public.policy_attachment.attached_by IS E'The user uuid that originally attached this policy';
 -- ddl-end --
@@ -187,7 +190,7 @@ CREATE TABLE public.policy (
 	uuid uuid NOT NULL,
 	account_uuid uuid,
 	id text,
-	current_revision smallint,
+	current_version smallint,
 	content text,
 	date_added timestamp DEFAULT CURRENT_TIMESTAMP,
 	added_by uuid,
@@ -239,7 +242,7 @@ CREATE TABLE public.pod_services (
 	protocol varchar(4),
 	domain_name text,
 	CONSTRAINT "primary" PRIMARY KEY (uuid),
-	CONSTRAINT unique_domain_name UNIQUE NULLS NOT DISTINCT (domain_name)
+	CONSTRAINT unique_domain_name UNIQUE (domain_name)
 );
 -- ddl-end --
 ALTER TABLE public.pod_services OWNER TO postgres;
@@ -263,7 +266,7 @@ ON DELETE NO ACTION ON UPDATE NO ACTION;
 -- ALTER TABLE public.api_key DROP CONSTRAINT IF EXISTS api_key_user_uuid CASCADE;
 ALTER TABLE public.api_key ADD CONSTRAINT api_key_user_uuid FOREIGN KEY (user_uuid)
 REFERENCES public."user" (uuid) MATCH SIMPLE
-ON DELETE NO ACTION ON UPDATE NO ACTION;
+ON DELETE CASCADE ON UPDATE CASCADE;
 -- ddl-end --
 
 -- object: account_uuid | type: CONSTRAINT --
@@ -291,14 +294,14 @@ ON DELETE CASCADE ON UPDATE CASCADE;
 -- ALTER TABLE public.policy_version DROP CONSTRAINT IF EXISTS policy_uuid CASCADE;
 ALTER TABLE public.policy_version ADD CONSTRAINT policy_uuid FOREIGN KEY (policy_uuid)
 REFERENCES public.policy (uuid) MATCH SIMPLE
-ON DELETE NO ACTION ON UPDATE NO ACTION;
+ON DELETE CASCADE ON UPDATE CASCADE;
 -- ddl-end --
 
 -- object: pod_uuid_fk | type: CONSTRAINT --
 -- ALTER TABLE public.pod_services DROP CONSTRAINT IF EXISTS pod_uuid_fk CASCADE;
 ALTER TABLE public.pod_services ADD CONSTRAINT pod_uuid_fk FOREIGN KEY (pod_uuid)
 REFERENCES public.project_pods (uuid) MATCH SIMPLE
-ON DELETE NO ACTION ON UPDATE NO ACTION;
+ON DELETE CASCADE ON UPDATE CASCADE;
 -- ddl-end --
 
 

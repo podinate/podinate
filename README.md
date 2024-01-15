@@ -1,5 +1,15 @@
 # podinate
-A fast and easy way to get a project from development to prod, cli and OpenTofu-first 
+Podinate is an easy to use container orchestation engine with built in package manager. It uses a Kubernetes cluster in the background to provide a simple production-ready API to manage your containers and data. The package manager allows you to easily spin up common applications, and development environments lets team members easily start working on your project. 
+
+# Installation
+There is documentation under `docs`, which you can view by runnning `mkdocs serve`.
+
+# Development
+This is the current plan for development
+- ~~Pods~~
+- ~~Ingress~~
+- Volumes
+- Installation Instructions 
 
 ## Repo Structure
 We use a monorepo, each top level folder here represents a single service, or holds some shared libraries. In the `api` folder is our API definition, if updated generate the updated client and server packages with the script `make api-generate`. It will ask you for a sudo password so it can update some weird permission issues from running the generator inside a Docker container. 

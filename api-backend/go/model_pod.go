@@ -9,7 +9,7 @@
 
 package openapi
 
-// Pod - A pod is a group of containers with the same lifecycle, and are the basic unit of deployment on Podinate
+// Pod - A pod is a group of container instances with identical settings, and are the basic unit of deployment on Podinate
 type Pod struct {
 
 	// The short name (slug/url) of the pod
@@ -24,6 +24,15 @@ type Pod struct {
 	// The image tag to run for this pod
 	Tag string `json:"tag"`
 
+	// The storage volumes attached to this pod
+	Storage []Storage `json:"storage,omitempty"`
+
+	// The environment variables to pass to the pod
+	Environment []EnvironmentVariable `json:"environment,omitempty"`
+
+	// The services to expose for this pod
+	Services []Service `json:"services,omitempty"`
+
 	// The current status of the pod
 	Status string `json:"status,omitempty"`
 
@@ -32,12 +41,6 @@ type Pod struct {
 
 	// The global Resource ID of the pod
 	ResourceId string `json:"resource_id,omitempty"`
-
-	// The environment variables to pass to the pod
-	Environment []EnvironmentVariable `json:"environment,omitempty"`
-
-	// The services to expose for this pod
-	Services []Service `json:"services,omitempty"`
 }
 
 // AssertPodRequired checks if the required fields are not zero-ed
@@ -53,6 +56,11 @@ func AssertPodRequired(obj Pod) error {
 		}
 	}
 
+	for _, el := range obj.Storage {
+		if err := AssertStorageRequired(el); err != nil {
+			return err
+		}
+	}
 	for _, el := range obj.Environment {
 		if err := AssertEnvironmentVariableRequired(el); err != nil {
 			return err

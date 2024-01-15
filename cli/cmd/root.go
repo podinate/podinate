@@ -27,7 +27,10 @@ func init() {
 	rootCmd.PersistentFlags().StringP("project", "p", "", "project to use")
 	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
 
-	rootCmd.PersistentFlags().StringP("account", "a", "", "account to use")
+	rootCmd.PersistentFlags().String("profile", "default", "Profile and credentials to use")
+	viper.BindPFlag("profile", rootCmd.PersistentFlags().Lookup("profile"))
+
+	rootCmd.PersistentFlags().StringP("account", "a", "default", "account to use")
 	viper.BindPFlag("account", rootCmd.PersistentFlags().Lookup("account"))
 
 	cobra.OnInitialize(initConfig)
@@ -68,11 +71,13 @@ func initConfig() {
 	viper.AddConfigPath(home + "/.config/podinate/")
 	viper.SetConfigName("credentials")
 	if err := viper.MergeInConfig(); err != nil {
-		if err == err.(viper.ConfigFileNotFoundError) {
-			apiclient.DoLogin()
-		} else {
-			fmt.Println("Can't read credentials file:", err)
-			os.Exit(1)
+		if err != nil {
+			switch err.(type) {
+			case viper.ConfigFileNotFoundError:
+				apiclient.StartLogin()
+			default:
+				fmt.Println("Can't read credentials file:", err)
+			}
 		}
 	}
 	apiclient.SetupUser()

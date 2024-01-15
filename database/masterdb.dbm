@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,389" last-zoom="1" max-obj-count="13"
+<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,219" last-zoom="0.75" max-obj-count="13"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -140,14 +140,14 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<columns names="account_uuid,id" ref-type="src-columns"/>
 </constraint>
 
-<table name="user" layers="0" collapse-mode="2" max-obj-count="9" z-value="0">
+<table name="user" layers="0" collapse-mode="2" max-obj-count="10" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="900" y="40"/>
 	<column name="uuid" not-null="true" default-value="gen_random_uuid()">
 		<type name="uuid" length="0"/>
 	</column>
-	<column name="main_provider" not-null="true">
+	<column name="main_provider">
 		<type name="text" length="0"/>
 		<comment> <![CDATA[The provider string for this username, eg github, gitlab, podinate]]> </comment>
 	</column>
@@ -157,6 +157,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="display_name">
 		<type name="text" length="0"/>
 		<comment> <![CDATA[The user's human name]]> </comment>
+	</column>
+	<column name="password_hash">
+		<type name="text" length="0"/>
 	</column>
 	<column name="avatar_url">
 		<type name="text" length="0"/>
@@ -205,7 +208,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="api_key" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="1140" y="300"/>
+	<position x="1260" y="380"/>
 	<column name="key" not-null="true">
 		<type name="text" length="0"/>
 		<comment> <![CDATA[The one-way hashed API key ]]> </comment>
@@ -235,7 +238,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="login_session" layers="0" collapse-mode="2" max-obj-count="3" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="1700" y="300"/>
+	<position x="1740" y="340"/>
 	<column name="session_id" not-null="true">
 		<type name="uuid" length="0"/>
 	</column>
@@ -253,12 +256,13 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="policy_attachment" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="780" y="460"/>
+	<position x="660" y="520"/>
 	<column name="account_uuid" not-null="true">
 		<type name="uuid" length="0"/>
 	</column>
-	<column name="resource_id" not-null="true">
+	<column name="requestor_id" not-null="true">
 		<type name="text" length="0"/>
+		<comment> <![CDATA[The resource (actor) that is requesting the action. ]]> </comment>
 	</column>
 	<column name="policy_uuid" not-null="true">
 		<type name="uuid" length="0"/>
@@ -274,7 +278,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<comment> <![CDATA[The user uuid that originally attached this policy]]> </comment>
 	</column>
 	<constraint name="compound_primary" type="pk-constr" table="public.policy_attachment">
-		<columns names="account_uuid,resource_id,policy_uuid" ref-type="src-columns"/>
+		<columns names="account_uuid,requestor_id,policy_uuid" ref-type="src-columns"/>
 	</constraint>
 </table>
 
@@ -292,7 +296,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="id">
 		<type name="text" length="0"/>
 	</column>
-	<column name="current_revision">
+	<column name="current_version">
 		<type name="smallint" length="0"/>
 	</column>
 	<column name="content">
@@ -394,7 +398,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 </constraint>
 
 <constraint name="api_key_user_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
-	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;user&quot;" table="public.api_key">
+	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.&quot;user&quot;" table="public.api_key">
 	<columns names="user_uuid" ref-type="src-columns"/>
 	<columns names="uuid" ref-type="dst-columns"/>
 </constraint>
@@ -418,13 +422,13 @@ CAUTION: Do not modify this file unless you know what you are doing.
 </constraint>
 
 <constraint name="policy_uuid" type="fk-constr" comparison-type="MATCH SIMPLE"
-	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.policy" table="public.policy_version">
+	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.policy" table="public.policy_version">
 	<columns names="policy_uuid" ref-type="src-columns"/>
 	<columns names="uuid" ref-type="dst-columns"/>
 </constraint>
 
 <constraint name="pod_uuid_fk" type="fk-constr" comparison-type="MATCH SIMPLE"
-	 upd-action="NO ACTION" del-action="CASCADE" ref-table="public.project_pods" table="public.pod_services">
+	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.project_pods" table="public.pod_services">
 	<columns names="pod_uuid" ref-type="src-columns"/>
 	<columns names="uuid" ref-type="dst-columns"/>
 </constraint>

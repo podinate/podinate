@@ -1,13 +1,17 @@
 package config
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
 
 	_ "github.com/lib/pq"
+	"github.com/matthewhartstonge/argon2"
 	"github.com/pelletier/go-toml"
+	"go.tmthrgd.dev/passit"
 
 	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
@@ -66,6 +70,38 @@ func Init() error {
 		lh.Log.Fatalw("Error connecting to database", "error", err)
 		//log.Fatal(err)
 	}
+
+	// Create admin account if not exists in the database
+	// Horrible hack replace asap
+	// TODO - replace this with a proper migration
+	var uuid string
+	err = DB.QueryRow("SELECT uuid FROM \"user\" WHERE id = 'administrator' AND main_provider IS NULL LIMIT 1").Scan(&uuid)
+
+	lh.Log.Infow("Checking for administrator account", "error", err)
+	if err == sql.ErrNoRows {
+		// Create the admin account
+		password, err := passit.Repeat(passit.EFFLargeWordlist, " ", 5).Password(rand.Reader)
+		if err != nil {
+			lh.Log.Fatalw("Error generating initial administrator password", "error", err)
+		}
+		argon := argon2.DefaultConfig()
+		hash, err := argon.HashEncoded([]byte(password))
+		if err != nil {
+			lh.Log.Fatalw("Error hashing default administraor password", "error", err)
+		}
+		store := base64.StdEncoding.EncodeToString(hash)
+		var adminID string
+		err = DB.QueryRow("INSERT INTO \"user\" (id, display_name, email, password_hash) VALUES ('administrator', 'Administrator', 'administrator@mypodinate.com', $1) returning uuid", store).Scan(&adminID)
+		if err != nil {
+			lh.Log.Fatalw("Error creating initial administrator account", "error", err)
+		}
+		lh.Log.Infow("Created initial administrator account", "username", "administrator", "password", password)
+
+	} else {
+		lh.Log.Infow("Administrator account already exists")
+
+	}
+
 	log.Println("Connected to database")
 	return nil
 }

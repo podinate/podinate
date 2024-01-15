@@ -13,14 +13,15 @@ install-dependencies:
 	
 # Show the logs for the API backend in the Kubernetes cluster while developing
 dev-backend-logs:
-	kubectl -n api logs -l app=api-backend -f
+	kubectl -n podinate logs -l app=podinate-controller -f
 
 dev-code-upload:
 	./api-backend/scripts/initial-code-upload.sh
+	kubycat ./kubycat.yaml
 
 # Get a shell on the API backend Postgres pod (for debugging)
 postgres-shell:
-	bash -c "kubectl -n api exec -it masterdb-1-0 -- psql 'postgresql://postgres:$$(kubectl -n api get secret masterdb-secret -o jsonpath='{.data.superUserPassword}' | base64 --decode ; echo)@localhost/podinate'"
+	bash -c "kubectl -n podinate exec -it masterdb-1-0 -- psql 'postgresql://postgres:$$(kubectl -n podinate get secret masterdb-secret -o jsonpath='{.data.superUserPassword}' | base64 --decode ; echo)@localhost/podinate'"
 
 # After API spec change, rebuild the generate code
 api-generate:

@@ -116,11 +116,11 @@ func createKubesDeployment(inns *corev1.Namespace, theProject project.Project, r
 
 	}
 
-	deploymentSpec := getDeploymentSpec(theProject, requested)
+	statefulSet := getStatefulSetSpec(theProject, requested)
 
 	_, err = clientset.AppsV1().
-		Deployments(inns.Name).
-		Create(context.Background(), deploymentSpec, metav1.CreateOptions{})
+		StatefulSets(inns.Name).
+		Create(context.Background(), statefulSet, metav1.CreateOptions{})
 	if err != nil {
 		fmt.Printf("error creating deployment: %v\n", err)
 		return err
@@ -138,11 +138,11 @@ func updateKubesDeployment(thePod Pod, requested api.Pod) error {
 		return err
 	}
 
-	deploymentSpec := getDeploymentSpec(thePod.Project, thePod.ToAPI())
+	statefulSet := getStatefulSetSpec(thePod.Project, thePod.ToAPI())
 
 	_, err = clientset.AppsV1().
-		Deployments(thePod.Project.Account.ID+"-project-"+thePod.Project.ID).
-		Update(context.Background(), deploymentSpec, metav1.UpdateOptions{})
+		StatefulSets(thePod.Project.Account.ID+"-project-"+thePod.Project.ID).
+		Update(context.Background(), statefulSet, metav1.UpdateOptions{})
 	if err != nil {
 		fmt.Printf("error updating deployment: %v\n", err)
 		return err
@@ -150,13 +150,64 @@ func updateKubesDeployment(thePod Pod, requested api.Pod) error {
 	return nil
 }
 
-// getDeploymentSpec returns a deployment spec for the specified pod.
-func getDeploymentSpec(theProject project.Project, requested api.Pod) *appsv1.Deployment {
-	out := &appsv1.Deployment{
+// // getDeploymentSpec returns a deployment spec for the specified pod.
+// func getDeploymentSpec(theProject project.Project, requested api.Pod) *appsv1.Deployment {
+// 	out := &appsv1.Deployment{
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name: requested.Id,
+// 		},
+// 		Spec: appsv1.DeploymentSpec{
+// 			Replicas: func(val int32) *int32 { return &val }(1),
+// 			Selector: &metav1.LabelSelector{
+// 				MatchLabels: map[string]string{
+// 					"podinate.com/pod":     requested.Id,
+// 					"podinate.com/project": theProject.ID,
+// 				},
+// 			},
+// 			Template: corev1.PodTemplateSpec{
+// 				ObjectMeta: metav1.ObjectMeta{
+// 					Labels: map[string]string{
+// 						"podinate.com/pod":     requested.Id,
+// 						"podinate.com/project": theProject.ID,
+// 					},
+// 				},
+// 				Spec: corev1.PodSpec{
+// 					Containers: []corev1.Container{
+// 						{
+// 							Name:  requested.Id,
+// 							Image: requested.Image + ":" + requested.Tag,
+// 							// TODO: Figure out what to do about ports
+// 							Ports: []corev1.ContainerPort{
+// 								{
+// 									ContainerPort: 80,
+// 								},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}
+
+// 	// Add environment variables to the pod spec
+// 	for _, envVar := range requested.Environment {
+// 		out.Spec.Template.Spec.Containers[0].Env = append(out.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+// 			Name:  envVar.Key,
+// 			Value: envVar.Value,
+// 		})
+// 	}
+
+// 	lh.Log.Infow("Deployment spec", "deployment", out)
+
+// 	return out
+// }
+
+func getStatefulSetSpec(theProject project.Project, requested api.Pod) *appsv1.StatefulSet {
+	out := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: requested.Id,
 		},
-		Spec: appsv1.DeploymentSpec{
+		Spec: appsv1.StatefulSetSpec{
 			Replicas: func(val int32) *int32 { return &val }(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -176,12 +227,6 @@ func getDeploymentSpec(theProject project.Project, requested api.Pod) *appsv1.De
 						{
 							Name:  requested.Id,
 							Image: requested.Image + ":" + requested.Tag,
-							// TODO: Figure out what to do about ports
-							Ports: []corev1.ContainerPort{
-								{
-									ContainerPort: 80,
-								},
-							},
 						},
 					},
 				},
@@ -197,7 +242,7 @@ func getDeploymentSpec(theProject project.Project, requested api.Pod) *appsv1.De
 		})
 	}
 
-	lh.Log.Infow("Deployment spec", "deployment", out)
+	lh.Log.Infow("StatefulSet spec generated", "statefulset", out)
 
 	return out
 }

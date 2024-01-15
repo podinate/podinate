@@ -1,21 +1,27 @@
 # the kubernetes yaml for a deployment running the image cosmtrek/air
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podinate
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-backend-deployment
+  name: podinate-controller
+  namespace: podinate
   labels:
-    app: api-backend
+    app: podinate-controller
 spec:
   selector:
     matchLabels:
-      app: api-backend
+      app: podinate-controller
   replicas: 1
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: api-backend
+        app: podinate-controller
     spec:
       containers:
         - name: backend
@@ -27,7 +33,7 @@ spec:
             - containerPort: 3000
           envFrom:
             - configMapRef:
-                name: api-backend-env
+                name: podinate-controller-env
           env:
             - name : POSTGRES_HOST
               value: mypostgres
@@ -39,13 +45,13 @@ spec:
             - name: CONFIG_FILE
               value: /etc/config/config.toml
           volumeMounts:
-            - name: api-backend-config
+            - name: podinate-controller-config
               mountPath: /etc/config
-      serviceAccountName: api-backend-deployment-manager
+      serviceAccountName: podinate-controller-deployment-manager
       volumes:
-        - name: api-backend-config
+        - name: podinate-controller-config
           configMap:
-            name: api-backend-config
+            name: podinate-controller-config
             items:
               - key: config.toml
                 path: config.toml
@@ -57,22 +63,23 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: api-backend
+  name: podinate-controller
   labels:
-    app: api-backend
+    app: podinate-controller
 spec:
   clusterIP: None
   ports:
     - port: 3000
-      name: api-backend
+      name: podinate-controller
   selector:
-    app: api-backend
+    app: podinate-controller
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: api-backend-env
+  name: podinate-controller-env
+  namespace: podinate
 data:
   PORT: "3000"
 
@@ -80,7 +87,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: api-backend-config
+  name: podinate-controller-config
+  namespace: podinate
 data:
   config.toml: |
     [database]
@@ -101,14 +109,14 @@ data:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: api-backend-deployment-manager
-  namespace: api
+  name: podinate-controller-deployment-manager
+  namespace: podinate
 ---
 # ClusterRole to give access to manage deployments in all namespaces
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: api-backend-deployment-manager
+  name: podinate-controller-deployment-manager
 rules:
 - apiGroups: ["apps"]
   resources: ["deployments"]
@@ -130,13 +138,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: api-backend-deployment-manager
+  name: podinate-controller-deployment-manager
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: api-backend-deployment-manager
+  name: podinate-controller-deployment-manager
 subjects:
 - kind: ServiceAccount
-  name: api-backend-deployment-manager
-  namespace: api
+  name: podinate-controller-deployment-manager
+  namespace: podinate
 

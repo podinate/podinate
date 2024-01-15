@@ -68,6 +68,7 @@ internal/sdk/pkg/models/operations/postprojectprojectidpod.go
 internal/sdk/pkg/models/operations/deleteprojectprojectidpodpodid.go
 internal/sdk/pkg/models/operations/getprojectprojectidpodpodid.go
 internal/sdk/pkg/models/operations/patchprojectprojectidpodpodid.go
+internal/sdk/pkg/models/operations/postuserlogin.go
 internal/sdk/pkg/models/operations/getuserlogininitiate.go
 internal/sdk/pkg/models/operations/getuserloginredirecttoken.go
 internal/sdk/pkg/models/operations/getuserlogincallbackprovider.go
@@ -79,10 +80,12 @@ internal/sdk/pkg/models/shared/project.go
 internal/sdk/pkg/models/shared/pod.go
 internal/sdk/pkg/models/shared/service.go
 internal/sdk/pkg/models/shared/environmentvariable.go
+internal/sdk/pkg/models/shared/storage.go
 internal/sdk/pkg/models/shared/user.go
 internal/sdk/pkg/models/shared/security.go
 internal/provider/type_environment_variable.go
 internal/provider/type_service.go
+internal/provider/type_storage.go
 USAGE.md
 internal/provider/provider.go
 examples/provider/provider.tf

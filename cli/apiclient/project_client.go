@@ -2,7 +2,11 @@ package apiclient
 
 import (
 	"context"
+	"errors"
 
+	"encoding/json"
+
+	"github.com/johncave/podinate/lib/api_client"
 	"github.com/spf13/viper"
 )
 
@@ -23,6 +27,30 @@ func ProjectGetByID(id string) (*Project, error) {
 		Name:       *resp.Name,
 		ResourceID: *resp.ResourceId,
 	}, nil
+}
+
+func GetAllProjects(accountID string) ([]Project, error) {
+	// Get the project from the API
+	resp, r, err := C.ProjectApi.ProjectGet(context.Background()).Account(accountID).Execute()
+
+	if err != nil {
+		var apierr api_client.Error
+		err = json.NewDecoder(r.Body).Decode(&apierr)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New(*apierr.Message)
+	}
+
+	var projects []Project
+	for _, p := range resp.Items {
+		projects = append(projects, Project{
+			ID:         *p.Project.Id,
+			Name:       *p.Project.Name,
+			ResourceID: *p.Project.ResourceId,
+		})
+	}
+	return projects, nil
 }
 
 func (p *Project) Delete() error {
