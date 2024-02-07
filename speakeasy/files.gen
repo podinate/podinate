@@ -80,12 +80,12 @@ internal/sdk/pkg/models/shared/project.go
 internal/sdk/pkg/models/shared/pod.go
 internal/sdk/pkg/models/shared/service.go
 internal/sdk/pkg/models/shared/environmentvariable.go
-internal/sdk/pkg/models/shared/storage.go
+internal/sdk/pkg/models/shared/volume.go
 internal/sdk/pkg/models/shared/user.go
 internal/sdk/pkg/models/shared/security.go
 internal/provider/type_environment_variable.go
 internal/provider/type_service.go
-internal/provider/type_storage.go
+internal/provider/type_volume.go
 USAGE.md
 internal/provider/provider.go
 examples/provider/provider.tf

@@ -29,10 +29,12 @@ type Pod struct {
 	Tag         string
 	Environment EnvironmentSlice
 	Services    ServiceSlice
+	Volumes     VolumeSlice
 	Status      string // Creating, OK, Down
 	Count       int
 	Ram         int
 	Project     project.Project
+
 	// TODO - add CPU requests / limits
 }
 
@@ -52,16 +54,27 @@ func GetByID(ctx context.Context, theProject project.Project, id string) (Pod, *
 	p.Project = theProject
 
 	// Get the services for the pod
-	p.loadServices()
+	err := p.loadServices()
+	if err != nil {
+		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+	}
+	err = p.loadVolumes()
+	if err != nil {
+		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+	}
 
 	// Get the status of the pod from kubernetes
-	dep, err := getKubesDeployment(theProject, id)
+	dep, err := getKubesStatefulSet(theProject, id)
 	if err != nil {
 		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
 	}
 
 	status := "Creating"
+
+	//lh.Info(ctx, "Pod status", "project", theProject, "pod", p, "status", dep.Status)
+
 	if dep.Status.AvailableReplicas == dep.Status.Replicas {
+
 		status = "Ready"
 	} else if dep.Status.AvailableReplicas == 0 {
 		status = "Down"
@@ -181,6 +194,16 @@ func Create(ctx context.Context, theAccount account.Account, theProject project.
 		}
 	}
 
+	if len(requestedPod.Volumes) > 0 {
+		for _, volume := range requestedPod.Volumes {
+			_, dberr = config.DB.Exec("INSERT INTO pod_volumes (uuid, pod_uuid, name, mount_path, size) VALUES (gen_random_uuid(), $1, $2, $3, $4)", uuid, volume.Name, volume.MountPath, volume.Size)
+			if dberr != nil {
+				lh.Error(ctx, "DB error creating pod volume", dberr)
+				return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+			}
+		}
+	}
+
 	// Start creating the pod
 	out := Pod{
 		Uuid:        uuid,
@@ -191,8 +214,10 @@ func Create(ctx context.Context, theAccount account.Account, theProject project.
 		Project:     theProject,
 		Status:      "Creating",
 		Environment: EnvVarFromAPIMany(requestedPod.Environment),
-		Services:    servicesFromAPI(requestedPod.Services),
 	}
+
+	out.loadServices()
+	out.loadVolumes()
 
 	// Ensure namespace exists
 	ns, err := out.ensureNamespace()
@@ -224,6 +249,7 @@ func (p *Pod) ToAPI() api.Pod {
 		Environment: EnvVarToAPIMany(p.Environment),
 		ResourceId:  p.GetResourceID(),
 		Services:    ServicesToAPI(p.Services),
+		Volumes:     p.Volumes.ToAPI(),
 	}
 }
 
@@ -330,6 +356,31 @@ func (p *Pod) Update(ctx context.Context, requested api.Pod) *apierror.ApiError 
 		if dberr != nil {
 			lh.Error(ctx, "DB error creating pod service", dberr)
 			return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+		}
+	}
+
+	// Update or create pod volumes
+	for _, volume := range requested.Volumes {
+		// See if the volume already exists
+		exists, err := p.volumeExists(volume.Name)
+		if err != nil {
+			lh.Error(ctx, "DB error checking if volume exists", dberr)
+			return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+		}
+		if exists {
+			_, dberr = config.DB.Exec("UPDATE pod_volumes SET mount_path = $3, size = $4 WHERE pod_uuid = $1 AND name = $2", p.Uuid, volume.Name, volume.MountPath, volume.Size)
+			if dberr != nil {
+				lh.Error(ctx, "DB error updating pod volume", dberr)
+				return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+			}
+			continue
+		} else {
+			// Finally, try create the volume
+			_, dberr = config.DB.Exec("INSERT INTO pod_volumes (uuid, pod_uuid, name, mount_path, size) VALUES (gen_random_uuid(), $1, $2, $3, $4)", p.Uuid, volume.Name, volume.MountPath, volume.Size)
+			if dberr != nil {
+				lh.Error(ctx, "DB error creating pod volume", dberr)
+				return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+			}
 		}
 	}
 

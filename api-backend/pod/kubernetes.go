@@ -12,6 +12,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -85,7 +86,7 @@ func (p *Pod) getNamespaceName() string {
 }
 
 // getKubesDeployment returns a deployment in the specified namespace.
-func getKubesDeployment(theProject project.Project, id string) (*appsv1.Deployment, error) {
+func getKubesStatefulSet(theProject project.Project, id string) (*appsv1.StatefulSet, error) {
 	fmt.Println("Get Kubernetes deployment")
 
 	clientset, err := getKubesClient()
@@ -95,7 +96,7 @@ func getKubesDeployment(theProject project.Project, id string) (*appsv1.Deployme
 	}
 
 	deployment, err := clientset.AppsV1().
-		Deployments(theProject.Account.ID+"-project-"+theProject.ID).
+		StatefulSets(theProject.Account.ID+"-project-"+theProject.ID).
 		Get(context.Background(), id, metav1.GetOptions{})
 
 	if err != nil {
@@ -242,6 +243,40 @@ func getStatefulSetSpec(theProject project.Project, requested api.Pod) *appsv1.S
 		})
 	}
 
+	for _, volume := range requested.Volumes {
+		// Add volume mounts
+		out.Spec.Template.Spec.Containers[0].VolumeMounts = append(out.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      volume.Name,
+			MountPath: volume.MountPath,
+		})
+
+		// Add volume claim templates
+		out.Spec.VolumeClaimTemplates = append(out.Spec.VolumeClaimTemplates, corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      volume.Name,
+				Namespace: theProject.Account.ID + "-project-" + theProject.ID,
+				Annotations: map[string]string{
+					"volumeType": "local",
+				},
+				Labels: map[string]string{
+					"podinate.com/pod":     requested.Id,
+					"podinate.com/project": theProject.ID,
+				},
+			},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes: []corev1.PersistentVolumeAccessMode{
+					"ReadWriteOnce",
+				},
+				StorageClassName: func(val string) *string { return &val }("local-path"),
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						"storage": func(val string) resource.Quantity { return resource.MustParse(val) }(fmt.Sprintf("%dGi", volume.Size)),
+					},
+				},
+			},
+		})
+	}
+
 	lh.Log.Infow("StatefulSet spec generated", "statefulset", out)
 
 	return out
@@ -283,7 +318,7 @@ func deleteKubesDeployment(thePod Pod) error {
 
 	deletePolicy := metav1.DeletePropagationForeground
 	err = clientset.AppsV1().
-		Deployments(thePod.Project.Account.ID+"-project-"+thePod.Project.ID).
+		StatefulSets(thePod.Project.Account.ID+"-project-"+thePod.Project.ID).
 		Delete(context.Background(), thePod.ID, metav1.DeleteOptions{
 			PropagationPolicy: &deletePolicy,
 		})

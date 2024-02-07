@@ -26,6 +26,6 @@ go/model_error.go
 go/model_pod.go
 go/model_project.go
 go/model_service.go
-go/model_storage.go
 go/model_user.go
+go/model_volume.go
 go/routers.go

@@ -13,7 +13,7 @@ type Pod struct {
 	// The image tag to run for this pod
 	Tag string `json:"tag"`
 	// The storage volumes attached to this pod
-	Storage []Storage `json:"storage,omitempty"`
+	Volumes []Volume `json:"volumes,omitempty"`
 	// The environment variables to pass to the pod
 	Environment []EnvironmentVariable `json:"environment,omitempty"`
 	// The services to expose for this pod
@@ -54,11 +54,11 @@ func (o *Pod) GetTag() string {
 	return o.Tag
 }
 
-func (o *Pod) GetStorage() []Storage {
+func (o *Pod) GetVolumes() []Volume {
 	if o == nil {
 		return nil
 	}
-	return o.Storage
+	return o.Volumes
 }
 
 func (o *Pod) GetEnvironment() []EnvironmentVariable {

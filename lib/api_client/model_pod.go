@@ -28,7 +28,7 @@ type Pod struct {
 	// The image tag to run for this pod
 	Tag string `json:"tag"`
 	// The storage volumes attached to this pod
-	Storage []Storage `json:"storage,omitempty"`
+	Volumes []Volume `json:"volumes,omitempty"`
 	// The environment variables to pass to the pod
 	Environment []EnvironmentVariable `json:"environment,omitempty"`
 	// The services to expose for this pod
@@ -165,36 +165,36 @@ func (o *Pod) SetTag(v string) {
 	o.Tag = v
 }
 
-// GetStorage returns the Storage field value if set, zero value otherwise.
-func (o *Pod) GetStorage() []Storage {
-	if o == nil || IsNil(o.Storage) {
-		var ret []Storage
+// GetVolumes returns the Volumes field value if set, zero value otherwise.
+func (o *Pod) GetVolumes() []Volume {
+	if o == nil || IsNil(o.Volumes) {
+		var ret []Volume
 		return ret
 	}
-	return o.Storage
+	return o.Volumes
 }
 
-// GetStorageOk returns a tuple with the Storage field value if set, nil otherwise
+// GetVolumesOk returns a tuple with the Volumes field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Pod) GetStorageOk() ([]Storage, bool) {
-	if o == nil || IsNil(o.Storage) {
+func (o *Pod) GetVolumesOk() ([]Volume, bool) {
+	if o == nil || IsNil(o.Volumes) {
 		return nil, false
 	}
-	return o.Storage, true
+	return o.Volumes, true
 }
 
-// HasStorage returns a boolean if a field has been set.
-func (o *Pod) HasStorage() bool {
-	if o != nil && !IsNil(o.Storage) {
+// HasVolumes returns a boolean if a field has been set.
+func (o *Pod) HasVolumes() bool {
+	if o != nil && !IsNil(o.Volumes) {
 		return true
 	}
 
 	return false
 }
 
-// SetStorage gets a reference to the given []Storage and assigns it to the Storage field.
-func (o *Pod) SetStorage(v []Storage) {
-	o.Storage = v
+// SetVolumes gets a reference to the given []Volume and assigns it to the Volumes field.
+func (o *Pod) SetVolumes(v []Volume) {
+	o.Volumes = v
 }
 
 // GetEnvironment returns the Environment field value if set, zero value otherwise.
@@ -373,8 +373,8 @@ func (o Pod) ToMap() (map[string]interface{}, error) {
 	toSerialize["name"] = o.Name
 	toSerialize["image"] = o.Image
 	toSerialize["tag"] = o.Tag
-	if !IsNil(o.Storage) {
-		toSerialize["storage"] = o.Storage
+	if !IsNil(o.Volumes) {
+		toSerialize["volumes"] = o.Volumes
 	}
 	if !IsNil(o.Environment) {
 		toSerialize["environment"] = o.Environment

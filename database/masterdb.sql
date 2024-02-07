@@ -16,7 +16,7 @@ CREATE DATABASE podinate;
 -- object: public.project | type: TABLE --
 -- DROP TABLE IF EXISTS public.project CASCADE;
 CREATE TABLE public.project (
-	uuid uuid NOT NULL,
+	uuid uuid NOT NULL DEFAULT gen_random_uuid(),
 	id text NOT NULL,
 	name text,
 	account_uuid uuid,
@@ -54,7 +54,7 @@ ALTER TABLE public.account OWNER TO postgres;
 -- object: public.project_pods | type: TABLE --
 -- DROP TABLE IF EXISTS public.project_pods CASCADE;
 CREATE TABLE public.project_pods (
-	uuid uuid NOT NULL,
+	uuid uuid NOT NULL DEFAULT gen_random_uuid(),
 	id text,
 	name text,
 	image text,
@@ -173,13 +173,13 @@ CREATE TABLE public.policy_attachment (
 	policy_uuid uuid NOT NULL,
 	date_attached timestamp DEFAULT CURRENT_TIMESTAMP,
 	valid_until timestamp,
-	attached_by uuid,
+	attached_by text,
 	CONSTRAINT compound_primary PRIMARY KEY (account_uuid,requestor_id,policy_uuid)
 );
 -- ddl-end --
 COMMENT ON COLUMN public.policy_attachment.requestor_id IS E'The resource (actor) that is requesting the action.';
 -- ddl-end --
-COMMENT ON COLUMN public.policy_attachment.attached_by IS E'The user uuid that originally attached this policy';
+COMMENT ON COLUMN public.policy_attachment.attached_by IS E'The user id that originally attached this policy';
 -- ddl-end --
 ALTER TABLE public.policy_attachment OWNER TO postgres;
 -- ddl-end --
@@ -187,7 +187,7 @@ ALTER TABLE public.policy_attachment OWNER TO postgres;
 -- object: public.policy | type: TABLE --
 -- DROP TABLE IF EXISTS public.policy CASCADE;
 CREATE TABLE public.policy (
-	uuid uuid NOT NULL,
+	uuid uuid NOT NULL DEFAULT gen_random_uuid(),
 	account_uuid uuid,
 	id text,
 	current_version smallint,
@@ -212,7 +212,7 @@ ALTER TABLE public.policy OWNER TO postgres;
 -- object: public.policy_version | type: TABLE --
 -- DROP TABLE IF EXISTS public.policy_version CASCADE;
 CREATE TABLE public.policy_version (
-	uuid uuid NOT NULL,
+	uuid uuid NOT NULL DEFAULT gen_random_uuid(),
 	policy_uuid uuid,
 	version_number smallint NOT NULL,
 	content text,
@@ -234,7 +234,7 @@ ALTER TABLE public.policy_version OWNER TO postgres;
 -- object: public.pod_services | type: TABLE --
 -- DROP TABLE IF EXISTS public.pod_services CASCADE;
 CREATE TABLE public.pod_services (
-	uuid uuid NOT NULL,
+	uuid uuid NOT NULL DEFAULT gen_random_uuid(),
 	pod_uuid uuid,
 	name text,
 	port smallint NOT NULL,
@@ -246,6 +246,20 @@ CREATE TABLE public.pod_services (
 );
 -- ddl-end --
 ALTER TABLE public.pod_services OWNER TO postgres;
+-- ddl-end --
+
+-- object: public.pod_volumes | type: TABLE --
+-- DROP TABLE IF EXISTS public.pod_volumes CASCADE;
+CREATE TABLE public.pod_volumes (
+	uuid uuid NOT NULL,
+	pod_uuid uuid NOT NULL,
+	name text NOT NULL,
+	size smallint NOT NULL,
+	mount_path smallint NOT NULL,
+	CONSTRAINT uuid_pk PRIMARY KEY (uuid)
+);
+-- ddl-end --
+ALTER TABLE public.pod_volumes OWNER TO postgres;
 -- ddl-end --
 
 -- object: owner_uuid | type: CONSTRAINT --
@@ -300,6 +314,13 @@ ON DELETE CASCADE ON UPDATE CASCADE;
 -- object: pod_uuid_fk | type: CONSTRAINT --
 -- ALTER TABLE public.pod_services DROP CONSTRAINT IF EXISTS pod_uuid_fk CASCADE;
 ALTER TABLE public.pod_services ADD CONSTRAINT pod_uuid_fk FOREIGN KEY (pod_uuid)
+REFERENCES public.project_pods (uuid) MATCH SIMPLE
+ON DELETE CASCADE ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: pod_uuid_fk | type: CONSTRAINT --
+-- ALTER TABLE public.pod_volumes DROP CONSTRAINT IF EXISTS pod_uuid_fk CASCADE;
+ALTER TABLE public.pod_volumes ADD CONSTRAINT pod_uuid_fk FOREIGN KEY (pod_uuid)
 REFERENCES public.project_pods (uuid) MATCH SIMPLE
 ON DELETE CASCADE ON UPDATE CASCADE;
 -- ddl-end --

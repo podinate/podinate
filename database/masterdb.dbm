@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,219" last-zoom="0.75" max-obj-count="13"
+<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,333" last-zoom="0.75" max-obj-count="14"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -20,7 +20,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="460" y="840"/>
-	<column name="uuid" not-null="true">
+	<column name="uuid" not-null="true" default-value="gen_random_uuid()">
 		<type name="uuid" length="0"/>
 	</column>
 	<column name="id" not-null="true">
@@ -83,7 +83,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="980" y="920"/>
-	<column name="uuid" not-null="true">
+	<column name="uuid" not-null="true" default-value="gen_random_uuid()">
 		<type name="uuid" length="0"/>
 	</column>
 	<column name="id">
@@ -238,7 +238,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="login_session" layers="0" collapse-mode="2" max-obj-count="3" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="1740" y="340"/>
+	<position x="1720" y="300"/>
 	<column name="session_id" not-null="true">
 		<type name="uuid" length="0"/>
 	</column>
@@ -274,8 +274,8 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<type name="timestamp" length="0"/>
 	</column>
 	<column name="attached_by">
-		<type name="uuid" length="0"/>
-		<comment> <![CDATA[The user uuid that originally attached this policy]]> </comment>
+		<type name="text" length="0"/>
+		<comment> <![CDATA[The user id that originally attached this policy]]> </comment>
 	</column>
 	<constraint name="compound_primary" type="pk-constr" table="public.policy_attachment">
 		<columns names="account_uuid,requestor_id,policy_uuid" ref-type="src-columns"/>
@@ -286,7 +286,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="1180" y="600"/>
-	<column name="uuid" not-null="true">
+	<column name="uuid" not-null="true" default-value="gen_random_uuid()">
 		<type name="uuid" length="0"/>
 	</column>
 	<column name="account_uuid">
@@ -323,7 +323,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="1640" y="560"/>
-	<column name="uuid" not-null="true">
+	<column name="uuid" not-null="true" default-value="gen_random_uuid()">
 		<type name="uuid" length="0"/>
 	</column>
 	<column name="policy_uuid">
@@ -356,7 +356,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="1540" y="900"/>
-	<column name="uuid" not-null="true">
+	<column name="uuid" not-null="true" default-value="gen_random_uuid()">
 		<type name="uuid" length="0"/>
 	</column>
 	<column name="pod_uuid">
@@ -382,6 +382,30 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</constraint>
 	<constraint name="unique_domain_name" type="uq-constr" table="public.pod_services">
 		<columns names="domain_name" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="pod_volumes" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1440" y="1260"/>
+	<column name="uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="pod_uuid" not-null="true">
+		<type name="uuid" length="0"/>
+	</column>
+	<column name="name" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<column name="size" not-null="true">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="mount_path" not-null="true">
+		<type name="text" length="0"/>
+	</column>
+	<constraint name="uuid_pk" type="pk-constr" table="public.pod_volumes">
+		<columns names="uuid" ref-type="src-columns"/>
 	</constraint>
 </table>
 
@@ -433,6 +457,12 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<columns names="uuid" ref-type="dst-columns"/>
 </constraint>
 
+<constraint name="pod_uuid_fk" type="fk-constr" comparison-type="MATCH SIMPLE"
+	 upd-action="CASCADE" del-action="CASCADE" ref-table="public.project_pods" table="public.pod_volumes">
+	<columns names="pod_uuid" ref-type="src-columns"/>
+	<columns names="uuid" ref-type="dst-columns"/>
+</constraint>
+
 <relationship name="rel_account_user" type="relfk" layers="0"
 	 src-table="public.account"
 	 dst-table="public.&quot;user&quot;" reference-fk="owner_uuid"
@@ -472,5 +502,10 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 src-table="public.pod_services"
 	 dst-table="public.project_pods" reference-fk="pod_uuid_fk"
 	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_pod_volumes_project_pods" type="relfk" layers="0"
+	 src-table="public.pod_volumes"
+	 dst-table="public.project_pods" reference-fk="pod_uuid_fk"
+	 src-required="false" dst-required="true"/>
 
 </dbmodel>

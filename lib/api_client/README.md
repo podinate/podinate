@@ -111,11 +111,11 @@ Class | Method | HTTP request | Description
  - [ProjectProjectIdPodGet200Response](docs/ProjectProjectIdPodGet200Response.md)
  - [ProjectProjectIdPodGet200ResponseItemsInner](docs/ProjectProjectIdPodGet200ResponseItemsInner.md)
  - [Service](docs/Service.md)
- - [Storage](docs/Storage.md)
  - [User](docs/User.md)
  - [UserLoginInitiateGet200Response](docs/UserLoginInitiateGet200Response.md)
  - [UserLoginPost200Response](docs/UserLoginPost200Response.md)
  - [UserLoginPostRequest](docs/UserLoginPostRequest.md)
+ - [Volume](docs/Volume.md)
 
 
 ## Documentation For Authorization

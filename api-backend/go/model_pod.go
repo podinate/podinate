@@ -25,7 +25,7 @@ type Pod struct {
 	Tag string `json:"tag"`
 
 	// The storage volumes attached to this pod
-	Storage []Storage `json:"storage,omitempty"`
+	Volumes []Volume `json:"volumes,omitempty"`
 
 	// The environment variables to pass to the pod
 	Environment []EnvironmentVariable `json:"environment,omitempty"`
@@ -56,8 +56,8 @@ func AssertPodRequired(obj Pod) error {
 		}
 	}
 
-	for _, el := range obj.Storage {
-		if err := AssertStorageRequired(el); err != nil {
+	for _, el := range obj.Volumes {
+		if err := AssertVolumeRequired(el); err != nil {
 			return err
 		}
 	}

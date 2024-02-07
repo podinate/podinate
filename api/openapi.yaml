@@ -918,7 +918,7 @@ components:
         #   description: The cluster to run this pod on
         #   example: "nz-1"
         #   type: string
-        storage:
+        volumes:
           description: The storage volumes attached to this pod
           example:
             - name: blog-images
@@ -926,7 +926,7 @@ components:
               mount_path: /var/www/html/images
           type: array
           items:
-            $ref: '#/components/schemas/Storage'
+            $ref: '#/components/schemas/Volume'
         environment:
           description: The environment variables to pass to the pod
           example:
@@ -1041,7 +1041,7 @@ components:
           description: The URL of the user's avatar
           example: https://avatars.githubusercontent.com/u/1234?v=4
           type: string
-    Storage:
+    Volume:
       description: A storage volume that is attached to each instance of a pod. 
       properties:
         name:
@@ -1056,11 +1056,11 @@ components:
           description: The path to mount the volume at
           example: /var/www/html
           type: string
-        resource_id:
-          description: The global Resource ID of the volume
-          example: account:podinate/project:hello-world/volume:my-blog
-          type: string
-          x-speakeasy-param-readonly: true
+        # resource_id:
+        #   description: The global Resource ID of the volume
+        #   example: account:podinate/project:hello-world/volume:my-blog
+        #   type: string
+        #   x-speakeasy-param-readonly: true
       required:
         - name
         - size

@@ -119,7 +119,7 @@ metadata:
   name: podinate-controller-deployment-manager
 rules:
 - apiGroups: ["apps"]
-  resources: ["deployments"]
+  resources: ["statefulsets"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["apps"]
   resources: ["deployments/status"]

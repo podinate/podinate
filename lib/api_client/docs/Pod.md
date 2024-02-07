@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **Name** | **string** | The name of the pod | 
 **Image** | **string** | The container image to run for this pod | 
 **Tag** | **string** | The image tag to run for this pod | 
-**Storage** | Pointer to [**[]Storage**](Storage.md) | The storage volumes attached to this pod | [optional] 
+**Volumes** | Pointer to [**[]Volume**](Volume.md) | The storage volumes attached to this pod | [optional] 
 **Environment** | Pointer to [**[]EnvironmentVariable**](EnvironmentVariable.md) | The environment variables to pass to the pod | [optional] 
 **Services** | Pointer to [**[]Service**](Service.md) | The services to expose for this pod | [optional] 
 **Status** | Pointer to **string** | The current status of the pod | [optional] 
@@ -119,30 +119,30 @@ and a boolean to check if the value has been set.
 SetTag sets Tag field to given value.
 
 
-### GetStorage
+### GetVolumes
 
-`func (o *Pod) GetStorage() []Storage`
+`func (o *Pod) GetVolumes() []Volume`
 
-GetStorage returns the Storage field if non-nil, zero value otherwise.
+GetVolumes returns the Volumes field if non-nil, zero value otherwise.
 
-### GetStorageOk
+### GetVolumesOk
 
-`func (o *Pod) GetStorageOk() (*[]Storage, bool)`
+`func (o *Pod) GetVolumesOk() (*[]Volume, bool)`
 
-GetStorageOk returns a tuple with the Storage field if it's non-nil, zero value otherwise
+GetVolumesOk returns a tuple with the Volumes field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetStorage
+### SetVolumes
 
-`func (o *Pod) SetStorage(v []Storage)`
+`func (o *Pod) SetVolumes(v []Volume)`
 
-SetStorage sets Storage field to given value.
+SetVolumes sets Volumes field to given value.
 
-### HasStorage
+### HasVolumes
 
-`func (o *Pod) HasStorage() bool`
+`func (o *Pod) HasVolumes() bool`
 
-HasStorage returns a boolean if a field has been set.
+HasVolumes returns a boolean if a field has been set.
 
 ### GetEnvironment
 

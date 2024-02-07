@@ -92,7 +92,7 @@ func GetPolicies(account account.Account, requestor Resource) ([]Policy, error) 
 	// Retrieve any policies from the policy_attachment table
 	// that apply to this user and account
 
-	rows, err := config.DB.Query("SELECT policy.uuid, policy.id, policy.content, policy.current_version FROM policy_attachment, policy WHERE policy_attachment.policy_uuid = policy.uuid AND policy_attachment.account_uuid = $1 AND policy_attachment.resource_id = $2", account.GetUUID(), requestor.GetResourceID())
+	rows, err := config.DB.Query("SELECT policy.uuid, policy.id, policy.content, policy.current_version FROM policy_attachment, policy WHERE policy_attachment.policy_uuid = policy.uuid AND policy_attachment.account_uuid = $1 AND policy_attachment.requestor_id = $2", account.GetUUID(), requestor.GetResourceID())
 	if err != nil {
 		lh.Log.Errorw("Error retrieving policies for user", "error", err, "user", requestor.GetResourceID(), "account", account.GetUUID(), "account_id", account.ID)
 		return []Policy{}, err

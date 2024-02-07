@@ -21,12 +21,12 @@ docs/ProjectGet200ResponseItemsInner.md
 docs/ProjectProjectIdPodGet200Response.md
 docs/ProjectProjectIdPodGet200ResponseItemsInner.md
 docs/Service.md
-docs/Storage.md
 docs/User.md
 docs/UserApi.md
 docs/UserLoginInitiateGet200Response.md
 docs/UserLoginPost200Response.md
 docs/UserLoginPostRequest.md
+docs/Volume.md
 git_push.sh
 go.mod
 go.sum
@@ -43,7 +43,7 @@ model_error.go
 model_pod.go
 model_project.go
 model_service.go
-model_storage.go
 model_user.go
+model_volume.go
 response.go
 utils.go

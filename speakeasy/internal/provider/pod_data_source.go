@@ -39,8 +39,8 @@ type PodDataSourceModel struct {
 	ResourceID  types.String          `tfsdk:"resource_id"`
 	Services    []Service             `tfsdk:"services"`
 	Status      types.String          `tfsdk:"status"`
-	Storage     []Storage             `tfsdk:"storage"`
 	Tag         types.String          `tfsdk:"tag"`
+	Volumes     []Volume              `tfsdk:"volumes"`
 }
 
 // Metadata returns the data source type name.
@@ -132,7 +132,11 @@ func (r *PodDataSource) Schema(ctx context.Context, req datasource.SchemaRequest
 				Computed:    true,
 				Description: `The current status of the pod`,
 			},
-			"storage": schema.ListNestedAttribute{
+			"tag": schema.StringAttribute{
+				Computed:    true,
+				Description: `The image tag to run for this pod`,
+			},
+			"volumes": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -148,17 +152,9 @@ func (r *PodDataSource) Schema(ctx context.Context, req datasource.SchemaRequest
 							Computed:    true,
 							Description: `The path to mount the volume at`,
 						},
-						"resource_id": schema.StringAttribute{
-							Computed:    true,
-							Description: `The global Resource ID of the volume`,
-						},
 					},
 				},
 				Description: `The storage volumes attached to this pod`,
-			},
-			"tag": schema.StringAttribute{
-				Computed:    true,
-				Description: `The image tag to run for this pod`,
 			},
 		},
 	}
