@@ -25,6 +25,8 @@ type Volume struct {
 	Size int32 `json:"size"`
 	// The path to mount the volume at
 	MountPath string `json:"mount_path"`
+	// The class of the volume, for example \"standard\" or \"premium\"
+	Class *string `json:"class,omitempty"`
 }
 
 // NewVolume instantiates a new Volume object
@@ -119,6 +121,38 @@ func (o *Volume) SetMountPath(v string) {
 	o.MountPath = v
 }
 
+// GetClass returns the Class field value if set, zero value otherwise.
+func (o *Volume) GetClass() string {
+	if o == nil || IsNil(o.Class) {
+		var ret string
+		return ret
+	}
+	return *o.Class
+}
+
+// GetClassOk returns a tuple with the Class field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Volume) GetClassOk() (*string, bool) {
+	if o == nil || IsNil(o.Class) {
+		return nil, false
+	}
+	return o.Class, true
+}
+
+// HasClass returns a boolean if a field has been set.
+func (o *Volume) HasClass() bool {
+	if o != nil && !IsNil(o.Class) {
+		return true
+	}
+
+	return false
+}
+
+// SetClass gets a reference to the given string and assigns it to the Class field.
+func (o *Volume) SetClass(v string) {
+	o.Class = &v
+}
+
 func (o Volume) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -132,6 +166,9 @@ func (o Volume) ToMap() (map[string]interface{}, error) {
 	toSerialize["name"] = o.Name
 	toSerialize["size"] = o.Size
 	toSerialize["mount_path"] = o.MountPath
+	if !IsNil(o.Class) {
+		toSerialize["class"] = o.Class
+	}
 	return toSerialize, nil
 }
 

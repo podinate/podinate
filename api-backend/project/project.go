@@ -1,15 +1,19 @@
 package project
 
 import (
+	"context"
 	"log"
+	"math/rand"
 	"net/http"
+	"regexp"
+	"time"
 
 	"github.com/johncave/podinate/api-backend/account"
 	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
-	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/lib/pq"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Project struct {
@@ -35,6 +39,15 @@ func (p *Project) ValidateNew() *apierror.ApiError {
 	if len(p.Name) > 64 {
 		return &apierror.ApiError{Code: http.StatusBadRequest, Message: "Project name too long"}
 	}
+
+	m, err := regexp.MatchString(`^([a-z]*[0-9]*-*)*$`, p.ID)
+	if err != nil {
+		return &apierror.ApiError{Code: http.StatusBadRequest, Message: "Error checking project ID " + err.Error()}
+	}
+	if !m { // ID must be lowercase letters and numbers only
+		return apierror.New(http.StatusBadRequest, "Project ID "+p.ID+" invalid, must be lowercase letters, numbers and dashes only")
+	}
+
 	log.Println("Validated project")
 	return nil
 }
@@ -94,10 +107,36 @@ func (p *Project) Patch(requested api.Project) *apierror.ApiError {
 	return nil
 }
 
+// CreateTest spins up a new project into which some tests can be putted
+func CreateTest() (Project, *apierror.ApiError) {
+	newAcc, err := account.CreateTest()
+	if err != nil {
+		return Project{}, err
+	}
+
+	//lh.Log.Debug("Created test account", "account", newAcc)
+
+	rand.Seed(time.Now().UnixNano())
+	id := generateRandomString(8)
+	name := generateRandomString(10)
+
+	newProj := api.Project{Id: id, Name: name}
+	return Create(newProj, *newAcc)
+}
+
+func generateRandomString(length int) string {
+	charset := "abcdefghijklmnopqrstuvwxyz0123456789"
+	result := make([]byte, length)
+	for i := 0; i < length; i++ {
+		result[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(result)
+}
+
 // Create creates a new project in the database
 func Create(new api.Project, inAccount account.Account) (Project, *apierror.ApiError) {
-	lh.Log.Debugw("Creating project", "project", new, "account", inAccount)
-	out := Project{ID: new.Id, Name: new.Name}
+	//lh.Log.Debugw("Creating project", "project", new, "account", inAccount)
+	out := Project{ID: new.Id, Name: new.Name, Account: inAccount}
 	err := out.ValidateNew()
 	if err != nil {
 		return Project{}, err
@@ -143,9 +182,33 @@ func (p *Project) Delete() *apierror.ApiError {
 	if err != nil {
 		return apierror.New(http.StatusInternalServerError, "Could not delete project")
 	}
+
+	// Delete the kubernetes namespace
+	apiErr := p.deleteKubeNamespace()
+	if err != nil {
+		return apiErr
+	}
 	return nil
 }
 
+// Delete Kubernetes namespace if it exists
+// func (p *Project) DeleteKubeNamespace() *apierror.ApiError {
+
 func (p Project) GetResourceID() string {
 	return p.Account.GetResourceID() + "/project:" + p.ID
+}
+
+// deleteKubeNamespace deletes a namespace from the kubernetes cluster
+func (p *Project) deleteKubeNamespace() *apierror.ApiError {
+	// Delete the namespace
+	err := config.Client.CoreV1().Namespaces().Delete(context.Background(), p.GetNamespaceName(), metav1.DeleteOptions{})
+	if err != nil {
+		log.Printf("error deleting namespace: %v\n", err)
+		return apierror.New(500, "error deleting namespace: "+err.Error())
+	}
+	return nil
+}
+
+func (p *Project) GetNamespaceName() string {
+	return p.Account.ID + "-project-" + p.ID
 }

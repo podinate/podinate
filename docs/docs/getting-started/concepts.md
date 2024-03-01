@@ -4,9 +4,6 @@ This page provides an overview of terms and components that make up the Podinate
 ## Account
 A podinate account is the root level collection of cloud resources. All resources must be part of an account. This keeps ownership and access separate. 
 
-## Bucket
-A bucket is an object storage endpoint for storing unstructured files and data. Powered by Minio, it provides storage using a familiar HTTP interface for storing and viewing files. 
-
 ## Cluster
 A cluster is a set of servers which run your Podinate workloads. Multiple Podinate clusters can be managed by a central 
 

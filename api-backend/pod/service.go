@@ -2,10 +2,10 @@ package pod
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
+	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
 	lh "github.com/johncave/podinate/api-backend/loghandler"
@@ -233,18 +233,19 @@ func (p *Pod) ensureIngresses(ctx context.Context) error {
 }
 
 // ensureServices ensures that the services for a pod exist
-func (p *Pod) ensureServices(ctx context.Context) error {
+func (p *Pod) ensureServices(ctx context.Context) *apierror.ApiError {
 
 	clientset, err := getKubesClient()
 	if err != nil {
 		log.Printf("error getting kubernetes client: %v\n", err)
-		return err
+		return apierror.New(500, "error getting kubernetes client: "+err.Error())
 	}
 
 	// TODO - Figure out how to get the service port from the pod
 	serviceSpec := p.getServiceSpec()
 
 	if serviceSpec == nil {
+		lh.Info(ctx, "No services for pod", "pod", p)
 		return nil
 	}
 
@@ -254,13 +255,13 @@ func (p *Pod) ensureServices(ctx context.Context) error {
 			Services(p.getNamespaceName()).
 			Get(context.Background(), service.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
-			fmt.Printf("error getting service: %v\n", err)
+			lh.Debug(ctx, "Couldn't get service, creating", "error", err)
 			_, err := clientset.CoreV1().
 				Services(p.getNamespaceName()).
 				Create(context.Background(), &service, metav1.CreateOptions{})
 			if err != nil {
-				fmt.Printf("error creating service: %v\n", err)
-				return err
+				lh.Error(ctx, "error creating service, aborting", "error", err)
+				return apierror.New(500, "error creating service: "+err.Error())
 			}
 			lh.Info(ctx, "Created service", "service", service.ObjectMeta.Name)
 		} else {
@@ -268,8 +269,8 @@ func (p *Pod) ensureServices(ctx context.Context) error {
 				Services(p.getNamespaceName()).
 				Update(context.Background(), &service, metav1.UpdateOptions{})
 			if err != nil {
-				fmt.Printf("error updating service: %v\n", err)
-				return err
+				lh.Error(ctx, "error updating service, aborting", "error", err)
+				return apierror.New(500, "error updating service: "+err.Error())
 			}
 			lh.Info(ctx, "Updated service", "service", service.ObjectMeta.Name)
 		}
@@ -280,9 +281,10 @@ func (p *Pod) ensureServices(ctx context.Context) error {
 
 	err = p.ensureIngresses(ctx)
 	if err != nil {
-		return err
+		return apierror.New(500, "error ensuring ingresses: "+err.Error())
 	}
 
+	lh.Info(ctx, "Created services for pod", "pod", p)
 	return nil
 }
 

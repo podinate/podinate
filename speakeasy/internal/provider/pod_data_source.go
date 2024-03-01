@@ -152,6 +152,10 @@ func (r *PodDataSource) Schema(ctx context.Context, req datasource.SchemaRequest
 							Computed:    true,
 							Description: `The path to mount the volume at`,
 						},
+						"class": schema.StringAttribute{
+							Computed:    true,
+							Description: `The class of the volume, for example "standard" or "premium"`,
+						},
 					},
 				},
 				Description: `The storage volumes attached to this pod`,

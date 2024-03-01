@@ -10,6 +10,7 @@ type Volume struct {
 	Name      string
 	MountPath string
 	Size      int
+	Class     string
 }
 
 type VolumeSlice []Volume
@@ -29,6 +30,7 @@ func volumeFromAPI(apiVolume api.Volume) Volume {
 		Name:      apiVolume.Name,
 		MountPath: apiVolume.MountPath,
 		Size:      int(apiVolume.Size),
+		Class:     apiVolume.Class,
 	}
 	return out
 }
@@ -49,6 +51,7 @@ func (v *Volume) ToAPI() api.Volume {
 		Name:      v.Name,
 		MountPath: v.MountPath,
 		Size:      int32(v.Size),
+		Class:     v.Class,
 	}
 	return out
 }

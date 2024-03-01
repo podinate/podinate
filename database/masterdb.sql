@@ -9,7 +9,7 @@
 -- 
 -- object: podinate | type: DATABASE --
 -- DROP DATABASE IF EXISTS podinate;
-CREATE DATABASE podinate;
+-- CREATE DATABASE podinate;
 -- ddl-end --
 
 
@@ -255,7 +255,7 @@ CREATE TABLE public.pod_volumes (
 	pod_uuid uuid NOT NULL,
 	name text NOT NULL,
 	size smallint NOT NULL,
-	mount_path smallint NOT NULL,
+	mount_path text NOT NULL,
 	CONSTRAINT uuid_pk PRIMARY KEY (uuid)
 );
 -- ddl-end --

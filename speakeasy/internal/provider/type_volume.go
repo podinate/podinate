@@ -5,6 +5,7 @@ package provider
 import "github.com/hashicorp/terraform-plugin-framework/types"
 
 type Volume struct {
+	Class     types.String `tfsdk:"class"`
 	MountPath types.String `tfsdk:"mount_path"`
 	Name      types.String `tfsdk:"name"`
 	Size      types.Int64  `tfsdk:"size"`

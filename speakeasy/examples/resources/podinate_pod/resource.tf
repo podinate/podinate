@@ -23,6 +23,7 @@ resource "podinate_pod" "my_pod" {
   tag = "6.0"
   volumes = [
     {
+      class      = "standard"
       mount_path = "/var/www/html"
       name       = "blog-data"
       size       = 10

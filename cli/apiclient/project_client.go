@@ -33,6 +33,9 @@ func GetAllProjects(accountID string) ([]Project, error) {
 	// Get the project from the API
 	resp, r, err := C.ProjectApi.ProjectGet(context.Background()).Account(accountID).Execute()
 
+	if r == nil {
+		return nil, errors.New("Could not connect to Podinate API: " + err.Error())
+	}
 	if err != nil {
 		var apierr api_client.Error
 		err = json.NewDecoder(r.Body).Decode(&apierr)

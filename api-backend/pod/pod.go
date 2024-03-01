@@ -5,13 +5,16 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 
-	"github.com/johncave/podinate/api-backend/account"
 	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
 	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/johncave/podinate/api-backend/project"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -56,30 +59,57 @@ func GetByID(ctx context.Context, theProject project.Project, id string) (Pod, *
 	// Get the services for the pod
 	err := p.loadServices()
 	if err != nil {
-		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+		return Pod{}, apierror.New(http.StatusInternalServerError, "Error Loading services"+err.Error())
 	}
 	err = p.loadVolumes()
 	if err != nil {
-		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+		return Pod{}, apierror.NewWithError(http.StatusInternalServerError, "error loading volumes", err)
 	}
 
 	// Get the status of the pod from kubernetes
-	dep, err := getKubesStatefulSet(theProject, id)
+	ss, err := getKubesStatefulSet(theProject, id)
 	if err != nil {
-		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+		return Pod{}, apierror.NewWithError(http.StatusInternalServerError, "error getting Kubernetes resources", err)
 	}
 
-	status := "Creating"
+	out := p
 
-	//lh.Info(ctx, "Pod status", "project", theProject, "pod", p, "status", dep.Status)
-
-	if dep.Status.AvailableReplicas == dep.Status.Replicas {
-
-		status = "Ready"
-	} else if dep.Status.AvailableReplicas == 0 {
-		status = "Down"
+	split := strings.Split(ss.Spec.Template.Spec.Containers[0].Image, ":")
+	if len(split) > 1 {
+		out.Tag = split[1]
+		out.Image = split[0]
 	}
-	p.Status = status
+
+	// Get all the pods in the statefulset
+	options := metav1.ListOptions{
+		LabelSelector: "podinate.com/pod=" + id,
+	}
+	// var kpods *corev1.PodList
+
+	var kpods *v1.PodList
+	for tries := 0; tries < 5; tries++ {
+		// If we create a Pod then immediately try to retrieve it from Kubernetes
+		// there may be a race condition IE in tests.
+		// Don't ask me about how this wasted an entire Friday evening.
+		kpods, err = config.Client.CoreV1().Pods(theProject.GetNamespaceName()).List(ctx, options)
+		if err != nil {
+			lh.Error(ctx, "Error getting pods from Kubernetes", "error", err)
+			return Pod{}, apierror.NewWithError(http.StatusInternalServerError, "Error getting pods from Kubernetes", err)
+		}
+		lh.Debug(ctx, "Got all pods from Kubernetes", "pods", kpods, "length", len(kpods.Items), "options", options, "namespace", theProject.GetNamespaceName())
+		if len(kpods.Items) > 0 {
+			break
+		}
+		if tries > 5 {
+			lh.Error(ctx, "No pods found after 5 tries", "pods", kpods, "length", len(kpods.Items), "options", options, "namespace", theProject.GetNamespaceName())
+			return Pod{}, apierror.New(http.StatusInternalServerError, "No pods found after 5 tries")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	out.Status = string(kpods.Items[0].Status.Phase)
+
+	lh.Debug(ctx, "Pod out", "pod", out)
 
 	return p, nil
 
@@ -155,7 +185,7 @@ func GetByProject(ctx context.Context, theProject project.Project, page int32, l
 }
 
 // Create performs the initial registration of a pod in the database and the kubernetes cluster
-func Create(ctx context.Context, theAccount account.Account, theProject project.Project, requestedPod api.Pod) (Pod, *apierror.ApiError) {
+func Create(ctx context.Context, theProject project.Project, requestedPod api.Pod) (Pod, *apierror.ApiError) {
 
 	// TODO - Validate the requestedPod
 
@@ -183,27 +213,6 @@ func Create(ctx context.Context, theAccount account.Account, theProject project.
 		return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
 	}
 
-	// Add the services to the database if it exists
-	if len(requestedPod.Services) > 0 {
-		for _, service := range requestedPod.Services {
-			_, dberr = config.DB.Exec("INSERT INTO pod_services (uuid, pod_uuid, name, port, target_port, protocol, domain_name) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)", uuid, service.Name, service.Port, service.TargetPort, service.Protocol, service.DomainName)
-			if dberr != nil {
-				lh.Error(ctx, "DB error creating pod service", dberr)
-				return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
-			}
-		}
-	}
-
-	if len(requestedPod.Volumes) > 0 {
-		for _, volume := range requestedPod.Volumes {
-			_, dberr = config.DB.Exec("INSERT INTO pod_volumes (uuid, pod_uuid, name, mount_path, size) VALUES (gen_random_uuid(), $1, $2, $3, $4)", uuid, volume.Name, volume.MountPath, volume.Size)
-			if dberr != nil {
-				lh.Error(ctx, "DB error creating pod volume", dberr)
-				return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
-			}
-		}
-	}
-
 	// Start creating the pod
 	out := Pod{
 		Uuid:        uuid,
@@ -214,26 +223,65 @@ func Create(ctx context.Context, theAccount account.Account, theProject project.
 		Project:     theProject,
 		Status:      "Creating",
 		Environment: EnvVarFromAPIMany(requestedPod.Environment),
+		Services:    servicesFromAPI(requestedPod.Services),
 	}
-
-	out.loadServices()
-	out.loadVolumes()
 
 	// Ensure namespace exists
-	ns, err := out.ensureNamespace()
+	ns, genericErr := out.ensureNamespace()
 	//ns, err := createKubesNamespace(theProject.GetResourceID())
+	if genericErr != nil {
+		return Pod{}, apierror.New(http.StatusInternalServerError, genericErr.Error())
+	}
+
+	err := createKubesDeployment(ns, theProject, requestedPod)
 	if err != nil {
+		return Pod{}, apierror.New(http.StatusInternalServerError, genericErr.Error())
+	}
+
+	// Add the services to the database if it exists
+	if len(requestedPod.Services) > 0 {
+		for _, service := range requestedPod.Services {
+			_, dberr = config.DB.Exec("INSERT INTO pod_services (uuid, pod_uuid, name, port, target_port, protocol, domain_name) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)", uuid, service.Name, service.Port, service.TargetPort, service.Protocol, service.DomainName)
+			if dberr != nil {
+				lh.Error(ctx, "DB error creating pod service", dberr)
+				out.Delete(ctx)
+				return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+			}
+		}
+	}
+
+	if len(requestedPod.Volumes) > 0 {
+		for _, volume := range requestedPod.Volumes {
+			_, dberr = config.DB.Exec("INSERT INTO pod_volumes (uuid, pod_uuid, name, mount_path, size) VALUES (gen_random_uuid(), $1, $2, $3, $4)", uuid, volume.Name, volume.MountPath, volume.Size)
+			if dberr != nil {
+				lh.Error(ctx, "DB error creating pod volume", dberr)
+				out.Delete(ctx)
+				return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
+			}
+		}
+	}
+
+	genericErr = out.loadServices()
+	if err != nil {
+		out.Delete(ctx)
+		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+	}
+	genericErr = out.loadVolumes()
+	if err != nil {
+		out.Delete(ctx)
 		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
 	}
 
-	err = createKubesDeployment(ns, theProject, requestedPod)
-	if err != nil {
-		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+	svcErr := out.ensureServices(ctx)
+	lh.Debug(ctx, "Ensure services", "err", svcErr)
+	if svcErr != nil {
+		return Pod{}, svcErr
 	}
 
-	err = out.ensureServices(ctx)
-	if err != nil {
-		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+	// Everything is created - we can load the pod from the database again
+	out, apiErr := GetByID(ctx, theProject, requestedPod.Id)
+	if apiErr != nil {
+		return Pod{}, apierror.New(http.StatusInternalServerError, apiErr.Error())
 	}
 
 	return out, nil

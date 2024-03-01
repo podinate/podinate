@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **Name** | **string** | The name of the volume | 
 **Size** | **int32** | The size of the volume in GB | 
 **MountPath** | **string** | The path to mount the volume at | 
+**Class** | Pointer to **string** | The class of the volume, for example \&quot;standard\&quot; or \&quot;premium\&quot; | [optional] 
 
 ## Methods
 
@@ -86,6 +87,31 @@ and a boolean to check if the value has been set.
 
 SetMountPath sets MountPath field to given value.
 
+
+### GetClass
+
+`func (o *Volume) GetClass() string`
+
+GetClass returns the Class field if non-nil, zero value otherwise.
+
+### GetClassOk
+
+`func (o *Volume) GetClassOk() (*string, bool)`
+
+GetClassOk returns a tuple with the Class field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetClass
+
+`func (o *Volume) SetClass(v string)`
+
+SetClass sets Class field to given value.
+
+### HasClass
+
+`func (o *Volume) HasClass() bool`
+
+HasClass returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

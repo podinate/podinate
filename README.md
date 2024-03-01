@@ -1,5 +1,7 @@
 # podinate
-Podinate is an easy to use container orchestation engine with built in package manager. It uses a Kubernetes cluster in the background to provide a simple production-ready API to manage your containers and data. The package manager allows you to easily spin up common applications, and development environments lets team members easily start working on your project. 
+Podinate is an alternative controller and API for Kubernetes. It wraps Kubernetes APIs with its own much simplified API, providing only the services you need to get most apps running quickly and easily. Podinate provides a built in package manager powered by OpenTofu.
+
+
 
 # Installation
 There is documentation under `docs`, which you can view by runnning `mkdocs serve`.
@@ -8,11 +10,14 @@ There is documentation under `docs`, which you can view by runnning `mkdocs serv
 This is the current plan for development
 - ~~Pods~~
 - ~~Ingress~~
+  - Let's Encrypt
 - Volumes
-- Installation Instructions 
+- Installer
+- Jobs
+- Cronjobs
 
 ## Repo Structure
-We use a monorepo, each top level folder here represents a single service, or holds some shared libraries. In the `api` folder is our API definition, if updated generate the updated client and server packages with the script `make api-generate`. It will ask you for a sudo password so it can update some weird permission issues from running the generator inside a Docker container. 
+We use a monorepo, each top level folder here represents a single service, or holds some shared libraries. In the `api` folder is our API definition, if updated generate the updated client and server packages with the script `make api-generate`. It will ask you for a sudo password so it can update some permission issues from running the generator inside a Docker container. 
 
 ## Documentation
 There is a Readme.md file inside important package folders. Please make sure to read `api-backend/Readme.md` and `api-backend/iam/Readme.md`.
@@ -57,7 +62,7 @@ k3d-podinate-dev-server-0   Ready    control-plane,master   86d   v1.27.4+k3s1
 ### Spin up API server and Postgres
 First we spin up Postgres in our new kubernetes cluster: 
 ```
-k create namespace api
+k create namespace podinate
 k apply -f kubernetes/masterdb-postgres.yaml
 ```
 Then install the API
@@ -75,8 +80,8 @@ kubycat ./kubycat.yaml # Leave this running to develop the backend
 
 To interact with it for development, forward port 3001 on your local machine to the API in the cluster
 ```
-k -n api get pods
-k -n api port-forward pods/api-backend-deployment-54c7b6895f-tg594 3001:3000 # Leave running to develop the backend
+k -n podinate get pods
+k -n podinate port-forward pods/api-backend-deployment-54c7b6895f-tg594 3001:3000 # Leave running to develop the backend
 ```
 
 
@@ -93,4 +98,4 @@ Load the `API/Insomnia.json` file into Insomnia to see the endpoints. First crea
 ## Get Started Developing
 Each top level folder has a Readme. Please read `api-backend/Readme.md` and `cli/Readme.md` to get started.  
 
-The backend and frontend communicate through client/server packages built off the OpenAPI spec in `api/`, if you make any changes to it, run `make api-generate` to rebuild it. 
+The controller and cli communicate through client/server packages built off the OpenAPI spec in `api/`, if you make any changes to it, run `make api-generate` to rebuild it. 

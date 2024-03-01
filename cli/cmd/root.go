@@ -20,7 +20,8 @@ var (
 // Config file stuff
 func init() {
 
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.cobra.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.config/podinate/credentials.yaml)")
+	viper.BindPFlag("config_file", rootCmd.PersistentFlags().Lookup("config"))
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 
@@ -80,7 +81,16 @@ func initConfig() {
 			}
 		}
 	}
-	apiclient.SetupUser()
+
+	// I have no idea why this works.
+	// If I print the string it's the word "login"
+	// but inverting this condition has the opposite effect
+	// Wtf is happening here?
+	//log.Printf("called as %+v %T", loginCmd.CalledAs(), loginCmd.CalledAs())
+	if loginCmd.CalledAs() == "" {
+		apiclient.SetupUser()
+	}
+
 	if viper.GetBool("verbose") {
 		log.Println("Verbose output enabled")
 		fmt.Printf("Config: %+v\n", viper.AllSettings())

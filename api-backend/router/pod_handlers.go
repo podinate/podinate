@@ -164,7 +164,7 @@ func (s *PodAPIService) ProjectProjectIdPodPost(ctx context.Context, projectId s
 		return responder.Response(http.StatusForbidden, "You do not have permission to create this pod in this project"), nil
 	}
 
-	thepod, err := pod.Create(ctx, theAccount, theProject, requestedPod)
+	thepod, err := pod.Create(ctx, theProject, requestedPod)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}

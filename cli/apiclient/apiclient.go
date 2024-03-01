@@ -6,6 +6,7 @@ package apiclient
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -50,25 +51,37 @@ func SetupUser() {
 	//m := viper.GetStringMapString("profiles")
 	//fmt.Printf("Config: %+v\n", m)
 
-	var profiles GlobalConfigFile
-	err := viper.Unmarshal(&profiles)
+	// Find home directory.
+	configFile, err := readConfigFile()
 	if err != nil {
-		fmt.Println("Error unmarshalling config:", err)
+		fmt.Println("Error reading config file:", err)
 		os.Exit(1)
 	}
-	//fmt.Printf("Profiles: %+v\n", profiles.Profiles)
 
-	for i, p := range profiles.Profiles {
+	for i, p := range configFile.Profiles {
 		if p.Name == viper.GetString("profile") {
+			if viper.GetBool("verbose") {
+				log.Printf("Using profile: %+v\n", p)
+			}
 			// I don't know why tf the apikey isn't in the profile, but this works
 			apiKey := viper.GetString("profiles." + strconv.Itoa(i) + ".api_key")
 			config.DefaultHeader["Authorization"] = apiKey
+
+			// Set the API URL
+			u, err := url.Parse(p.APIUrl)
+			if err != nil {
+				fmt.Println("Error parsing API URL in profile:", err)
+				os.Exit(1)
+			}
+			config.Host = u.Host
+			config.Scheme = u.Scheme
+
 			viper.Set("api_key", apiKey)
 			return
 		}
 	}
 
-	fmt.Printf("Profile not found: %s\n", viper.GetString("profile"))
+	log.Printf("Profile not found: %s\n", viper.GetString("profile"))
 	os.Exit(1)
 	return
 
@@ -150,15 +163,37 @@ type Profile struct {
 func SaveProfile(apiURL string, profileName string, apiKey string) error {
 	// TODO: Check for existing profiles
 
-	yamlContent, err := yaml.Marshal(GlobalConfigFile{
-		Profiles: []Profile{
-			{
-				Name:   profileName,
-				APIKey: apiKey,
-				APIUrl: apiURL,
-			},
-		},
-	})
+	currentConfig, err := readConfigFile()
+	if err != nil {
+		return err
+	}
+
+	newProfile := Profile{
+		Name:   profileName,
+		APIKey: apiKey,
+		APIUrl: apiURL,
+	}
+
+	overwrote := false
+	for i, p := range currentConfig.Profiles {
+		if p.Name == profileName {
+			if viper.GetBool("verbose") {
+				log.Printf("Profile already exists: %+v, overwriting\n", p)
+			}
+			currentConfig.Profiles[i] = newProfile
+			overwrote = true
+		}
+	}
+
+	if !overwrote {
+		currentConfig.Profiles = append(currentConfig.Profiles, newProfile)
+	}
+
+	if viper.GetBool("verbose") {
+		log.Printf("Saving profile: %+v\n", currentConfig)
+	}
+
+	yamlContent, err := yaml.Marshal(currentConfig)
 	if err != nil {
 		return err
 	}
@@ -174,7 +209,7 @@ func SaveProfile(apiURL string, profileName string, apiKey string) error {
 		filePath = home + "/.config/podinate/credentials.yaml"
 	}
 	fmt.Printf("Saving profile to %s\n", filePath)
-	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return err
 	}
@@ -313,4 +348,30 @@ func openBrowser(url string) error {
 	//e := exec.Command(cmd, args...)
 
 	return exec.Command(cmd, args...).Start()
+}
+
+// readConfigFile reads the config file and returns the GlobalConfigFile struct
+func readConfigFile() (*GlobalConfigFile, error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return nil, err
+	}
+	var configFile string
+	if viper.GetString("config_file") != "" {
+		configFile = viper.GetString("config_file")
+	} else {
+		configFile = home + "/.config/podinate/credentials.yaml"
+	}
+
+	yamlFile, err := os.ReadFile(configFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var profiles GlobalConfigFile
+	err = yaml.Unmarshal(yamlFile, &profiles)
+	if err != nil {
+		return nil, err
+	}
+	return &profiles, nil
 }

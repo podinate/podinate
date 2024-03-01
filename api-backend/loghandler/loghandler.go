@@ -2,15 +2,34 @@ package lh
 
 import (
 	"context"
+	"flag"
+	"fmt"
 
 	zap "go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 // Log is the global logger, based on zap sugared logger
 var Log *zap.SugaredLogger
+var observedLogs *observer.ObservedLogs
 
-func Init() {
-	logger, _ := zap.NewDevelopment()
+func init() {
+	var logger *zap.Logger
+	if flag.Lookup("test.v") == nil {
+		fmt.Println("Inited logger in dev mode")
+		var err error
+		logger, err = zap.NewDevelopment()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		fmt.Println("Creating test logger")
+		var observerCore zapcore.Core
+		observerCore, observedLogs = observer.New(zap.InfoLevel)
+		logger = zap.New(observerCore)
+	}
+
 	defer logger.Sync() // flushes buffer, if any
 	Log = logger.Sugar()
 

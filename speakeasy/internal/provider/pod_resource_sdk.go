@@ -22,10 +22,17 @@ func (r *PodResourceModel) ToCreateSDKType() *shared.Pod {
 		name1 := volumesItem.Name.ValueString()
 		size := volumesItem.Size.ValueInt64()
 		mountPath := volumesItem.MountPath.ValueString()
+		class := new(string)
+		if !volumesItem.Class.IsUnknown() && !volumesItem.Class.IsNull() {
+			*class = volumesItem.Class.ValueString()
+		} else {
+			class = nil
+		}
 		volumes = append(volumes, shared.Volume{
 			Name:      name1,
 			Size:      size,
 			MountPath: mountPath,
+			Class:     class,
 		})
 	}
 	var environment []shared.EnvironmentVariable = nil
@@ -194,12 +201,18 @@ func (r *PodResourceModel) RefreshFromGetResponse(resp *shared.Pod) {
 	}
 	for volumesCount, volumesItem := range resp.Volumes {
 		var volumes1 Volume
+		if volumesItem.Class != nil {
+			volumes1.Class = types.StringValue(*volumesItem.Class)
+		} else {
+			volumes1.Class = types.StringNull()
+		}
 		volumes1.MountPath = types.StringValue(volumesItem.MountPath)
 		volumes1.Name = types.StringValue(volumesItem.Name)
 		volumes1.Size = types.Int64Value(volumesItem.Size)
 		if volumesCount+1 > len(r.Volumes) {
 			r.Volumes = append(r.Volumes, volumes1)
 		} else {
+			r.Volumes[volumesCount].Class = volumes1.Class
 			r.Volumes[volumesCount].MountPath = volumes1.MountPath
 			r.Volumes[volumesCount].Name = volumes1.Name
 			r.Volumes[volumesCount].Size = volumes1.Size

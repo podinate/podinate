@@ -31,3 +31,8 @@ func GetRequestID(ctx context.Context) RequestID {
 func NewRequestID() RequestID {
 	return "pr-" + RequestID(uuid.New().String())
 }
+
+func TestContext() context.Context {
+	ctx := context.Background()
+	return context.WithValue(ctx, ContextKey("request-id"), NewRequestID())
+}

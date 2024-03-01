@@ -1299,6 +1299,10 @@ components:
           description: The path to mount the volume at
           example: /var/www/html
           type: string
+        class:
+          description: "The class of the volume, for example \"standard\" or \"premium\""
+          example: standard
+          type: string
       required:
       - mount_path
       - name

@@ -146,6 +146,11 @@ func (r *PodResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
+						"class": schema.StringAttribute{
+							Computed:    true,
+							Optional:    true,
+							Description: `The class of the volume, for example "standard" or "premium"`,
+						},
 						"mount_path": schema.StringAttribute{
 							Required:    true,
 							Description: `The path to mount the volume at`,

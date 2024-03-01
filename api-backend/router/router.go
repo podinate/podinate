@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 
 	"github.com/gorilla/mux"
-	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/iam"
 	lh "github.com/johncave/podinate/api-backend/loghandler"
@@ -122,7 +121,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 
 // MakeRequest - Make a request to the API, useful for testing
 func MakeRequest(method, url string, body interface{}, headers map[string]string) *httptest.ResponseRecorder {
-	config.Init()
+	//config.Init()
 	log.Println("Configurinated")
 
 	requestBody, _ := json.Marshal(body)

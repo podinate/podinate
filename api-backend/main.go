@@ -17,19 +17,17 @@ import (
 
 	"github.com/johncave/podinate/api-backend/config"
 	"github.com/johncave/podinate/api-backend/router"
-
-	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
 func main() {
 	log.Printf("Server initialising...")
 
-	lh.Init()
+	//lh.Init()
 
-	err := config.Init()
-	if err != nil {
-		lh.Log.Panicw("Error initialising config", "error", err)
-	}
+	// err := config.Init()
+	// if err != nil {
+	// 	lh.Log.Panicw("Error initialising config", "error", err)
+	// }
 	log.Println("Server configured...")
 
 	theRouter := router.GetRouter()

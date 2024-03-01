@@ -10,6 +10,8 @@ type Volume struct {
 	Size int64 `json:"size"`
 	// The path to mount the volume at
 	MountPath string `json:"mount_path"`
+	// The class of the volume, for example "standard" or "premium"
+	Class *string `json:"class,omitempty"`
 }
 
 func (o *Volume) GetName() string {
@@ -31,4 +33,11 @@ func (o *Volume) GetMountPath() string {
 		return ""
 	}
 	return o.MountPath
+}
+
+func (o *Volume) GetClass() *string {
+	if o == nil {
+		return nil
+	}
+	return o.Class
 }

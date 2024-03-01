@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
+	"github.com/johncave/podinate/api-backend/apierror"
+	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
 	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/johncave/podinate/api-backend/project"
@@ -16,37 +17,36 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
-func callKubes() {
-	fmt.Println("Get Kubernetes pods")
+// func callKubes() {
+// 	fmt.Println("Get Kubernetes pods")
 
-	clientset, err := getKubesClient()
-	log.Println("Getting pods...")
+// 	clientset, err := getKubesClient()
+// 	log.Println("Getting pods...")
 
-	pods, err := clientset.CoreV1().
-		Pods("kube-system").
-		List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		fmt.Printf("error getting pods: %v\n", err)
-		os.Exit(1)
-	}
-	for _, pod := range pods.Items {
-		fmt.Printf("Pod name: %s\n", pod.Name)
-	}
+// 	pods, err := clientset.CoreV1().
+// 		Pods("kube-system").
+// 		List(context.Background(), metav1.ListOptions{})
+// 	if err != nil {
+// 		fmt.Printf("error getting pods: %v\n", err)
+// 		os.Exit(1)
+// 	}
+// 	for _, pod := range pods.Items {
+// 		fmt.Printf("Pod name: %s\n", pod.Name)
+// 	}
 
-	nsList, err := clientset.CoreV1().
-		Namespaces().
-		List(context.Background(), metav1.ListOptions{})
-	//checkErr(err)
-	fmt.Println(err)
+// 	nsList, err := clientset.CoreV1().
+// 		Namespaces().
+// 		List(context.Background(), metav1.ListOptions{})
+// 	//checkErr(err)
+// 	fmt.Println(err)
 
-	for _, n := range nsList.Items {
-		fmt.Printf("Namespace: %s\n", n.Name)
-	}
+// 	for _, n := range nsList.Items {
+// 		fmt.Printf("Namespace: %s\n", n.Name)
+// 	}
 
-}
+// }
 
 func (p *Pod) ensureNamespace() (*corev1.Namespace, error) {
 	fmt.Println("Create Kubernetes namespace")
@@ -107,103 +107,60 @@ func getKubesStatefulSet(theProject project.Project, id string) (*appsv1.Statefu
 }
 
 // createKubesDeployment creates a deployment in the specified namespace.
-func createKubesDeployment(inns *corev1.Namespace, theProject project.Project, requested api.Pod) error {
+func createKubesDeployment(inns *corev1.Namespace, theProject project.Project, requested api.Pod) *apierror.ApiError {
 	fmt.Println("Create Kubernetes deployment")
 
 	clientset, err := getKubesClient()
 	if err != nil {
 		log.Printf("error getting kubernetes client: %v\n", err)
-		return err
+		return apierror.New(500, "error getting kubernetes client")
 
 	}
 
-	statefulSet := getStatefulSetSpec(theProject, requested)
+	statefulSet, apierr := getStatefulSetSpec(theProject, requested)
+	if apierr != nil {
+		lh.Log.Errorw("Error building Kubernetes spec", "error", apierr.Error())
+		return apierr
+	}
 
 	_, err = clientset.AppsV1().
 		StatefulSets(inns.Name).
 		Create(context.Background(), statefulSet, metav1.CreateOptions{})
 	if err != nil {
 		fmt.Printf("error creating deployment: %v\n", err)
-		return err
+		return apierror.New(500, "error creating deployment: "+err.Error())
 	}
 	return nil
 }
 
 // updateKubesDeployment updates a deployment in the specified namespace.
-func updateKubesDeployment(thePod Pod, requested api.Pod) error {
+func updateKubesDeployment(thePod Pod, requested api.Pod) *apierror.ApiError {
 	fmt.Println("Update Kubernetes deployment")
 
 	clientset, err := getKubesClient()
 	if err != nil {
 		log.Printf("error getting kubernetes client: %v\n", err)
-		return err
+		return apierror.New(500, "error getting kubernetes client")
 	}
 
-	statefulSet := getStatefulSetSpec(thePod.Project, thePod.ToAPI())
+	statefulSet, apierr := getStatefulSetSpec(thePod.Project, thePod.ToAPI())
+	if err != nil {
+		lh.Log.Errorw("error getting statefulset spec to update", "error", apierr.Error())
+		return apierr
+	}
 
 	_, err = clientset.AppsV1().
 		StatefulSets(thePod.Project.Account.ID+"-project-"+thePod.Project.ID).
 		Update(context.Background(), statefulSet, metav1.UpdateOptions{})
 	if err != nil {
 		fmt.Printf("error updating deployment: %v\n", err)
-		return err
+		return &apierror.ApiError{Code: 500, Message: "error updating deployment " + err.Error()}
 	}
+
 	return nil
 }
 
-// // getDeploymentSpec returns a deployment spec for the specified pod.
-// func getDeploymentSpec(theProject project.Project, requested api.Pod) *appsv1.Deployment {
-// 	out := &appsv1.Deployment{
-// 		ObjectMeta: metav1.ObjectMeta{
-// 			Name: requested.Id,
-// 		},
-// 		Spec: appsv1.DeploymentSpec{
-// 			Replicas: func(val int32) *int32 { return &val }(1),
-// 			Selector: &metav1.LabelSelector{
-// 				MatchLabels: map[string]string{
-// 					"podinate.com/pod":     requested.Id,
-// 					"podinate.com/project": theProject.ID,
-// 				},
-// 			},
-// 			Template: corev1.PodTemplateSpec{
-// 				ObjectMeta: metav1.ObjectMeta{
-// 					Labels: map[string]string{
-// 						"podinate.com/pod":     requested.Id,
-// 						"podinate.com/project": theProject.ID,
-// 					},
-// 				},
-// 				Spec: corev1.PodSpec{
-// 					Containers: []corev1.Container{
-// 						{
-// 							Name:  requested.Id,
-// 							Image: requested.Image + ":" + requested.Tag,
-// 							// TODO: Figure out what to do about ports
-// 							Ports: []corev1.ContainerPort{
-// 								{
-// 									ContainerPort: 80,
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-
-// 	// Add environment variables to the pod spec
-// 	for _, envVar := range requested.Environment {
-// 		out.Spec.Template.Spec.Containers[0].Env = append(out.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-// 			Name:  envVar.Key,
-// 			Value: envVar.Value,
-// 		})
-// 	}
-
-// 	lh.Log.Infow("Deployment spec", "deployment", out)
-
-// 	return out
-// }
-
-func getStatefulSetSpec(theProject project.Project, requested api.Pod) *appsv1.StatefulSet {
+func getStatefulSetSpec(theProject project.Project, requested api.Pod) (*appsv1.StatefulSet, *apierror.ApiError) {
 	out := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: requested.Id,
@@ -251,7 +208,7 @@ func getStatefulSetSpec(theProject project.Project, requested api.Pod) *appsv1.S
 		})
 
 		// Add volume claim templates
-		out.Spec.VolumeClaimTemplates = append(out.Spec.VolumeClaimTemplates, corev1.PersistentVolumeClaim{
+		newPVC := corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      volume.Name,
 				Namespace: theProject.Account.ID + "-project-" + theProject.ID,
@@ -267,19 +224,33 @@ func getStatefulSetSpec(theProject project.Project, requested api.Pod) *appsv1.S
 				AccessModes: []corev1.PersistentVolumeAccessMode{
 					"ReadWriteOnce",
 				},
-				StorageClassName: func(val string) *string { return &val }("local-path"),
+				//StorageClassName: func(val string) *string { return &val }("local-path"),
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
 						"storage": func(val string) resource.Quantity { return resource.MustParse(val) }(fmt.Sprintf("%dGi", volume.Size)),
 					},
 				},
 			},
-		})
+		}
+
+		// Add the storageclass if exists
+		if volume.Class != "" {
+			// Check given SC exists
+			storageClass, err := getStorageClass(volume.Class)
+			if err != nil {
+				lh.Log.Errorw("error getting storage class", "error", err.Error())
+				return nil, apierror.New(500, "error getting storage class")
+			}
+			newPVC.Spec.StorageClassName = &storageClass.Name
+		}
+
+		out.Spec.VolumeClaimTemplates = append(out.Spec.VolumeClaimTemplates, newPVC)
+
 	}
 
 	lh.Log.Infow("StatefulSet spec generated", "statefulset", out)
 
-	return out
+	return out, nil
 }
 
 // getKubesClient returns a Kubernetes clientset.
@@ -293,17 +264,17 @@ func getKubesClient() (*kubernetes.Clientset, error) {
 
 	// kubeConfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 
-	kubeConfig, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, fmt.Errorf("error getting Kubernetes config: %v", err)
-	}
+	// kubeConfig, err := rest.InClusterConfig()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error getting Kubernetes config: %v", err)
+	// }
 
-	clientset, err := kubernetes.NewForConfig(kubeConfig)
-	if err != nil {
-		return nil, fmt.Errorf("error getting Kubernetes clientset: %v", err)
-	}
+	// clientset, err := kubernetes.NewForConfig(kubeConfig)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("error getting Kubernetes clientset: %v", err)
+	// }
 
-	return clientset, nil
+	return config.Client, nil
 }
 
 // deleteKubesDeployment deletes a deployment in the specified namespace.

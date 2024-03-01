@@ -1041,6 +1041,7 @@ components:
           description: The URL of the user's avatar
           example: https://avatars.githubusercontent.com/u/1234?v=4
           type: string
+
     Volume:
       description: A storage volume that is attached to each instance of a pod. 
       properties:
@@ -1055,6 +1056,10 @@ components:
         mount_path:
           description: The path to mount the volume at
           example: /var/www/html
+          type: string
+        class:
+          description: The class of the volume, for example "standard" or "premium"
+          example: standard
           type: string
         # resource_id:
         #   description: The global Resource ID of the volume

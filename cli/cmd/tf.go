@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 
@@ -39,6 +40,7 @@ var tfCmd = &cobra.Command{
 		}
 
 		//fmt.Println("Running:", path, args)
+		log.Printf("Running: %s %v", path, args)
 
 		c := exec.Command(path, args...)
 		c.Stdin = os.Stdin

@@ -1,0 +1,8 @@
+storageClass:
+  name: local-path-big
+  provisionerName: rancher.io/local-path-big
+
+nodePathMap:
+  - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
+    paths:
+      - /var/lib/podinate/big

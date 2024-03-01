@@ -87,12 +87,18 @@ func (r *PodDataSourceModel) RefreshFromGetResponse(resp *shared.Pod) {
 		volumes1.Name = types.StringValue(volumesItem.Name)
 		volumes1.Size = types.Int64Value(volumesItem.Size)
 		volumes1.MountPath = types.StringValue(volumesItem.MountPath)
+		if volumesItem.Class != nil {
+			volumes1.Class = types.StringValue(*volumesItem.Class)
+		} else {
+			volumes1.Class = types.StringNull()
+		}
 		if volumesCount+1 > len(r.Volumes) {
 			r.Volumes = append(r.Volumes, volumes1)
 		} else {
 			r.Volumes[volumesCount].Name = volumes1.Name
 			r.Volumes[volumesCount].Size = volumes1.Size
 			r.Volumes[volumesCount].MountPath = volumes1.MountPath
+			r.Volumes[volumesCount].Class = volumes1.Class
 		}
 	}
 }

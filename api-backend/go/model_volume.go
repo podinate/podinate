@@ -20,6 +20,9 @@ type Volume struct {
 
 	// The path to mount the volume at
 	MountPath string `json:"mount_path"`
+
+	// The class of the volume, for example \"standard\" or \"premium\"
+	Class string `json:"class,omitempty"`
 }
 
 // AssertVolumeRequired checks if the required fields are not zero-ed

@@ -16,6 +16,10 @@ func New(code int, message string) *ApiError {
 	return &ApiError{Code: code, Message: message}
 }
 
+func NewWithError(code int, message string, err error) *ApiError {
+	return &ApiError{Code: code, Message: message + err.Error()}
+}
+
 // func New(code int, message string) *ApiError {
 // 	return &ApiError{Code: code, Message: message}
 // }

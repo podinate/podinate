@@ -1,14 +1,16 @@
-FROM golang:1.10 AS build
+FROM golang:1.21 AS build
 WORKDIR /go/src
-COPY go ./go
-COPY main.go .
+COPY ./api-backend/ ./api-backend/
+COPY ./go.mod ./
+COPY ./go.sum ./
 
 ENV CGO_ENABLED=0
+WORKDIR /go/src/api-backend
 RUN go get -d -v ./...
 
-RUN go build -a -installsuffix cgo -o api .
+RUN go build -a -installsuffix cgo -o controller .
 
-FROM scratch AS runtime
-COPY --from=build /go/src/api ./
+FROM ubuntu AS runtime
+COPY --from=build /go/src/api-backend/controller ./
 EXPOSE 8080/tcp
-ENTRYPOINT ["./api"]
+ENTRYPOINT ["./controller"]

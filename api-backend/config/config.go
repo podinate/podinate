@@ -12,14 +12,17 @@ import (
 	"github.com/matthewhartstonge/argon2"
 	"github.com/pelletier/go-toml"
 	"go.tmthrgd.dev/passit"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
 var (
 	// Config - The configuration for this service.
-	DB *sql.DB
-	C  *toml.Tree
+	DB     *sql.DB
+	C      *toml.Tree
+	Client *kubernetes.Clientset
 )
 
 type configFile struct {
@@ -53,7 +56,7 @@ func ConnectDatabase(connectionString string) error {
 }
 
 // Init - Initialize the service.
-func Init() error {
+func init() {
 	// Read in the config file
 	confile, err := toml.LoadFile(os.Getenv("CONFIG_FILE"))
 	if err != nil {
@@ -67,9 +70,21 @@ func Init() error {
 	crdb := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=disable user=%s password=%s", confile.Get("database.host"), confile.Get("database.port"), confile.Get("database.database"), confile.Get("database.user"), os.Getenv("POSTGRES_PASSWORD"))
 	err = ConnectDatabase(crdb)
 	if err != nil {
-		lh.Log.Fatalw("Error connecting to database", "error", err)
+		lh.Log.Panicw("Error connecting to database", "error", err)
 		//log.Fatal(err)
+		//os.Exit(2)
 	}
+
+	kubeConfig, err := rest.InClusterConfig()
+	if err != nil {
+		lh.Log.Panicw("error getting Kubernetes config", "error", err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(kubeConfig)
+	if err != nil {
+		lh.Log.Panicw("error connecting to kubernetes cluster", "error", err)
+	}
+	Client = clientset
 
 	// Create admin account if not exists in the database
 	// Horrible hack replace asap
@@ -103,7 +118,6 @@ func Init() error {
 	}
 
 	log.Println("Connected to database")
-	return nil
 }
 
 // Cleanup - Cleanup any resources used by this service.

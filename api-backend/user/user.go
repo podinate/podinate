@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"encoding/base64"
+	"net/http"
 
 	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
@@ -27,6 +28,17 @@ func GetByUUID(id string) (*User, error) {
 	err := config.DB.QueryRow("SELECT uuid, main_provider, id, email, display_name, avatar_url FROM \"user\" WHERE uuid = $1", id).Scan(&userOut.UUID, &userOut.MainProvider, &userOut.ID, &userOut.Email, &userOut.DisplayName, &userOut.AvatarURL)
 	if err != nil {
 		return nil, err
+	}
+
+	return &userOut, nil
+}
+
+func GetByUsername(username string) (*User, *apierror.ApiError) {
+	// Get from the database by UUID
+	var userOut User
+	err := config.DB.QueryRow("SELECT uuid, main_provider, id, email, display_name, avatar_url FROM \"user\" WHERE id = $1", username).Scan(&userOut.UUID, &userOut.MainProvider, &userOut.ID, &userOut.Email, &userOut.DisplayName, &userOut.AvatarURL)
+	if err != nil {
+		return nil, apierror.NewWithError(http.StatusNotFound, "Could not find user", err)
 	}
 
 	return &userOut, nil

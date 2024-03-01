@@ -7,13 +7,16 @@ dev-cluster:
 install-dependencies:
 	paru -S rancher-k3d-bin
 	sudo pacman -S kubectl docker
-	curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
-	sudo install skaffold /usr/local/bin/
-	rm skaffold
+	# curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
+	# sudo install skaffold /usr/local/bin/
+	# rm skaffold
 	
 # Show the logs for the API backend in the Kubernetes cluster while developing
 dev-backend-logs:
 	kubectl -n podinate logs -l app=podinate-controller -f
+
+dev-backend-shell:
+	kubectl -n podinate exec -it deployment/podinate-controller -- /bin/bash
 
 dev-code-upload:
 	./api-backend/scripts/initial-code-upload.sh
@@ -21,7 +24,7 @@ dev-code-upload:
 
 # Get a shell on the API backend Postgres pod (for debugging)
 postgres-shell:
-	bash -c "kubectl -n podinate exec -it masterdb-1-0 -- psql 'postgresql://postgres:$$(kubectl -n podinate get secret masterdb-secret -o jsonpath='{.data.superUserPassword}' | base64 --decode ; echo)@localhost/podinate'"
+	bash -c "kubectl -n podinate exec -it postgres-0 -- psql 'postgresql://postgres:$$(kubectl -n podinate get secret masterdb-secret -o jsonpath='{.data.superUserPassword}' | base64 --decode ; echo)@localhost/podinate'"
 
 # After API spec change, rebuild the generate code
 api-generate:
