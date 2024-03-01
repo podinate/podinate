@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,0" last-zoom="0.75" max-obj-count="14"
+<dbmodel pgmodeler-ver="1.0.6" use-changelog="false" last-position="0,10" last-zoom="0.85" max-obj-count="14"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -82,7 +82,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 <table name="project_pods" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
-	<position x="980" y="920"/>
+	<position x="1100" y="920"/>
 	<column name="uuid" not-null="true" default-value="gen_random_uuid()">
 		<type name="uuid" length="0"/>
 	</column>
@@ -125,7 +125,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 custom-color="#36ab33"
 	 src-table="public.account"
 	 dst-table="public.project"
-	 src-required="false" dst-required="false"/>
+	 src-required="false" dst-required="false"
+	upd-action="CASCADE"
+	del-action="CASCADE"/>
 
 <relationship name="project_has_many_project_pods" type="rel1n" layers="0"
 	 src-col-pattern="{st}_{sc}"
@@ -134,7 +136,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 custom-color="#e31f19"
 	 src-table="public.project"
 	 dst-table="public.project_pods"
-	 src-required="false" dst-required="false"/>
+	 src-required="false" dst-required="false"
+	upd-action="CASCADE"
+	del-action="CASCADE"/>
 
 <constraint name="unique_project_slug_per_account" type="uq-constr" table="public.project">
 	<columns names="account_uuid,id" ref-type="src-columns"/>

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/johncave/podinate/api-backend/apierror"
 	"github.com/johncave/podinate/api-backend/config"
@@ -239,7 +240,7 @@ func getStatefulSetSpec(theProject project.Project, requested api.Pod) (*appsv1.
 			storageClass, err := getStorageClass(volume.Class)
 			if err != nil {
 				lh.Log.Errorw("error getting storage class", "error", err.Error())
-				return nil, apierror.New(500, "error getting storage class")
+				return nil, apierror.NewWithError(http.StatusBadRequest, "error checking storage class exists", err)
 			}
 			newPVC.Spec.StorageClassName = &storageClass.Name
 		}

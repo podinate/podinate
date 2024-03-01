@@ -62,6 +62,7 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 				Status:      p.Status,
 				Environment: pod.EnvVarToAPIMany(p.Environment),
 				Services:    pod.ServicesToAPI(p.Services),
+				Volumes:     p.Volumes.ToAPI(),
 			})
 		}
 	}
@@ -148,6 +149,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdPatch(ctx context.Context, proje
 
 // ProjectProjectIdPodPost - Creates a pod for a project.
 func (s *PodAPIService) ProjectProjectIdPodPost(ctx context.Context, projectId string, accountID string, requestedPod api.Pod) (api.ImplResponse, error) {
+	//lh.Debug(ctx, "Creating pod", "project_id", projectId, "acc", accountID, "pod", requestedPod)
 	// Get the account by ID
 	theAccount, apiErr := account.GetByID(accountID)
 	if apiErr != nil {

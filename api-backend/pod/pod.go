@@ -186,9 +186,6 @@ func GetByProject(ctx context.Context, theProject project.Project, page int32, l
 
 // Create performs the initial registration of a pod in the database and the kubernetes cluster
 func Create(ctx context.Context, theProject project.Project, requestedPod api.Pod) (Pod, *apierror.ApiError) {
-
-	// TODO - Validate the requestedPod
-
 	// Check if the pod already exists
 	uuid := ""
 	dberr := config.DB.QueryRow("SELECT uuid FROM project_pods WHERE id = $1 AND project_uuid = $2", requestedPod.Id, theProject.Uuid).Scan(&uuid)
@@ -205,17 +202,9 @@ func Create(ctx context.Context, theProject project.Project, requestedPod api.Po
 		return Pod{}, &apierror.ApiError{Code: http.StatusConflict, Message: "A pod with this ID already exists"}
 	}
 
-	// Create the pod in the database
-	dberr = config.DB.QueryRow("INSERT INTO project_pods (uuid, id, name, image, tag, project_uuid, environment) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6) RETURNING uuid", requestedPod.Id, requestedPod.Name, requestedPod.Image, requestedPod.Tag, theProject.Uuid, EnvVarSliceFromAPI(requestedPod.Environment)).Scan(&uuid)
-	// Check if insert was successful
-	if dberr != nil {
-		lh.Error(ctx, "DB error creating pod", dberr)
-		return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
-	}
-
 	// Start creating the pod
 	out := Pod{
-		Uuid:        uuid,
+		Uuid:        uuid, // Note: UUID blank (should be fine?)
 		ID:          requestedPod.Id,
 		Name:        requestedPod.Name,
 		Image:       requestedPod.Image,
@@ -235,7 +224,22 @@ func Create(ctx context.Context, theProject project.Project, requestedPod api.Po
 
 	err := createKubesDeployment(ns, theProject, requestedPod)
 	if err != nil {
-		return Pod{}, apierror.New(http.StatusInternalServerError, genericErr.Error())
+		lh.Error(ctx, "Error creating kubes deployment", "err", err)
+		return Pod{}, err
+	}
+
+	svcErr := out.ensureServices(ctx)
+	lh.Debug(ctx, "Ensure services", "err", svcErr)
+	if svcErr != nil {
+		return Pod{}, svcErr
+	}
+
+	// Create the pod in the database
+	dberr = config.DB.QueryRow("INSERT INTO project_pods (uuid, id, name, image, tag, project_uuid, environment) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6) RETURNING uuid", requestedPod.Id, requestedPod.Name, requestedPod.Image, requestedPod.Tag, theProject.Uuid, EnvVarSliceFromAPI(requestedPod.Environment)).Scan(&uuid)
+	// Check if insert was successful
+	if dberr != nil {
+		lh.Error(ctx, "DB error creating pod", dberr)
+		return Pod{}, &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
 	}
 
 	// Add the services to the database if it exists
@@ -261,22 +265,16 @@ func Create(ctx context.Context, theProject project.Project, requestedPod api.Po
 		}
 	}
 
-	genericErr = out.loadServices()
-	if err != nil {
-		out.Delete(ctx)
-		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
-	}
-	genericErr = out.loadVolumes()
-	if err != nil {
-		out.Delete(ctx)
-		return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
-	}
-
-	svcErr := out.ensureServices(ctx)
-	lh.Debug(ctx, "Ensure services", "err", svcErr)
-	if svcErr != nil {
-		return Pod{}, svcErr
-	}
+	// genericErr = out.loadServices()
+	// if err != nil {
+	// 	out.Delete(ctx)
+	// 	return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+	// }
+	// genericErr = out.loadVolumes()
+	// if err != nil {
+	// 	out.Delete(ctx)
+	// 	return Pod{}, apierror.New(http.StatusInternalServerError, err.Error())
+	// }
 
 	// Everything is created - we can load the pod from the database again
 	out, apiErr := GetByID(ctx, theProject, requestedPod.Id)
