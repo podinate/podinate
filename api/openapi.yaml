@@ -521,6 +521,62 @@ paths:
           $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
+  /project/{project_id}/pod/{pod_id}/logs:
+    get:
+      summary: Get the logs for a pod
+      description: Get the logs for a pod
+      tags:
+      - Pod
+      x-speakeasy-entity-operation: Pod#logs
+      parameters:
+      - explode: false
+        in: query
+        name: lines
+        description: The number of lines to return
+        schema:
+          type: integer
+          default: 20
+      - explode: false
+        in: query
+        name: follow
+        description: Whether to keep the connection open and continue streaming the logs
+        schema:
+          type: boolean
+          default: false
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: pod_id
+        required: true
+        schema:
+          description: The pod to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - $ref: '#/components/parameters/account'
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "127.0.0.1 - peter [9/Feb/2017:10:34:12 -0700] \"GET /sample-image.png HTTP/2\" 200 1479"
+          description: The logs for the given pod
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
   
   /user/login:
     post:

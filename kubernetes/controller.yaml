@@ -131,6 +131,9 @@ rules:
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
   verbs: ["get", "list"] # Don't need creation on storageclasses
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get", "list", "watch"]
 ---
 # ClusterRoleBinding to bind the ClusterRole to the ServiceAccount
 apiVersion: rbac.authorization.k8s.io/v1

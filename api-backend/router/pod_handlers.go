@@ -5,12 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/johncave/podinate/api-backend/account"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/iam"
 	lh "github.com/johncave/podinate/api-backend/loghandler"
 	pod "github.com/johncave/podinate/api-backend/pod"
-	"github.com/johncave/podinate/api-backend/project"
 	"github.com/johncave/podinate/api-backend/responder"
 )
 
@@ -30,16 +28,10 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 	//log.Printf("%s %s %d %d", projectID, accountID, page, limit)
 	lh.Debug(ctx, "Getting pods for project", "projectID", projectID, "accountID", accountID, "page", page, "limit", limit)
 
-	// Get the account
-	theAccount, apiErr := account.GetByID(accountID)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
-	}
-
-	// Get the project to list the pods of
-	theProject, apiErr := project.GetByID(theAccount, projectID)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
+	// Get the account and project
+	theAccount, theProject, err := getAccountAndProject(accountID, projectID)
+	if err != nil {
+		return responder.Response(err.Code, err.Message), nil
 	}
 
 	// Get the pods for the project
@@ -82,16 +74,9 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdGet(ctx context.Context, project
 
 	log.Printf("%s %s %s", projectID, podID, accountID)
 
-	// Get the account by ID
-	theAccount, apiErr := account.GetByID(accountID)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
-	}
-
-	// Get the project this pod lives in by ID
-	theProject, apiErr := project.GetByID(theAccount, projectID)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
+	theAccount, theProject, err := getAccountAndProject(accountID, projectID)
+	if err != nil {
+		return responder.Response(err.Code, err.Message), nil
 	}
 
 	p, apiErr := pod.GetByID(ctx, theProject, podID)
@@ -103,6 +88,8 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdGet(ctx context.Context, project
 		return responder.Response(http.StatusForbidden, "You do not have permission to view this pod"), nil
 	}
 
+	lh.Debug(ctx, "Returning pod get response", "pod", p.ToAPI())
+
 	return responder.Response(http.StatusOK, p.ToAPI()), nil
 }
 
@@ -112,15 +99,9 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdPatch(ctx context.Context, proje
 	lh.Debug(ctx, "Updating pod", "project_id", projectID, "acc", accountID, "podId", podID, "pod", podIn)
 
 	// Get the account by ID
-	theAccount, apiErr := account.GetByID(accountID)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
-	}
-
-	// Get the project this pod lives in by ID
-	theProject, apiErr := project.GetByID(theAccount, projectID)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
+	theAccount, theProject, err := getAccountAndProject(accountID, projectID)
+	if err != nil {
+		return responder.Response(err.Code, err.Message), nil
 	}
 
 	// Get the pod by ID
@@ -136,7 +117,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdPatch(ctx context.Context, proje
 		return responder.Response(http.StatusForbidden, "You do not have permission to update this pod"), nil
 	}
 
-	err := thePod.Update(ctx, podIn)
+	err = thePod.Update(ctx, podIn)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}
@@ -151,15 +132,9 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdPatch(ctx context.Context, proje
 func (s *PodAPIService) ProjectProjectIdPodPost(ctx context.Context, projectId string, accountID string, requestedPod api.Pod) (api.ImplResponse, error) {
 	//lh.Debug(ctx, "Creating pod", "project_id", projectId, "acc", accountID, "pod", requestedPod)
 	// Get the account by ID
-	theAccount, apiErr := account.GetByID(accountID)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
-	}
-
-	// Get the project this pod lives in by ID
-	theProject, apiErr := project.GetByID(theAccount, projectId)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
+	theAccount, theProject, err := getAccountAndProject(accountID, projectId)
+	if err != nil {
+		return responder.Response(err.Code, err.Message), nil
 	}
 
 	if !iam.RequestorCan(ctx, theAccount, theProject, pod.ActionCreate) {
@@ -180,16 +155,9 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 
 	log.Printf("%s %s %s", projectID, podID, accountID)
 
-	// Get the account by ID
-	theAccount, apiErr := account.GetByID(accountID)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
-	}
-
-	// Get the project this pod lives in by ID
-	theProject, apiErr := project.GetByID(theAccount, projectID)
-	if apiErr != nil {
-		return responder.Response(apiErr.Code, apiErr.Message), nil
+	theAccount, theProject, err := getAccountAndProject(accountID, projectID)
+	if err != nil {
+		return responder.Response(err.Code, err.Message), nil
 	}
 
 	// Get the pod by ID

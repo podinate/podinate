@@ -7,6 +7,7 @@ Method | HTTP request | Description
 [**ProjectProjectIdPodGet**](PodApi.md#ProjectProjectIdPodGet) | **Get** /project/{project_id}/pod | Get a list of pods for a given project
 [**ProjectProjectIdPodPodIdDelete**](PodApi.md#ProjectProjectIdPodPodIdDelete) | **Delete** /project/{project_id}/pod/{pod_id} | Delete a pod
 [**ProjectProjectIdPodPodIdGet**](PodApi.md#ProjectProjectIdPodPodIdGet) | **Get** /project/{project_id}/pod/{pod_id} | Get a pod by ID
+[**ProjectProjectIdPodPodIdLogsGet**](PodApi.md#ProjectProjectIdPodPodIdLogsGet) | **Get** /project/{project_id}/pod/{pod_id}/logs | Get the logs for a pod
 [**ProjectProjectIdPodPodIdPatch**](PodApi.md#ProjectProjectIdPodPodIdPatch) | **Patch** /project/{project_id}/pod/{pod_id} | Update a pod
 [**ProjectProjectIdPodPost**](PodApi.md#ProjectProjectIdPodPost) | **Post** /project/{project_id}/pod | Create a new pod
 
@@ -230,6 +231,85 @@ Name | Type | Description  | Notes
 
 - **Content-Type**: Not defined
 - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## ProjectProjectIdPodPodIdLogsGet
+
+> string ProjectProjectIdPodPodIdLogsGet(ctx, projectId, podId).Account(account).Lines(lines).Follow(follow).Execute()
+
+Get the logs for a pod
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+    projectId := "hello-world" // string | 
+    podId := "hello-world" // string | 
+    account := "my-account" // string | The account to use for the request
+    lines := int32(56) // int32 | The number of lines to return (optional) (default to 20)
+    follow := true // bool | Whether to keep the connection open and continue streaming the logs (optional) (default to false)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PodApi.ProjectProjectIdPodPodIdLogsGet(context.Background(), projectId, podId).Account(account).Lines(lines).Follow(follow).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PodApi.ProjectProjectIdPodPodIdLogsGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `ProjectProjectIdPodPodIdLogsGet`: string
+    fmt.Fprintf(os.Stdout, "Response from `PodApi.ProjectProjectIdPodPodIdLogsGet`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**projectId** | **string** |  | 
+**podId** | **string** |  | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiProjectProjectIdPodPodIdLogsGetRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+ **account** | **string** | The account to use for the request | 
+ **lines** | **int32** | The number of lines to return | [default to 20]
+ **follow** | **bool** | Whether to keep the connection open and continue streaming the logs | [default to false]
+
+### Return type
+
+**string**
+
+### Authorization
+
+[APIKeyAuth](../README.md#APIKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: text/plain, application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)

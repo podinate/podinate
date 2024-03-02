@@ -27,9 +27,10 @@ echo "Running go fmt on generated code."
 go fmt ./lib/api_client/...
 go fmt ./api-backend/go/...
 
-echo "Generating Terraform SDK."
+# echo "Generating Terraform SDK."
 
 # Generate the Terraform SDK 
-speakeasy generate sdk --lang terraform -o ./speakeasy/ -s ./api/openapi.yaml
-cd ./speakeasy
-go build -o terraform-provider-podinate
+# Killing Terraform for now, will build our own package manager
+# speakeasy generate sdk --lang terraform -o ./speakeasy/ -s ./api/openapi.yaml
+# cd ./speakeasy
+# go build -o terraform-provider-podinate

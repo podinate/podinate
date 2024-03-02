@@ -521,6 +521,191 @@ func (a *PodApiService) ProjectProjectIdPodPodIdGetExecute(r ApiProjectProjectId
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
+type ApiProjectProjectIdPodPodIdLogsGetRequest struct {
+	ctx        context.Context
+	ApiService *PodApiService
+	projectId  string
+	podId      string
+	account    *string
+	lines      *int32
+	follow     *bool
+}
+
+// The account to use for the request
+func (r ApiProjectProjectIdPodPodIdLogsGetRequest) Account(account string) ApiProjectProjectIdPodPodIdLogsGetRequest {
+	r.account = &account
+	return r
+}
+
+// The number of lines to return
+func (r ApiProjectProjectIdPodPodIdLogsGetRequest) Lines(lines int32) ApiProjectProjectIdPodPodIdLogsGetRequest {
+	r.lines = &lines
+	return r
+}
+
+// Whether to keep the connection open and continue streaming the logs
+func (r ApiProjectProjectIdPodPodIdLogsGetRequest) Follow(follow bool) ApiProjectProjectIdPodPodIdLogsGetRequest {
+	r.follow = &follow
+	return r
+}
+
+func (r ApiProjectProjectIdPodPodIdLogsGetRequest) Execute() (string, *http.Response, error) {
+	return r.ApiService.ProjectProjectIdPodPodIdLogsGetExecute(r)
+}
+
+/*
+ProjectProjectIdPodPodIdLogsGet Get the logs for a pod
+
+Get the logs for a pod
+
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId
+	@param podId
+	@return ApiProjectProjectIdPodPodIdLogsGetRequest
+*/
+func (a *PodApiService) ProjectProjectIdPodPodIdLogsGet(ctx context.Context, projectId string, podId string) ApiProjectProjectIdPodPodIdLogsGetRequest {
+	return ApiProjectProjectIdPodPodIdLogsGetRequest{
+		ApiService: a,
+		ctx:        ctx,
+		projectId:  projectId,
+		podId:      podId,
+	}
+}
+
+// Execute executes the request
+//
+//	@return string
+func (a *PodApiService) ProjectProjectIdPodPodIdLogsGetExecute(r ApiProjectProjectIdPodPodIdLogsGetRequest) (string, *http.Response, error) {
+	var (
+		localVarHTTPMethod  = http.MethodGet
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue string
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodPodIdLogsGet")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/project/{project_id}/pod/{pod_id}/logs"
+	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", url.PathEscape(parameterValueToString(r.projectId, "projectId")), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"pod_id"+"}", url.PathEscape(parameterValueToString(r.podId, "podId")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.account == nil {
+		return localVarReturnValue, nil, reportError("account is required and must be specified")
+	}
+
+	if r.lines != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "lines", r.lines, "")
+	}
+	if r.follow != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "follow", r.follow, "")
+	}
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"text/plain", "application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	parameterAddToHeaderOrQuery(localVarHeaderParams, "account", r.account, "")
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["APIKeyAuth"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["Authorization"] = key
+			}
+		}
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
 type ApiProjectProjectIdPodPodIdPatchRequest struct {
 	ctx        context.Context
 	ApiService *PodApiService

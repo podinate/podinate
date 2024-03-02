@@ -14,7 +14,7 @@ import (
 	lh "github.com/johncave/podinate/api-backend/loghandler"
 )
 
-func RequestorCan(ctx context.Context, account account.Account, resource Resource, action string) bool {
+func RequestorCan(ctx context.Context, account *account.Account, resource Resource, action string) bool {
 	requestor := GetFromContext(ctx)
 
 	// Check if the user has permission to do the action on the resource
@@ -88,7 +88,7 @@ type Resource interface {
 	GetResourceID() string
 }
 
-func GetPolicies(account account.Account, requestor Resource) ([]Policy, error) {
+func GetPolicies(account *account.Account, requestor Resource) ([]Policy, error) {
 	// Retrieve any policies from the policy_attachment table
 	// that apply to this user and account
 
@@ -115,7 +115,7 @@ func GetPolicies(account account.Account, requestor Resource) ([]Policy, error) 
 	return policies, nil
 }
 
-func CreatePolicyForAccount(account account.Account, name string, content string, versionComment string) (Policy, *apierror.ApiError) {
+func CreatePolicyForAccount(account *account.Account, name string, content string, versionComment string) (Policy, *apierror.ApiError) {
 	// Create a new policy for the account
 	var policy Policy
 	policy.Account = account
@@ -186,7 +186,7 @@ func (p *Policy) ValidateNewContent(content string) error {
 
 type Policy struct {
 	UUID      string
-	Account   account.Account
+	Account   *account.Account
 	Requestor Resource
 	Name      string
 	Content   string

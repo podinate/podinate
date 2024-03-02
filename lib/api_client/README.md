@@ -84,6 +84,7 @@ Class | Method | HTTP request | Description
 *PodApi* | [**ProjectProjectIdPodGet**](docs/PodApi.md#projectprojectidpodget) | **Get** /project/{project_id}/pod | Get a list of pods for a given project
 *PodApi* | [**ProjectProjectIdPodPodIdDelete**](docs/PodApi.md#projectprojectidpodpodiddelete) | **Delete** /project/{project_id}/pod/{pod_id} | Delete a pod
 *PodApi* | [**ProjectProjectIdPodPodIdGet**](docs/PodApi.md#projectprojectidpodpodidget) | **Get** /project/{project_id}/pod/{pod_id} | Get a pod by ID
+*PodApi* | [**ProjectProjectIdPodPodIdLogsGet**](docs/PodApi.md#projectprojectidpodpodidlogsget) | **Get** /project/{project_id}/pod/{pod_id}/logs | Get the logs for a pod
 *PodApi* | [**ProjectProjectIdPodPodIdPatch**](docs/PodApi.md#projectprojectidpodpodidpatch) | **Patch** /project/{project_id}/pod/{pod_id} | Update a pod
 *PodApi* | [**ProjectProjectIdPodPost**](docs/PodApi.md#projectprojectidpodpost) | **Post** /project/{project_id}/pod | Create a new pod
 *ProjectApi* | [**ProjectGet**](docs/ProjectApi.md#projectget) | **Get** /project | Returns a list of projects.

@@ -42,7 +42,7 @@ func (s *ProjectAPIService) ProjectGet(ctx context.Context, requestedAccount str
 	//var out []api.Project
 	var items []api.ProjectGet200ResponseItemsInner
 	for _, theProject := range projects {
-		if iam.RequestorCan(ctx, theAccount, theProject, project.ActionView) {
+		if iam.RequestorCan(ctx, &theAccount, theProject, project.ActionView) {
 			//out = append(out, theProject.ToAPI())
 			items = append(items, api.ProjectGet200ResponseItemsInner{
 				Id:         theProject.ID,
@@ -66,7 +66,7 @@ func (s *ProjectAPIService) ProjectIdGet(ctx context.Context, id string, request
 		// We can pass this error directly to the API response
 		return responder.Response(http.StatusNotFound, err.Message), nil
 	}
-	if !iam.RequestorCan(ctx, theAccount, theProject, project.ActionView) {
+	if !iam.RequestorCan(ctx, &theAccount, theProject, project.ActionView) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to view this project"), nil
 	}
 	return responder.Response(http.StatusOK, theProject.ToAPI()), nil
@@ -83,7 +83,7 @@ func (s *ProjectAPIService) ProjectIdPatch(ctx context.Context, id string, acc s
 	}
 
 	// Check if the user has permission to do the action on the resource
-	if !iam.RequestorCan(ctx, theAccount, theProject, project.ActionUpdate) {
+	if !iam.RequestorCan(ctx, &theAccount, theProject, project.ActionUpdate) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to update this project"), nil
 	}
 
@@ -107,7 +107,7 @@ func (s *ProjectAPIService) ProjectPost(ctx context.Context, requestedAccount st
 	log.Printf("ProjectPost: %v", newProject)
 
 	res := iam.NewResource(theAccount.GetResourceID() + "/project:" + newProject.Id)
-	if !iam.RequestorCan(ctx, theAccount, res, project.ActionCreate) {
+	if !iam.RequestorCan(ctx, &theAccount, res, project.ActionCreate) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to create this project"), nil
 	}
 	created, apiErr := project.Create(newProject, theAccount)
@@ -142,7 +142,7 @@ func (s *ProjectAPIService) ProjectIdDelete(ctx context.Context, id string, requ
 	}
 
 	// Check if the user has permission to do the action on the resource
-	if !iam.RequestorCan(ctx, theAccount, theProject, project.ActionDelete) {
+	if !iam.RequestorCan(ctx, &theAccount, theProject, project.ActionDelete) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to delete this project"), nil
 	}
 

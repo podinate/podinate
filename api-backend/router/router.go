@@ -9,9 +9,12 @@ import (
 	"net/http/httptest"
 
 	"github.com/gorilla/mux"
+	"github.com/johncave/podinate/api-backend/account"
+	"github.com/johncave/podinate/api-backend/apierror"
 	api "github.com/johncave/podinate/api-backend/go"
 	"github.com/johncave/podinate/api-backend/iam"
 	lh "github.com/johncave/podinate/api-backend/loghandler"
+	"github.com/johncave/podinate/api-backend/project"
 )
 
 // GetRouter - Get the router for the API
@@ -29,8 +32,9 @@ func GetRouter() *mux.Router {
 	UserApiController := api.NewUserApiController(UserAPIService)
 
 	UserShimController := NewUserShimController(NewUserAPIService())
+	PodShimController := NewPodShimController(NewPodAPIService())
 
-	r := api.NewRouter(ProjectApiController, AccountApiController, PodApiController, UserShimController, UserApiController)
+	r := api.NewRouter(ProjectApiController, AccountApiController, PodShimController, PodApiController, UserShimController, UserApiController)
 	r.Use(requestIDMiddleware)
 	r.Use(authMiddleware)
 	r.Use(loggingMiddleware)
@@ -135,4 +139,20 @@ func MakeRequest(method, url string, body interface{}, headers map[string]string
 	router := GetRouter()
 	router.ServeHTTP(writer, request)
 	return writer
+}
+
+func getAccountAndProject(accountID string, projectID string) (*account.Account, *project.Project, *apierror.ApiError) {
+	// Get the account by ID
+	theAccount, apiErr := account.GetByID(accountID)
+	if apiErr != nil {
+		return nil, nil, apiErr
+	}
+
+	// Get the project this pod lives in by ID
+	theProject, apiErr := project.GetByID(theAccount, projectID)
+	if apiErr != nil {
+		return nil, nil, apiErr
+	}
+
+	return &theAccount, &theProject, nil
 }

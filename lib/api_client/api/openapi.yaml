@@ -745,6 +745,89 @@ paths:
       tags:
       - Pod
       x-speakeasy-entity-operation: Pod#update
+  /project/{project_id}/pod/{pod_id}/logs:
+    get:
+      description: Get the logs for a pod
+      parameters:
+      - description: The number of lines to return
+        explode: false
+        in: query
+        name: lines
+        required: false
+        schema:
+          default: 20
+          type: integer
+        style: form
+      - description: Whether to keep the connection open and continue streaming the
+          logs
+        explode: false
+        in: query
+        name: follow
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: pod_id
+        required: true
+        schema:
+          description: The pod to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                example: "127.0.0.1 - peter [9/Feb/2017:10:34:12 -0700] \"GET /sample-image.png\
+                  \ HTTP/2\" 200 1479"
+                type: string
+          description: The logs for the given pod
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Get the logs for a pod
+      tags:
+      - Pod
+      x-speakeasy-entity-operation: Pod#logs
   /user/login:
     post:
       description: Login to Podinate

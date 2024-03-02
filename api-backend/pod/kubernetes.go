@@ -87,7 +87,7 @@ func (p *Pod) getNamespaceName() string {
 }
 
 // getKubesDeployment returns a deployment in the specified namespace.
-func getKubesStatefulSet(theProject project.Project, id string) (*appsv1.StatefulSet, error) {
+func getKubesStatefulSet(theProject *project.Project, id string) (*appsv1.StatefulSet, error) {
 	fmt.Println("Get Kubernetes deployment")
 
 	clientset, err := getKubesClient()
@@ -108,7 +108,7 @@ func getKubesStatefulSet(theProject project.Project, id string) (*appsv1.Statefu
 }
 
 // createKubesDeployment creates a deployment in the specified namespace.
-func createKubesDeployment(inns *corev1.Namespace, theProject project.Project, requested api.Pod) *apierror.ApiError {
+func createKubesDeployment(inns *corev1.Namespace, theProject *project.Project, requested api.Pod) *apierror.ApiError {
 	fmt.Println("Create Kubernetes deployment")
 
 	clientset, err := getKubesClient()
@@ -161,7 +161,7 @@ func updateKubesDeployment(thePod Pod, requested api.Pod) *apierror.ApiError {
 	return nil
 }
 
-func getStatefulSetSpec(theProject project.Project, requested api.Pod) (*appsv1.StatefulSet, *apierror.ApiError) {
+func getStatefulSetSpec(theProject *project.Project, requested api.Pod) (*appsv1.StatefulSet, *apierror.ApiError) {
 	out := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: requested.Id,

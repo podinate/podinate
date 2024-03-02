@@ -3,6 +3,7 @@ package pod
 import (
 	"context"
 	"database/sql"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -13,15 +14,16 @@ import (
 	api "github.com/johncave/podinate/api-backend/go"
 	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/johncave/podinate/api-backend/project"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	ActionCreate = "pod:create"
-	ActionView   = "pod:view"
-	ActionUpdate = "pod:update"
-	ActionDelete = "pod:delete"
+	ActionCreate   = "pod:create"
+	ActionView     = "pod:view"
+	ActionUpdate   = "pod:update"
+	ActionDelete   = "pod:delete"
+	ActionViewLogs = "pod:view"
 )
 
 type Pod struct {
@@ -36,12 +38,12 @@ type Pod struct {
 	Status      string // Creating, OK, Down
 	Count       int
 	Ram         int
-	Project     project.Project
+	Project     *project.Project
 
 	// TODO - add CPU requests / limits
 }
 
-func GetByID(ctx context.Context, theProject project.Project, id string) (Pod, *apierror.ApiError) {
+func GetByID(ctx context.Context, theProject *project.Project, id string) (Pod, *apierror.ApiError) {
 	p := Pod{}
 	dberr := config.DB.QueryRow("SELECT uuid, id, name, image, tag, environment FROM project_pods WHERE id = $1 AND project_uuid = $2", id, theProject.Uuid).Scan(&p.Uuid, &p.ID, &p.Name, &p.Image, &p.Tag, &p.Environment)
 	if dberr != nil && dberr != sql.ErrNoRows {
@@ -86,7 +88,7 @@ func GetByID(ctx context.Context, theProject project.Project, id string) (Pod, *
 	}
 	// var kpods *corev1.PodList
 
-	var kpods *v1.PodList
+	var kpods *corev1.PodList
 	for tries := 0; tries < 5; tries++ {
 		// If we create a Pod then immediately try to retrieve it from Kubernetes
 		// there may be a race condition IE in tests.
@@ -96,7 +98,7 @@ func GetByID(ctx context.Context, theProject project.Project, id string) (Pod, *
 			lh.Error(ctx, "Error getting pods from Kubernetes", "error", err)
 			return Pod{}, apierror.NewWithError(http.StatusInternalServerError, "Error getting pods from Kubernetes", err)
 		}
-		lh.Debug(ctx, "Got all pods from Kubernetes", "pods", kpods, "length", len(kpods.Items), "options", options, "namespace", theProject.GetNamespaceName())
+		//lh.Debug(ctx, "Got all pods from Kubernetes", "pods", kpods, "length", len(kpods.Items), "options", options, "namespace", theProject.GetNamespaceName())
 		if len(kpods.Items) > 0 {
 			break
 		}
@@ -109,13 +111,13 @@ func GetByID(ctx context.Context, theProject project.Project, id string) (Pod, *
 
 	out.Status = string(kpods.Items[0].Status.Phase)
 
-	lh.Debug(ctx, "Pod out", "pod", out)
+	//lh.Debug(ctx, "Pod got by ID", "pod", out)
 
-	return p, nil
+	return out, nil
 
 }
 
-func GetByProject(ctx context.Context, theProject project.Project, page int32, limit int32) ([]Pod, *apierror.ApiError) {
+func GetByProject(ctx context.Context, theProject *project.Project, page int32, limit int32) ([]Pod, *apierror.ApiError) {
 	if limit < 1 || limit > 125 {
 		limit = 25
 	}
@@ -185,7 +187,7 @@ func GetByProject(ctx context.Context, theProject project.Project, page int32, l
 }
 
 // Create performs the initial registration of a pod in the database and the kubernetes cluster
-func Create(ctx context.Context, theProject project.Project, requestedPod api.Pod) (Pod, *apierror.ApiError) {
+func Create(ctx context.Context, theProject *project.Project, requestedPod api.Pod) (Pod, *apierror.ApiError) {
 	// Check if the pod already exists
 	uuid := ""
 	dberr := config.DB.QueryRow("SELECT uuid FROM project_pods WHERE id = $1 AND project_uuid = $2", requestedPod.Id, theProject.Uuid).Scan(&uuid)
@@ -286,7 +288,9 @@ func Create(ctx context.Context, theProject project.Project, requestedPod api.Po
 }
 
 func (p *Pod) ToAPI() api.Pod {
-	return api.Pod{
+	lh.Log.Debug("HELLO WTF", "pod", p)
+
+	out := api.Pod{
 		Id:          p.ID,
 		Name:        p.Name,
 		Image:       p.Image,
@@ -297,6 +301,11 @@ func (p *Pod) ToAPI() api.Pod {
 		Services:    ServicesToAPI(p.Services),
 		Volumes:     p.Volumes.ToAPI(),
 	}
+
+	lh.Log.Debug("Converted pod to API", "pod", p, "apiPod", out)
+
+	return out
+
 }
 
 // Delete removes a pod from the database and the kubernetes cluster
@@ -431,6 +440,24 @@ func (p *Pod) Update(ctx context.Context, requested api.Pod) *apierror.ApiError 
 	}
 
 	return nil
+}
+
+func (p *Pod) GetLogsBuffer(ctx context.Context, lines int, follow bool) (io.ReadCloser, *apierror.ApiError) {
+	// Get the logs from kubernetes
+
+	l := int64(lines)
+	podLogOpts := corev1.PodLogOptions{
+		TailLines: &l,
+		Follow:    follow,
+	}
+
+	req := config.Client.CoreV1().Pods(p.Project.GetNamespaceName()).GetLogs(p.ID+"-0", &podLogOpts)
+	podLogs, err := req.Stream(ctx)
+	if err != nil {
+		return nil, apierror.NewWithError(http.StatusInternalServerError, "error getting logs from kubernetes", err)
+	}
+
+	return podLogs, nil
 }
 
 func (p Pod) GetResourceID() string {

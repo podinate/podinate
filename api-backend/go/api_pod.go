@@ -69,6 +69,12 @@ func (c *PodApiController) Routes() Routes {
 			c.ProjectProjectIdPodPodIdGet,
 		},
 		{
+			"ProjectProjectIdPodPodIdLogsGet",
+			strings.ToUpper("Get"),
+			"/v0/project/{project_id}/pod/{pod_id}/logs",
+			c.ProjectProjectIdPodPodIdLogsGet,
+		},
+		{
 			"ProjectProjectIdPodPodIdPatch",
 			strings.ToUpper("Patch"),
 			"/v0/project/{project_id}/pod/{pod_id}",
@@ -134,6 +140,34 @@ func (c *PodApiController) ProjectProjectIdPodPodIdGet(w http.ResponseWriter, r 
 	podIdParam := params["pod_id"]
 	accountParam := r.Header.Get("account")
 	result, err := c.service.ProjectProjectIdPodPodIdGet(r.Context(), projectIdParam, podIdParam, accountParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// ProjectProjectIdPodPodIdLogsGet - Get the logs for a pod
+func (c *PodApiController) ProjectProjectIdPodPodIdLogsGet(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	query := r.URL.Query()
+	projectIdParam := params["project_id"]
+	podIdParam := params["pod_id"]
+	accountParam := r.Header.Get("account")
+	linesParam, err := parseInt32Parameter(query.Get("lines"), false)
+	if err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	followParam, err := parseBoolParameter(query.Get("follow"), false)
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	result, err := c.service.ProjectProjectIdPodPodIdLogsGet(r.Context(), projectIdParam, podIdParam, accountParam, linesParam, followParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

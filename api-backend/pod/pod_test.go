@@ -11,7 +11,7 @@ import (
 	"github.com/johncave/podinate/api-backend/project"
 )
 
-var testProject project.Project
+var testProject *project.Project
 
 func TestCreateThenGet(t *testing.T) {
 	// Create a pod

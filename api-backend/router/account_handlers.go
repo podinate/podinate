@@ -35,7 +35,7 @@ func (s *AccountAPIService) AccountGet(ctx context.Context, requestedAccount str
 	}
 
 	// Check if the user can view the account
-	if iam.RequestorCan(ctx, theAccount, &theAccount, account.ActionView) {
+	if iam.RequestorCan(ctx, &theAccount, &theAccount, account.ActionView) {
 		return responder.Response(http.StatusOK, theAccount.ToAPIAccount()), nil
 	}
 	return responder.Response(http.StatusNotFound, "Account not found"), nil
@@ -50,7 +50,7 @@ func (s *AccountAPIService) AccountPatch(ctx context.Context, requestedAccount s
 		return responder.Response(http.StatusNotFound, apiErr.Error()), nil
 	}
 
-	if !iam.RequestorCan(ctx, workAccount, workAccount, account.ActionUpdate) {
+	if !iam.RequestorCan(ctx, &workAccount, workAccount, account.ActionUpdate) {
 		return responder.Response(http.StatusNotFound, "Account not found"), nil
 	}
 
@@ -81,7 +81,7 @@ statements:
   - effect: allow
     actions: ["**"]
     resources: ["**"]`
-	superAdminPolicy, err := iam.CreatePolicyForAccount(newAcc, "super-administrator", superAdminPolicyDocument, "Default policy created during initial account creation")
+	superAdminPolicy, err := iam.CreatePolicyForAccount(&newAcc, "super-administrator", superAdminPolicyDocument, "Default policy created during initial account creation")
 	err = superAdminPolicy.AttachToRequestor(u, u)
 	if err != nil {
 		// We can pass this error directly to the API response
@@ -100,7 +100,7 @@ func (s *AccountAPIService) AccountDelete(ctx context.Context, requestedAccount 
 		return responder.Response(http.StatusNotFound, apiErr.Error()), nil
 	}
 
-	if !iam.RequestorCan(ctx, workAccount, workAccount, account.ActionDelete) {
+	if !iam.RequestorCan(ctx, &workAccount, workAccount, account.ActionDelete) {
 		return responder.Response(http.StatusNotFound, "Account not found"), nil
 	}
 

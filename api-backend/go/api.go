@@ -31,6 +31,7 @@ type PodApiRouter interface {
 	ProjectProjectIdPodGet(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPodIdDelete(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPodIdGet(http.ResponseWriter, *http.Request)
+	ProjectProjectIdPodPodIdLogsGet(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPodIdPatch(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPost(http.ResponseWriter, *http.Request)
 }
@@ -77,6 +78,7 @@ type PodApiServicer interface {
 	ProjectProjectIdPodGet(context.Context, string, string, int32, int32) (ImplResponse, error)
 	ProjectProjectIdPodPodIdDelete(context.Context, string, string, string) (ImplResponse, error)
 	ProjectProjectIdPodPodIdGet(context.Context, string, string, string) (ImplResponse, error)
+	ProjectProjectIdPodPodIdLogsGet(context.Context, string, string, string, int32, bool) (ImplResponse, error)
 	ProjectProjectIdPodPodIdPatch(context.Context, string, string, string, Pod) (ImplResponse, error)
 	ProjectProjectIdPodPost(context.Context, string, string, Pod) (ImplResponse, error)
 }

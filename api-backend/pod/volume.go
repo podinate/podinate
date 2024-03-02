@@ -41,7 +41,7 @@ func (volumes VolumeSlice) ToAPI() []api.Volume {
 	for i, volume := range volumes {
 		apiVolumes[i] = volume.ToAPI()
 	}
-	lh.Log.Debug("Converted volumes to API", "volumes", volumes, "apiVolumes", apiVolumes)
+	//lh.Log.Debug("Converted volumes to API", "volumes", volumes, "apiVolumes", apiVolumes)
 	return apiVolumes
 }
 
