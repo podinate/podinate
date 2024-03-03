@@ -2,6 +2,10 @@ package apiclient
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"strconv"
 
 	"github.com/johncave/podinate/lib/api_client"
 	"github.com/spf13/viper"
@@ -74,6 +78,18 @@ func getPodFromApi(p *Project, in *api_client.Pod) *Pod {
 func (p *Pod) GetLogs(lines int, follow bool) (string, error) {
 	resp, _, err := C.PodApi.ProjectProjectIdPodPodIdLogsGet(context.Background(), p.Project.ID, p.ID).Account(viper.GetString("account")).Lines(int32(lines)).Execute()
 	return resp, err
+}
+
+// getLogsBuffer returns the logs for a pod
+func (p *Pod) GetLogsBuffer(lines int, follow bool) (io.ReadCloser, error) {
+	//_, r, err := C.PodApi.ProjectProjectIdPodPodIdLogsGet(context.Background(), p.Project.ID, p.ID).Account(viper.GetString("account")).Lines(int32(lines)).Follow(follow).Execute()
+	hc := C.GetConfig().HTTPClient
+	req, err := http.NewRequest("GET", C.GetConfig().Scheme+"://"+C.GetConfig().Host+"/v0/project/"+p.Project.ID+"/pod/"+p.ID+"/logs?lines="+strconv.Itoa(lines)+"&follow=true", nil)
+	req.Header.Set("Authorization", viper.GetString("api_key"))
+	req.Header.Set("Account", viper.GetString("account"))
+	r, err := hc.Do(req)
+	fmt.Println("r", r, "err", err)
+	return r.Body, err
 }
 
 // Delete deletes the pod

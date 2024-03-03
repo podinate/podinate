@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	apiclient "github.com/johncave/podinate/cli/apiclient"
 	"github.com/spf13/cobra"
@@ -32,8 +34,17 @@ var logsCmd = &cobra.Command{
 		cobra.CheckErr(err)
 		follow, err := cmd.Flags().GetBool("follow")
 		cobra.CheckErr(err)
-		logs, err := thePod.GetLogs(lines, follow)
-		cobra.CheckErr(err)
-		fmt.Print(logs)
+
+		if !follow {
+			logs, err := thePod.GetLogs(lines, follow)
+			cobra.CheckErr(err)
+			fmt.Print(logs)
+		} else {
+			buf, err := thePod.GetLogsBuffer(lines, follow)
+			cobra.CheckErr(err)
+			_, err = io.Copy(os.Stdout, buf)
+			cobra.CheckErr(err)
+
+		}
 	},
 }
