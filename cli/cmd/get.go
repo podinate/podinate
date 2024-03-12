@@ -6,7 +6,7 @@ import (
 
 	bubbletable "github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/johncave/podinate/cli/apiclient"
+	"github.com/johncave/podinate/cli/sdk"
 	"github.com/johncave/podinate/cli/tui/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -44,7 +44,7 @@ var getPodsCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		resp, _, err := apiclient.C.PodApi.ProjectProjectIdPodGet(cmd.Context(), viper.GetString("project")).Account(viper.GetString("account")).Execute()
+		resp, _, err := sdk.C.PodApi.ProjectProjectIdPodGet(cmd.Context(), viper.GetString("project")).Account(viper.GetString("account")).Execute()
 
 		if err != nil && err.Error() == "404 Not Found" {
 			fmt.Println("No pods found")
@@ -73,7 +73,7 @@ var getPodsCmd = &cobra.Command{
 			p := i.Pod
 
 			rows = append(rows, bubbletable.Row{
-				*p.Id, p.Name, "", p.Image + ":" + p.Tag,
+				p.Id, p.Name, "", p.Image + ":" + p.Tag,
 			})
 		}
 
@@ -92,7 +92,7 @@ var getProjectsCmd = &cobra.Command{
 	Short:   "List projects on Podinate",
 	Long:    `Lists all projects on Podinate account`,
 	Run: func(cmd *cobra.Command, args []string) {
-		projects, err := apiclient.GetAllProjects(viper.GetString("account"))
+		projects, err := sdk.GetAllProjects(viper.GetString("account"))
 
 		//fmt.Printf("Response: %+v, r: %+v\n", resp, r)
 		cobra.CheckErr(err)

@@ -80,9 +80,9 @@ func (s *ProjectApiService) ProjectIdGet(ctx context.Context, id string, account
 	return Response(http.StatusNotImplemented, nil), errors.New("ProjectIdGet method not implemented")
 }
 
-// ProjectIdPatch - Update an existing project
-func (s *ProjectApiService) ProjectIdPatch(ctx context.Context, id string, account string, project Project) (ImplResponse, error) {
-	// TODO - update ProjectIdPatch with the required logic for this service method.
+// ProjectIdPut - Update an existing project
+func (s *ProjectApiService) ProjectIdPut(ctx context.Context, id string, account string, project Project) (ImplResponse, error) {
+	// TODO - update ProjectIdPut with the required logic for this service method.
 	// Add api_project_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, Project{}) or use other options such as http.Ok ...
@@ -91,7 +91,7 @@ func (s *ProjectApiService) ProjectIdPatch(ctx context.Context, id string, accou
 	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
 	//return Response(400, Error{}), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("ProjectIdPatch method not implemented")
+	return Response(http.StatusNotImplemented, nil), errors.New("ProjectIdPut method not implemented")
 }
 
 // ProjectPost - Create a new project

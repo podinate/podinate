@@ -22,6 +22,9 @@ dev-code-upload:
 	./api-backend/scripts/initial-code-upload.sh
 	kubycat ./kubycat.yaml
 
+make dev-port-forward:
+	kubectl -n podinate port-forward service/podinate-controller 3001:3000
+
 # Get a shell on the API backend Postgres pod (for debugging)
 postgres-shell:
 	bash -c "kubectl -n podinate exec -it postgres-0 -- psql 'postgresql://postgres:$$(kubectl -n podinate get secret masterdb-secret -o jsonpath='{.data.superUserPassword}' | base64 --decode ; echo)@localhost/podinate'"

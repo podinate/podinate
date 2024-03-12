@@ -356,6 +356,190 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjec
 	return localVarHTTPResponse, nil
 }
 
+type ApiProjectProjectIdPodPodIdExecPostRequest struct {
+	ctx                                     context.Context
+	ApiService                              *PodApiService
+	projectId                               string
+	podId                                   string
+	account                                 *string
+	projectProjectIdPodPodIdExecPostRequest *ProjectProjectIdPodPodIdExecPostRequest
+}
+
+// The account to use for the request
+func (r ApiProjectProjectIdPodPodIdExecPostRequest) Account(account string) ApiProjectProjectIdPodPodIdExecPostRequest {
+	r.account = &account
+	return r
+}
+
+func (r ApiProjectProjectIdPodPodIdExecPostRequest) ProjectProjectIdPodPodIdExecPostRequest(projectProjectIdPodPodIdExecPostRequest ProjectProjectIdPodPodIdExecPostRequest) ApiProjectProjectIdPodPodIdExecPostRequest {
+	r.projectProjectIdPodPodIdExecPostRequest = &projectProjectIdPodPodIdExecPostRequest
+	return r
+}
+
+func (r ApiProjectProjectIdPodPodIdExecPostRequest) Execute() (string, *http.Response, error) {
+	return r.ApiService.ProjectProjectIdPodPodIdExecPostExecute(r)
+}
+
+/*
+ProjectProjectIdPodPodIdExecPost Execute a command in a pod
+
+Execute a command in a pod
+
+	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+	@param projectId
+	@param podId
+	@return ApiProjectProjectIdPodPodIdExecPostRequest
+*/
+func (a *PodApiService) ProjectProjectIdPodPodIdExecPost(ctx context.Context, projectId string, podId string) ApiProjectProjectIdPodPodIdExecPostRequest {
+	return ApiProjectProjectIdPodPodIdExecPostRequest{
+		ApiService: a,
+		ctx:        ctx,
+		projectId:  projectId,
+		podId:      podId,
+	}
+}
+
+// Execute executes the request
+//
+//	@return string
+func (a *PodApiService) ProjectProjectIdPodPodIdExecPostExecute(r ApiProjectProjectIdPodPodIdExecPostRequest) (string, *http.Response, error) {
+	var (
+		localVarHTTPMethod  = http.MethodPost
+		localVarPostBody    interface{}
+		formFiles           []formFile
+		localVarReturnValue string
+	)
+
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodPodIdExecPost")
+	if err != nil {
+		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
+	}
+
+	localVarPath := localBasePath + "/project/{project_id}/pod/{pod_id}/exec"
+	localVarPath = strings.Replace(localVarPath, "{"+"project_id"+"}", url.PathEscape(parameterValueToString(r.projectId, "projectId")), -1)
+	localVarPath = strings.Replace(localVarPath, "{"+"pod_id"+"}", url.PathEscape(parameterValueToString(r.podId, "podId")), -1)
+
+	localVarHeaderParams := make(map[string]string)
+	localVarQueryParams := url.Values{}
+	localVarFormParams := url.Values{}
+	if r.account == nil {
+		return localVarReturnValue, nil, reportError("account is required and must be specified")
+	}
+
+	// to determine the Content-Type header
+	localVarHTTPContentTypes := []string{"application/json"}
+
+	// set Content-Type header
+	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
+	if localVarHTTPContentType != "" {
+		localVarHeaderParams["Content-Type"] = localVarHTTPContentType
+	}
+
+	// to determine the Accept header
+	localVarHTTPHeaderAccepts := []string{"text/plain", "application/json"}
+
+	// set Accept header
+	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
+	if localVarHTTPHeaderAccept != "" {
+		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
+	}
+	parameterAddToHeaderOrQuery(localVarHeaderParams, "account", r.account, "")
+	// body params
+	localVarPostBody = r.projectProjectIdPodPodIdExecPostRequest
+	if r.ctx != nil {
+		// API Key Authentication
+		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
+			if apiKey, ok := auth["APIKeyAuth"]; ok {
+				var key string
+				if apiKey.Prefix != "" {
+					key = apiKey.Prefix + " " + apiKey.Key
+				} else {
+					key = apiKey.Key
+				}
+				localVarHeaderParams["Authorization"] = key
+			}
+		}
+	}
+	req, err := a.client.prepareRequest(r.ctx, localVarPath, localVarHTTPMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, formFiles)
+	if err != nil {
+		return localVarReturnValue, nil, err
+	}
+
+	localVarHTTPResponse, err := a.client.callAPI(req)
+	if err != nil || localVarHTTPResponse == nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	localVarBody, err := io.ReadAll(localVarHTTPResponse.Body)
+	localVarHTTPResponse.Body.Close()
+	localVarHTTPResponse.Body = io.NopCloser(bytes.NewBuffer(localVarBody))
+	if err != nil {
+		return localVarReturnValue, localVarHTTPResponse, err
+	}
+
+	if localVarHTTPResponse.StatusCode >= 300 {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 404 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 500 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarReturnValue, localVarHTTPResponse, newErr
+		}
+		if localVarHTTPResponse.StatusCode == 403 {
+			var v Error
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarReturnValue, localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+	if err != nil {
+		newErr := &GenericOpenAPIError{
+			body:  localVarBody,
+			error: err.Error(),
+		}
+		return localVarReturnValue, localVarHTTPResponse, newErr
+	}
+
+	return localVarReturnValue, localVarHTTPResponse, nil
+}
+
 type ApiProjectProjectIdPodPodIdGetRequest struct {
 	ctx        context.Context
 	ApiService *PodApiService
@@ -706,7 +890,7 @@ func (a *PodApiService) ProjectProjectIdPodPodIdLogsGetExecute(r ApiProjectProje
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type ApiProjectProjectIdPodPodIdPatchRequest struct {
+type ApiProjectProjectIdPodPodIdPutRequest struct {
 	ctx        context.Context
 	ApiService *PodApiService
 	projectId  string
@@ -716,33 +900,33 @@ type ApiProjectProjectIdPodPodIdPatchRequest struct {
 }
 
 // The account to use for the request
-func (r ApiProjectProjectIdPodPodIdPatchRequest) Account(account string) ApiProjectProjectIdPodPodIdPatchRequest {
+func (r ApiProjectProjectIdPodPodIdPutRequest) Account(account string) ApiProjectProjectIdPodPodIdPutRequest {
 	r.account = &account
 	return r
 }
 
 // A JSON object containing the information needed to update a pod
-func (r ApiProjectProjectIdPodPodIdPatchRequest) Pod(pod Pod) ApiProjectProjectIdPodPodIdPatchRequest {
+func (r ApiProjectProjectIdPodPodIdPutRequest) Pod(pod Pod) ApiProjectProjectIdPodPodIdPutRequest {
 	r.pod = &pod
 	return r
 }
 
-func (r ApiProjectProjectIdPodPodIdPatchRequest) Execute() (*Pod, *http.Response, error) {
-	return r.ApiService.ProjectProjectIdPodPodIdPatchExecute(r)
+func (r ApiProjectProjectIdPodPodIdPutRequest) Execute() (*Pod, *http.Response, error) {
+	return r.ApiService.ProjectProjectIdPodPodIdPutExecute(r)
 }
 
 /*
-ProjectProjectIdPodPodIdPatch Update a pod
+ProjectProjectIdPodPodIdPut Update a pod's spec
 
 Update a pod
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param projectId
 	@param podId
-	@return ApiProjectProjectIdPodPodIdPatchRequest
+	@return ApiProjectProjectIdPodPodIdPutRequest
 */
-func (a *PodApiService) ProjectProjectIdPodPodIdPatch(ctx context.Context, projectId string, podId string) ApiProjectProjectIdPodPodIdPatchRequest {
-	return ApiProjectProjectIdPodPodIdPatchRequest{
+func (a *PodApiService) ProjectProjectIdPodPodIdPut(ctx context.Context, projectId string, podId string) ApiProjectProjectIdPodPodIdPutRequest {
+	return ApiProjectProjectIdPodPodIdPutRequest{
 		ApiService: a,
 		ctx:        ctx,
 		projectId:  projectId,
@@ -753,15 +937,15 @@ func (a *PodApiService) ProjectProjectIdPodPodIdPatch(ctx context.Context, proje
 // Execute executes the request
 //
 //	@return Pod
-func (a *PodApiService) ProjectProjectIdPodPodIdPatchExecute(r ApiProjectProjectIdPodPodIdPatchRequest) (*Pod, *http.Response, error) {
+func (a *PodApiService) ProjectProjectIdPodPodIdPutExecute(r ApiProjectProjectIdPodPodIdPutRequest) (*Pod, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = http.MethodPatch
+		localVarHTTPMethod  = http.MethodPut
 		localVarPostBody    interface{}
 		formFiles           []formFile
 		localVarReturnValue *Pod
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodPodIdPatch")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "PodApiService.ProjectProjectIdPodPodIdPut")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}

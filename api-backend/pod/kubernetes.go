@@ -226,7 +226,7 @@ func getStatefulSetSpec(theProject *project.Project, requested api.Pod) (*appsv1
 					"ReadWriteOnce",
 				},
 				//StorageClassName: func(val string) *string { return &val }("local-path"),
-				Resources: corev1.ResourceRequirements{
+				Resources: corev1.VolumeResourceRequirements{
 					Requests: corev1.ResourceList{
 						"storage": func(val string) resource.Quantity { return resource.MustParse(val) }(fmt.Sprintf("%dGi", volume.Size)),
 					},

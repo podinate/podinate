@@ -5,7 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/johncave/podinate/cli/apiclient"
+	"github.com/johncave/podinate/cli/package_parser"
+	"github.com/johncave/podinate/cli/sdk"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,11 +19,18 @@ func init() {
 }
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete things on Podinate",
-	Long:  `Deletes things on Podinate`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cobra.CheckErr(cmd.Help())
+	Use:          "delete",
+	Short:        "Delete things on Podinate",
+	Long:         `Deletes things on Podinate`,
+	Args:         cobra.MinimumNArgs(1),
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		pkg, err := package_parser.Parse(args[0])
+		if err != nil {
+			return err
+		}
+		return pkg.Delete()
+
 	},
 }
 
@@ -33,7 +41,7 @@ var deletePodCmd = &cobra.Command{
 	Long:    `Deletes pods on Podinate`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		theProject, err := apiclient.ProjectGetByID(viper.GetString("project"))
+		theProject, err := sdk.ProjectGetByID(viper.GetString("project"))
 		if err != nil {
 			fmt.Print("Could not find this project %s", viper.GetString("project"))
 			os.Exit(1)
@@ -76,7 +84,7 @@ var deleteProjectCmd = &cobra.Command{
 	Short:   "Delete projects on Podinate",
 	Long:    `Deletes projects on Podinate`,
 	Run: func(cmd *cobra.Command, args []string) {
-		p, err := apiclient.ProjectGetByID(args[0])
+		p, err := sdk.ProjectGetByID(args[0])
 		if err != nil {
 			fmt.Println("Could not find this project")
 			os.Exit(1)

@@ -93,8 +93,8 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdGet(ctx context.Context, project
 	return responder.Response(http.StatusOK, p.ToAPI()), nil
 }
 
-// ProjectProjectIdPodPodIdPatch - Updates a pod for a project.
-func (s *PodAPIService) ProjectProjectIdPodPodIdPatch(ctx context.Context, projectID string, podID string, accountID string, podIn api.Pod) (api.ImplResponse, error) {
+// ProjectProjectIdPodPodIdPut - Updates a pod for a project.
+func (s *PodAPIService) ProjectProjectIdPodPodIdPut(ctx context.Context, projectID string, podID string, accountID string, podIn api.Pod) (api.ImplResponse, error) {
 
 	lh.Debug(ctx, "Updating pod", "project_id", projectID, "acc", accountID, "podId", podID, "pod", podIn)
 
@@ -140,6 +140,8 @@ func (s *PodAPIService) ProjectProjectIdPodPost(ctx context.Context, projectId s
 	if !iam.RequestorCan(ctx, theAccount, theProject, pod.ActionCreate) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to create this pod in this project"), nil
 	}
+
+	lh.Info(ctx, "Creating pod", "project_id", projectId, "acc", accountID, "pod", requestedPod)
 
 	thepod, err := pod.Create(ctx, theProject, requestedPod)
 	if err != nil {

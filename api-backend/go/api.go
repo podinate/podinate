@@ -20,8 +20,8 @@ import (
 type AccountApiRouter interface {
 	AccountDelete(http.ResponseWriter, *http.Request)
 	AccountGet(http.ResponseWriter, *http.Request)
-	AccountPatch(http.ResponseWriter, *http.Request)
 	AccountPost(http.ResponseWriter, *http.Request)
+	AccountPut(http.ResponseWriter, *http.Request)
 }
 
 // PodApiRouter defines the required methods for binding the api requests to a responses for the PodApi
@@ -30,9 +30,10 @@ type AccountApiRouter interface {
 type PodApiRouter interface {
 	ProjectProjectIdPodGet(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPodIdDelete(http.ResponseWriter, *http.Request)
+	ProjectProjectIdPodPodIdExecPost(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPodIdGet(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPodIdLogsGet(http.ResponseWriter, *http.Request)
-	ProjectProjectIdPodPodIdPatch(http.ResponseWriter, *http.Request)
+	ProjectProjectIdPodPodIdPut(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPost(http.ResponseWriter, *http.Request)
 }
 
@@ -43,7 +44,7 @@ type ProjectApiRouter interface {
 	ProjectGet(http.ResponseWriter, *http.Request)
 	ProjectIdDelete(http.ResponseWriter, *http.Request)
 	ProjectIdGet(http.ResponseWriter, *http.Request)
-	ProjectIdPatch(http.ResponseWriter, *http.Request)
+	ProjectIdPut(http.ResponseWriter, *http.Request)
 	ProjectPost(http.ResponseWriter, *http.Request)
 }
 
@@ -66,8 +67,8 @@ type UserApiRouter interface {
 type AccountApiServicer interface {
 	AccountDelete(context.Context, string) (ImplResponse, error)
 	AccountGet(context.Context, string) (ImplResponse, error)
-	AccountPatch(context.Context, string, Account) (ImplResponse, error)
 	AccountPost(context.Context, Account) (ImplResponse, error)
+	AccountPut(context.Context, string, Account) (ImplResponse, error)
 }
 
 // PodApiServicer defines the api actions for the PodApi service
@@ -77,9 +78,10 @@ type AccountApiServicer interface {
 type PodApiServicer interface {
 	ProjectProjectIdPodGet(context.Context, string, string, int32, int32) (ImplResponse, error)
 	ProjectProjectIdPodPodIdDelete(context.Context, string, string, string) (ImplResponse, error)
+	ProjectProjectIdPodPodIdExecPost(context.Context, string, string, string, ProjectProjectIdPodPodIdExecPostRequest) (ImplResponse, error)
 	ProjectProjectIdPodPodIdGet(context.Context, string, string, string) (ImplResponse, error)
 	ProjectProjectIdPodPodIdLogsGet(context.Context, string, string, string, int32, bool) (ImplResponse, error)
-	ProjectProjectIdPodPodIdPatch(context.Context, string, string, string, Pod) (ImplResponse, error)
+	ProjectProjectIdPodPodIdPut(context.Context, string, string, string, Pod) (ImplResponse, error)
 	ProjectProjectIdPodPost(context.Context, string, string, Pod) (ImplResponse, error)
 }
 
@@ -91,7 +93,7 @@ type ProjectApiServicer interface {
 	ProjectGet(context.Context, string, int32, int32) (ImplResponse, error)
 	ProjectIdDelete(context.Context, string, string) (ImplResponse, error)
 	ProjectIdGet(context.Context, string, string) (ImplResponse, error)
-	ProjectIdPatch(context.Context, string, string, Project) (ImplResponse, error)
+	ProjectIdPut(context.Context, string, string, Project) (ImplResponse, error)
 	ProjectPost(context.Context, string, Project) (ImplResponse, error)
 }
 

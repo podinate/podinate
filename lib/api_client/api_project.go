@@ -487,7 +487,7 @@ func (a *ProjectApiService) ProjectIdGetExecute(r ApiProjectIdGetRequest) (*Proj
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type ApiProjectIdPatchRequest struct {
+type ApiProjectIdPutRequest struct {
 	ctx        context.Context
 	ApiService *ProjectApiService
 	id         string
@@ -496,31 +496,31 @@ type ApiProjectIdPatchRequest struct {
 }
 
 // The account to use for the request
-func (r ApiProjectIdPatchRequest) Account(account string) ApiProjectIdPatchRequest {
+func (r ApiProjectIdPutRequest) Account(account string) ApiProjectIdPutRequest {
 	r.account = &account
 	return r
 }
 
-func (r ApiProjectIdPatchRequest) Project(project Project) ApiProjectIdPatchRequest {
+func (r ApiProjectIdPutRequest) Project(project Project) ApiProjectIdPutRequest {
 	r.project = &project
 	return r
 }
 
-func (r ApiProjectIdPatchRequest) Execute() (*Project, *http.Response, error) {
-	return r.ApiService.ProjectIdPatchExecute(r)
+func (r ApiProjectIdPutRequest) Execute() (*Project, *http.Response, error) {
+	return r.ApiService.ProjectIdPutExecute(r)
 }
 
 /*
-ProjectIdPatch Update an existing project
+ProjectIdPut Update an existing project
 
 Allows you to update or edit an existing project. For example, you can update the tag to deploy when you have made and pushed a new build, or change the image to run entirely.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param id
-	@return ApiProjectIdPatchRequest
+	@return ApiProjectIdPutRequest
 */
-func (a *ProjectApiService) ProjectIdPatch(ctx context.Context, id string) ApiProjectIdPatchRequest {
-	return ApiProjectIdPatchRequest{
+func (a *ProjectApiService) ProjectIdPut(ctx context.Context, id string) ApiProjectIdPutRequest {
+	return ApiProjectIdPutRequest{
 		ApiService: a,
 		ctx:        ctx,
 		id:         id,
@@ -530,15 +530,15 @@ func (a *ProjectApiService) ProjectIdPatch(ctx context.Context, id string) ApiPr
 // Execute executes the request
 //
 //	@return Project
-func (a *ProjectApiService) ProjectIdPatchExecute(r ApiProjectIdPatchRequest) (*Project, *http.Response, error) {
+func (a *ProjectApiService) ProjectIdPutExecute(r ApiProjectIdPutRequest) (*Project, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = http.MethodPatch
+		localVarHTTPMethod  = http.MethodPut
 		localVarPostBody    interface{}
 		formFiles           []formFile
 		localVarReturnValue *Project
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectApiService.ProjectIdPatch")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ProjectApiService.ProjectIdPut")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}

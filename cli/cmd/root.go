@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/johncave/podinate/cli/apiclient"
+	"github.com/johncave/podinate/cli/sdk"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -75,7 +75,7 @@ func initConfig() {
 		if err != nil {
 			switch err.(type) {
 			case viper.ConfigFileNotFoundError:
-				apiclient.StartLogin()
+				sdk.StartLogin()
 			default:
 				fmt.Println("Can't read credentials file:", err)
 			}
@@ -88,7 +88,7 @@ func initConfig() {
 	// Wtf is happening here?
 	//log.Printf("called as %+v %T", loginCmd.CalledAs(), loginCmd.CalledAs())
 	if loginCmd.CalledAs() == "" {
-		apiclient.SetupUser()
+		sdk.SetupUser()
 	}
 
 	if viper.GetBool("verbose") {
@@ -99,9 +99,10 @@ func initConfig() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "podinate",
-	Short: "The podinate cli, easy to use hosting for containerised applications",
-	Long:  "podinate is a command-line interface for managing your containers and applicatioions. \nIt provides an easy-to-use interface for deploying and managing containerised applications.",
+	Use:          "podinate",
+	Short:        "The podinate cli, easy to use hosting for containerised applications",
+	Long:         "podinate is a command-line interface for managing your containers and applicatioions. \nIt provides an easy-to-use interface for deploying and managing containerised applications.",
+	SilenceUsage: true,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Do Stuff Here
 		cobra.CheckErr(cmd.Help())

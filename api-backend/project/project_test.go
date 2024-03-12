@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/johncave/podinate/api-backend/account"
-	"github.com/johncave/podinate/api-backend/config"
 	api "github.com/johncave/podinate/api-backend/go"
 )
 
@@ -26,13 +25,12 @@ func TestBadProjectName(t *testing.T) {
 }
 
 func TestProjectCreation(t *testing.T) {
-	InitDB()
-	newAcc, err := account.Create(api.Account{Id: RandStringBytes(10), Name: RandStringBytes(20)})
+	newAcc, err := account.CreateTest()
 	if err != nil {
 		t.Error("Error encountered creating account")
 	}
 	apiproj := api.Project{Id: RandStringBytes(10), Name: RandStringBytes(20)}
-	theProject, err := Create(apiproj, newAcc)
+	theProject, err := Create(apiproj, *newAcc)
 	if err != nil {
 		t.Error("Expected no error creating project"+err.Error(), err.Code)
 	}
@@ -47,7 +45,7 @@ func TestProjectCreation(t *testing.T) {
 	}
 
 	t.Log("Created project", theProject.ID, " ", theProject.Name, " ", theProject.Uuid, "now testing getting project by ID")
-	gotProj, err := GetByID(newAcc, theProject.ID)
+	gotProj, err := GetByID(*newAcc, theProject.ID)
 	if err != nil {
 		t.Error("Expected no error getting project by ID", err.Error())
 	}
@@ -62,7 +60,7 @@ func TestProjectCreation(t *testing.T) {
 	}
 
 	t.Log("Testing getting projects by account")
-	projects, err := GetByAccount(newAcc, 0, 2)
+	projects, err := GetByAccount(*newAcc, 0, 2)
 	if err != nil {
 		t.Error("Expected no error getting projects by account", err.Error())
 	}
@@ -85,13 +83,12 @@ func TestProjectCreation(t *testing.T) {
 }
 
 func TestProjectUpdate(t *testing.T) {
-	InitDB()
-	newAcc, err := account.Create(api.Account{Id: RandStringBytes(10), Name: RandStringBytes(20)})
+	newAcc, err := account.CreateTest()
 	if err != nil {
 		t.Error("Error encountered creating account")
 	}
 	apiproj := api.Project{Id: RandStringBytes(10), Name: RandStringBytes(20)}
-	theProject, err := Create(apiproj, newAcc)
+	theProject, err := Create(apiproj, *newAcc)
 	if err != nil {
 		t.Error("Expected no error creating project"+err.Error(), err.Code)
 	}
@@ -106,7 +103,7 @@ func TestProjectUpdate(t *testing.T) {
 	}
 
 	t.Log("Getting the project again to check the update worked")
-	gotProj, err := GetByID(newAcc, theProject.ID)
+	gotProj, err := GetByID(*newAcc, theProject.ID)
 	if err != nil {
 		t.Error("Expected no error getting project by ID", err.Error())
 	}
@@ -144,8 +141,4 @@ func RandStringBytes(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
-}
-
-func InitDB() {
-	config.Init()
 }

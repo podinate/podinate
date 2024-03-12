@@ -69,10 +69,10 @@ func (c *ProjectApiController) Routes() Routes {
 			c.ProjectIdGet,
 		},
 		{
-			"ProjectIdPatch",
-			strings.ToUpper("Patch"),
+			"ProjectIdPut",
+			strings.ToUpper("Put"),
 			"/v0/project/{id}",
-			c.ProjectIdPatch,
+			c.ProjectIdPut,
 		},
 		{
 			"ProjectPost",
@@ -140,8 +140,8 @@ func (c *ProjectApiController) ProjectIdGet(w http.ResponseWriter, r *http.Reque
 
 }
 
-// ProjectIdPatch - Update an existing project
-func (c *ProjectApiController) ProjectIdPatch(w http.ResponseWriter, r *http.Request) {
+// ProjectIdPut - Update an existing project
+func (c *ProjectApiController) ProjectIdPut(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	idParam := params["id"]
 	accountParam := r.Header.Get("account")
@@ -156,7 +156,7 @@ func (c *ProjectApiController) ProjectIdPatch(w http.ResponseWriter, r *http.Req
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.ProjectIdPatch(r.Context(), idParam, accountParam, projectParam)
+	result, err := c.service.ProjectIdPut(r.Context(), idParam, accountParam, projectParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

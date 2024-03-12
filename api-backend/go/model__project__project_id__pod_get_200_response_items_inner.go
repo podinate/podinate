@@ -12,7 +12,7 @@ package openapi
 type ProjectProjectIdPodGet200ResponseItemsInner struct {
 
 	// The short name (slug/url) of the pod
-	Id string `json:"id,omitempty"`
+	Id string `json:"id"`
 
 	// The name of the pod
 	Name string `json:"name"`
@@ -45,6 +45,7 @@ type ProjectProjectIdPodGet200ResponseItemsInner struct {
 // AssertProjectProjectIdPodGet200ResponseItemsInnerRequired checks if the required fields are not zero-ed
 func AssertProjectProjectIdPodGet200ResponseItemsInnerRequired(obj ProjectProjectIdPodGet200ResponseItemsInner) error {
 	elements := map[string]interface{}{
+		"id":    obj.Id,
 		"name":  obj.Name,
 		"image": obj.Image,
 		"tag":   obj.Tag,

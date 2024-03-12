@@ -335,38 +335,31 @@ func (a *AccountApiService) AccountGetExecute(r ApiAccountGetRequest) (*Account,
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type ApiAccountPatchRequest struct {
+type ApiAccountPostRequest struct {
 	ctx        context.Context
 	ApiService *AccountApiService
-	account    *string
-	account2   *Account
+	account    *Account
 }
 
-// The account to use for the request
-func (r ApiAccountPatchRequest) Account(account string) ApiAccountPatchRequest {
+func (r ApiAccountPostRequest) Account(account Account) ApiAccountPostRequest {
 	r.account = &account
 	return r
 }
 
-func (r ApiAccountPatchRequest) Account2(account2 Account) ApiAccountPatchRequest {
-	r.account2 = &account2
-	return r
-}
-
-func (r ApiAccountPatchRequest) Execute() (*Account, *http.Response, error) {
-	return r.ApiService.AccountPatchExecute(r)
+func (r ApiAccountPostRequest) Execute() (*Account, *http.Response, error) {
+	return r.ApiService.AccountPostExecute(r)
 }
 
 /*
-AccountPatch Update an existing account
+AccountPost Create a new account
 
-Update an existing account, for example to change the display name
+Create a new logically separate account, for example for a given client or team.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return ApiAccountPatchRequest
+	@return ApiAccountPostRequest
 */
-func (a *AccountApiService) AccountPatch(ctx context.Context) ApiAccountPatchRequest {
-	return ApiAccountPatchRequest{
+func (a *AccountApiService) AccountPost(ctx context.Context) ApiAccountPostRequest {
+	return ApiAccountPostRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -375,15 +368,15 @@ func (a *AccountApiService) AccountPatch(ctx context.Context) ApiAccountPatchReq
 // Execute executes the request
 //
 //	@return Account
-func (a *AccountApiService) AccountPatchExecute(r ApiAccountPatchRequest) (*Account, *http.Response, error) {
+func (a *AccountApiService) AccountPostExecute(r ApiAccountPostRequest) (*Account, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = http.MethodPatch
+		localVarHTTPMethod  = http.MethodPost
 		localVarPostBody    interface{}
 		formFiles           []formFile
 		localVarReturnValue *Account
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AccountApiService.AccountPatch")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AccountApiService.AccountPost")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -393,9 +386,6 @@ func (a *AccountApiService) AccountPatchExecute(r ApiAccountPatchRequest) (*Acco
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
-	if r.account == nil {
-		return localVarReturnValue, nil, reportError("account is required and must be specified")
-	}
 
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{"application/json"}
@@ -414,9 +404,8 @@ func (a *AccountApiService) AccountPatchExecute(r ApiAccountPatchRequest) (*Acco
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
-	parameterAddToHeaderOrQuery(localVarHeaderParams, "account", r.account, "")
 	// body params
-	localVarPostBody = r.account2
+	localVarPostBody = r.account
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {
@@ -489,31 +478,38 @@ func (a *AccountApiService) AccountPatchExecute(r ApiAccountPatchRequest) (*Acco
 	return localVarReturnValue, localVarHTTPResponse, nil
 }
 
-type ApiAccountPostRequest struct {
+type ApiAccountPutRequest struct {
 	ctx        context.Context
 	ApiService *AccountApiService
-	account    *Account
+	account    *string
+	account2   *Account
 }
 
-func (r ApiAccountPostRequest) Account(account Account) ApiAccountPostRequest {
+// The account to use for the request
+func (r ApiAccountPutRequest) Account(account string) ApiAccountPutRequest {
 	r.account = &account
 	return r
 }
 
-func (r ApiAccountPostRequest) Execute() (*Account, *http.Response, error) {
-	return r.ApiService.AccountPostExecute(r)
+func (r ApiAccountPutRequest) Account2(account2 Account) ApiAccountPutRequest {
+	r.account2 = &account2
+	return r
+}
+
+func (r ApiAccountPutRequest) Execute() (*Account, *http.Response, error) {
+	return r.ApiService.AccountPutExecute(r)
 }
 
 /*
-AccountPost Create a new account
+AccountPut Update an existing account
 
-Create a new logically separate account, for example for a given client or team.
+Update an existing account, for example to change the display name
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@return ApiAccountPostRequest
+	@return ApiAccountPutRequest
 */
-func (a *AccountApiService) AccountPost(ctx context.Context) ApiAccountPostRequest {
-	return ApiAccountPostRequest{
+func (a *AccountApiService) AccountPut(ctx context.Context) ApiAccountPutRequest {
+	return ApiAccountPutRequest{
 		ApiService: a,
 		ctx:        ctx,
 	}
@@ -522,15 +518,15 @@ func (a *AccountApiService) AccountPost(ctx context.Context) ApiAccountPostReque
 // Execute executes the request
 //
 //	@return Account
-func (a *AccountApiService) AccountPostExecute(r ApiAccountPostRequest) (*Account, *http.Response, error) {
+func (a *AccountApiService) AccountPutExecute(r ApiAccountPutRequest) (*Account, *http.Response, error) {
 	var (
-		localVarHTTPMethod  = http.MethodPost
+		localVarHTTPMethod  = http.MethodPut
 		localVarPostBody    interface{}
 		formFiles           []formFile
 		localVarReturnValue *Account
 	)
 
-	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AccountApiService.AccountPost")
+	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "AccountApiService.AccountPut")
 	if err != nil {
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
@@ -540,6 +536,9 @@ func (a *AccountApiService) AccountPostExecute(r ApiAccountPostRequest) (*Accoun
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
+	if r.account == nil {
+		return localVarReturnValue, nil, reportError("account is required and must be specified")
+	}
 
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{"application/json"}
@@ -558,8 +557,9 @@ func (a *AccountApiService) AccountPostExecute(r ApiAccountPostRequest) (*Accoun
 	if localVarHTTPHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHTTPHeaderAccept
 	}
+	parameterAddToHeaderOrQuery(localVarHeaderParams, "account", r.account, "")
 	// body params
-	localVarPostBody = r.account
+	localVarPostBody = r.account2
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {

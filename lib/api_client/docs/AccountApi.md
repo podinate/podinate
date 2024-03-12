@@ -6,8 +6,8 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**AccountDelete**](AccountApi.md#AccountDelete) | **Delete** /account | Delete the account and all associated resources!
 [**AccountGet**](AccountApi.md#AccountGet) | **Get** /account | Get information about the current account.
-[**AccountPatch**](AccountApi.md#AccountPatch) | **Patch** /account | Update an existing account
 [**AccountPost**](AccountApi.md#AccountPost) | **Post** /account | Create a new account
+[**AccountPut**](AccountApi.md#AccountPut) | **Put** /account | Update an existing account
 
 
 
@@ -143,74 +143,6 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
-## AccountPatch
-
-> Account AccountPatch(ctx).Account(account).Account2(account2).Execute()
-
-Update an existing account
-
-
-
-### Example
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "os"
-    openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
-)
-
-func main() {
-    account := "my-account" // string | The account to use for the request
-    account2 := *openapiclient.NewAccount() // Account |  (optional)
-
-    configuration := openapiclient.NewConfiguration()
-    apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.AccountApi.AccountPatch(context.Background()).Account(account).Account2(account2).Execute()
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `AccountApi.AccountPatch``: %v\n", err)
-        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
-    }
-    // response from `AccountPatch`: Account
-    fmt.Fprintf(os.Stdout, "Response from `AccountApi.AccountPatch`: %v\n", resp)
-}
-```
-
-### Path Parameters
-
-
-
-### Other Parameters
-
-Other parameters are passed through a pointer to a apiAccountPatchRequest struct via the builder pattern
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **account** | **string** | The account to use for the request | 
- **account2** | [**Account**](Account.md) |  | 
-
-### Return type
-
-[**Account**](Account.md)
-
-### Authorization
-
-[APIKeyAuth](../README.md#APIKeyAuth)
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
-[[Back to Model list]](../README.md#documentation-for-models)
-[[Back to README]](../README.md)
-
-
 ## AccountPost
 
 > Account AccountPost(ctx).Account(account).Execute()
@@ -258,6 +190,74 @@ Other parameters are passed through a pointer to a apiAccountPostRequest struct 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **account** | [**Account**](Account.md) |  | 
+
+### Return type
+
+[**Account**](Account.md)
+
+### Authorization
+
+[APIKeyAuth](../README.md#APIKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## AccountPut
+
+> Account AccountPut(ctx).Account(account).Account2(account2).Execute()
+
+Update an existing account
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+    account := "my-account" // string | The account to use for the request
+    account2 := *openapiclient.NewAccount() // Account |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.AccountApi.AccountPut(context.Background()).Account(account).Account2(account2).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `AccountApi.AccountPut``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `AccountPut`: Account
+    fmt.Fprintf(os.Stdout, "Response from `AccountApi.AccountPut`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiAccountPutRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **account** | **string** | The account to use for the request | 
+ **account2** | [**Account**](Account.md) |  | 
 
 ### Return type
 

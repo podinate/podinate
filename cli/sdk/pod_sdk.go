@@ -1,4 +1,4 @@
-package apiclient
+package sdk
 
 import (
 	"context"
@@ -28,9 +28,9 @@ type Pod struct {
 }
 
 // GetPodByID returns a pod by ID from the given project
-func (p *Project) GetPodByID(id string) (*Pod, error) {
-	resp, _, err := C.PodApi.ProjectProjectIdPodPodIdGet(context.Background(), p.ID, id).Account(viper.GetString("account")).Execute()
-	if err != nil {
+func (p *Project) GetPodByID(id string) (*Pod, *SDKError) {
+	resp, r, err := C.PodApi.ProjectProjectIdPodPodIdGet(context.Background(), p.ID, id).Account(viper.GetString("account")).Execute()
+	if err := handleAPIError(r, err); err != nil {
 		return nil, err
 	}
 	return getPodFromApi(p, resp), nil
@@ -38,9 +38,9 @@ func (p *Project) GetPodByID(id string) (*Pod, error) {
 }
 
 // GetPods returns all pods from the given project
-func (p *Project) GetPods() ([]*Pod, error) {
-	resp, _, err := C.PodApi.ProjectProjectIdPodGet(context.Background(), p.ID).Account(viper.GetString("account")).Execute()
-	if err != nil {
+func (p *Project) GetPods() ([]*Pod, *SDKError) {
+	resp, r, err := C.PodApi.ProjectProjectIdPodGet(context.Background(), p.ID).Account(viper.GetString("account")).Execute()
+	if err := handleAPIError(r, err); err != nil {
 		return nil, err
 	}
 
@@ -55,11 +55,39 @@ func (p *Project) GetPods() ([]*Pod, error) {
 	return pods, nil
 }
 
+// Create creates a new pod in the given project
+func (p *Project) CreatePod(in Pod) (*Pod, error) {
+
+	req := in.ToAPI()
+
+	resp, r, err := C.PodApi.ProjectProjectIdPodPost(context.Background(), p.ID).Account(viper.GetString("account")).Pod(req).Execute()
+	if err := handleAPIError(r, err); err != nil {
+		return nil, err
+	}
+
+	return getPodFromApi(p, resp), nil
+
+}
+
+// Update updates a pod in the given project
+func (p *Pod) Update(in *Pod) (*Pod, error) {
+
+	req := in.ToAPI()
+
+	resp, r, err := C.PodApi.ProjectProjectIdPodPodIdPut(context.Background(), p.Project.ID, p.ID).Account(viper.GetString("account")).Pod(req).Execute()
+	if err := handleAPIError(r, err); err != nil {
+		return nil, err
+	}
+
+	return getPodFromApi(p.Project, resp), nil
+
+}
+
 func getPodFromApi(p *Project, in *api_client.Pod) *Pod {
 	//fmt.Println("in.Id", in.Id, "in", in, "created", in.CreatedAt)
 	//fmt.Println("%+V\n", in)
 	out := &Pod{
-		ID:          *in.Id,
+		ID:          in.Id,
 		Name:        in.Name,
 		Image:       in.Image,
 		Tag:         in.Tag,
@@ -92,8 +120,31 @@ func (p *Pod) GetLogsBuffer(lines int, follow bool) (io.ReadCloser, error) {
 	return r.Body, err
 }
 
+// Exec executes a command in the pod
+func (p *Pod) Exec(command []string) (string, error) {
+	req := *api_client.NewProjectProjectIdPodPodIdExecPostRequest(command)
+	resp, _, err := C.PodApi.ProjectProjectIdPodPodIdExecPost(context.Background(), p.Project.ID, p.ID).
+		Account(viper.GetString("account")).
+		ProjectProjectIdPodPodIdExecPostRequest(req).Execute()
+	//fmt.Println("resp", resp, "err", err)
+	return resp, err
+}
+
 // Delete deletes the pod
 func (p *Pod) Delete() error {
 	_, err := C.PodApi.ProjectProjectIdPodPodIdDelete(context.Background(), p.Project.ID, p.ID).Account(viper.GetString("account")).Execute()
 	return err
+}
+
+// ToAPI returns a Pod from the API client representation
+func (p *Pod) ToAPI() api_client.Pod {
+	return api_client.Pod{
+		Id:          p.ID,
+		Name:        p.Name,
+		Image:       p.Image,
+		Tag:         p.Tag,
+		Environment: environmentVariablesToAPI(p.Environment),
+		Volumes:     volumesToAPI(p.Volumes),
+		Services:    servicesToAPI(p.Services),
+	}
 }

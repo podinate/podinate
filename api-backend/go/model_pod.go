@@ -13,7 +13,7 @@ package openapi
 type Pod struct {
 
 	// The short name (slug/url) of the pod
-	Id string `json:"id,omitempty"`
+	Id string `json:"id"`
 
 	// The name of the pod
 	Name string `json:"name"`
@@ -46,6 +46,7 @@ type Pod struct {
 // AssertPodRequired checks if the required fields are not zero-ed
 func AssertPodRequired(obj Pod) error {
 	elements := map[string]interface{}{
+		"id":    obj.Id,
 		"name":  obj.Name,
 		"image": obj.Image,
 		"tag":   obj.Tag,

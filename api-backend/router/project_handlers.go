@@ -72,7 +72,7 @@ func (s *ProjectAPIService) ProjectIdGet(ctx context.Context, id string, request
 	return responder.Response(http.StatusOK, theProject.ToAPI()), nil
 }
 
-func (s *ProjectAPIService) ProjectIdPatch(ctx context.Context, id string, acc string, proj api.Project) (api.ImplResponse, error) {
+func (s *ProjectAPIService) ProjectIdPut(ctx context.Context, id string, acc string, proj api.Project) (api.ImplResponse, error) {
 	theAccount, apiErr := account.GetByID(acc)
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil

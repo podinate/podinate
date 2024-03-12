@@ -7,7 +7,7 @@ Method | HTTP request | Description
 [**ProjectGet**](ProjectApi.md#ProjectGet) | **Get** /project | Returns a list of projects.
 [**ProjectIdDelete**](ProjectApi.md#ProjectIdDelete) | **Delete** /project/{id} | Delete an existing project
 [**ProjectIdGet**](ProjectApi.md#ProjectIdGet) | **Get** /project/{id} | Get an existing project given by ID
-[**ProjectIdPatch**](ProjectApi.md#ProjectIdPatch) | **Patch** /project/{id} | Update an existing project
+[**ProjectIdPut**](ProjectApi.md#ProjectIdPut) | **Put** /project/{id} | Update an existing project
 [**ProjectPost**](ProjectApi.md#ProjectPost) | **Post** /project | Create a new project
 
 
@@ -224,9 +224,9 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
-## ProjectIdPatch
+## ProjectIdPut
 
-> Project ProjectIdPatch(ctx, id).Account(account).Project(project).Execute()
+> Project ProjectIdPut(ctx, id).Account(account).Project(project).Execute()
 
 Update an existing project
 
@@ -251,13 +251,13 @@ func main() {
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.ProjectApi.ProjectIdPatch(context.Background(), id).Account(account).Project(project).Execute()
+    resp, r, err := apiClient.ProjectApi.ProjectIdPut(context.Background(), id).Account(account).Project(project).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `ProjectApi.ProjectIdPatch``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `ProjectApi.ProjectIdPut``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `ProjectIdPatch`: Project
-    fmt.Fprintf(os.Stdout, "Response from `ProjectApi.ProjectIdPatch`: %v\n", resp)
+    // response from `ProjectIdPut`: Project
+    fmt.Fprintf(os.Stdout, "Response from `ProjectApi.ProjectIdPut`: %v\n", resp)
 }
 ```
 
@@ -271,7 +271,7 @@ Name | Type | Description  | Notes
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiProjectIdPatchRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiProjectIdPutRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes

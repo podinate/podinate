@@ -66,23 +66,6 @@ func (s *AccountApiService) AccountGet(ctx context.Context, account string) (Imp
 	return Response(http.StatusNotImplemented, nil), errors.New("AccountGet method not implemented")
 }
 
-// AccountPatch - Update an existing account
-func (s *AccountApiService) AccountPatch(ctx context.Context, account string, account2 Account) (ImplResponse, error) {
-	// TODO - update AccountPatch with the required logic for this service method.
-	// Add api_account_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, Account{}) or use other options such as http.Ok ...
-	//return Response(200, Account{}), nil
-
-	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
-	//return Response(400, Error{}), nil
-
-	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
-	//return Response(500, Error{}), nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("AccountPatch method not implemented")
-}
-
 // AccountPost - Create a new account
 func (s *AccountApiService) AccountPost(ctx context.Context, account Account) (ImplResponse, error) {
 	// TODO - update AccountPost with the required logic for this service method.
@@ -98,4 +81,21 @@ func (s *AccountApiService) AccountPost(ctx context.Context, account Account) (I
 	//return Response(500, Error{}), nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("AccountPost method not implemented")
+}
+
+// AccountPut - Update an existing account
+func (s *AccountApiService) AccountPut(ctx context.Context, account string, account2 Account) (ImplResponse, error) {
+	// TODO - update AccountPut with the required logic for this service method.
+	// Add api_account_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, Account{}) or use other options such as http.Ok ...
+	//return Response(200, Account{}), nil
+
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("AccountPut method not implemented")
 }

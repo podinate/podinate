@@ -67,7 +67,7 @@ paths:
           $ref: "#/components/responses/400Error"
         "500":
           $ref: "#/components/responses/500Error"
-    patch:
+    put:
       summary: Update an existing account
       description: Update an existing account, for example to change the display name
       tags:
@@ -223,7 +223,7 @@ paths:
           $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
-    patch:
+    put:
       summary: Update an existing project
       description: "Allows you to update or edit an existing project. For example,\
         \ you can update the tag to deploy when you have made and pushed a new build,\
@@ -438,8 +438,8 @@ paths:
           $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
-    patch:
-      summary: Update a pod
+    put:
+      summary: Update a pod's spec
       description: Update a pod
       tags:
       - Pod
@@ -577,6 +577,70 @@ paths:
           $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
+
+  /project/{project_id}/pod/{pod_id}/exec:
+    post:
+      summary: Execute a command in a pod
+      description: Execute a command in a pod
+      tags:
+      - Pod
+      x-speakeasy-entity-operation: Pod#exec
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: pod_id
+        required: true
+        schema:
+          description: The pod to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - $ref: '#/components/parameters/account'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: array
+                  items:
+                    type: string
+                  description: The command to execute
+                  example: ["ls", "/"]
+              required:
+                - command
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "bin dev etc home lib lib64 media mnt opt proc root run sbin srv sys tmp usr var"
+          description: The output of the command
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The command could not be executed due to a permissions error
+
   
   /user/login:
     post:
@@ -1019,6 +1083,7 @@ components:
           x-speakeasy-param-readonly: true
       type: object
       required:
+        - id 
         - name
         - image
         - tag

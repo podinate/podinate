@@ -1,11 +1,13 @@
 // File: apiclient.go
 // Package: apiclient
 // Abstracts away the API client so that it can be used in the CLI
-package apiclient
+package sdk
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -374,4 +376,47 @@ func readConfigFile() (*GlobalConfigFile, error) {
 		return nil, err
 	}
 	return &profiles, nil
+}
+
+// handleAPIError handles API errors
+func handleAPIError(r *http.Response, err error) *SDKError {
+	if r == nil {
+		return newError(0, "Could not connect to Podinate API: "+err.Error())
+	}
+	if err != nil {
+		var sdkerr *SDKError
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			return newError(http.StatusTeapot, "Couldn't read response from API! "+string(body))
+		}
+		//jsonError := json.NewDecoder(r.Body).Decode(&sdkerr)
+		jsonError := json.Unmarshal(body, &sdkerr)
+		if jsonError != nil {
+			if r != nil {
+				return newError(r.StatusCode, "Got invalid error response from API! "+string(body))
+			} else {
+				return newError(0, "Got invalid error response from API! "+string(body))
+			}
+		}
+		return sdkerr
+	}
+	return nil
+}
+
+type SDKError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// Error returns the error message - satisfy the error interface
+func (e *SDKError) Error() string {
+	return strconv.Itoa(e.Code) + ": " + e.Message
+}
+
+// NewError creates a new SDKError
+func newError(code int, message string) *SDKError {
+	return &SDKError{
+		Code:    code,
+		Message: message,
+	}
 }

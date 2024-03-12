@@ -66,6 +66,29 @@ func (s *PodApiService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 	return Response(http.StatusNotImplemented, nil), errors.New("ProjectProjectIdPodPodIdDelete method not implemented")
 }
 
+// ProjectProjectIdPodPodIdExecPost - Execute a command in a pod
+func (s *PodApiService) ProjectProjectIdPodPodIdExecPost(ctx context.Context, projectId string, podId string, account string, projectProjectIdPodPodIdExecPostRequest ProjectProjectIdPodPodIdExecPostRequest) (ImplResponse, error) {
+	// TODO - update ProjectProjectIdPodPodIdExecPost with the required logic for this service method.
+	// Add api_pod_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, string{}) or use other options such as http.Ok ...
+	//return Response(200, string{}), nil
+
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(404, Error{}) or use other options such as http.Ok ...
+	//return Response(404, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(403, Error{}) or use other options such as http.Ok ...
+	//return Response(403, Error{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("ProjectProjectIdPodPodIdExecPost method not implemented")
+}
+
 // ProjectProjectIdPodPodIdGet - Get a pod by ID
 func (s *PodApiService) ProjectProjectIdPodPodIdGet(ctx context.Context, projectId string, podId string, account string) (ImplResponse, error) {
 	// TODO - update ProjectProjectIdPodPodIdGet with the required logic for this service method.
@@ -106,9 +129,9 @@ func (s *PodApiService) ProjectProjectIdPodPodIdLogsGet(ctx context.Context, pro
 	return Response(http.StatusNotImplemented, nil), errors.New("ProjectProjectIdPodPodIdLogsGet method not implemented")
 }
 
-// ProjectProjectIdPodPodIdPatch - Update a pod
-func (s *PodApiService) ProjectProjectIdPodPodIdPatch(ctx context.Context, projectId string, podId string, account string, pod Pod) (ImplResponse, error) {
-	// TODO - update ProjectProjectIdPodPodIdPatch with the required logic for this service method.
+// ProjectProjectIdPodPodIdPut - Update a pod&#39;s spec
+func (s *PodApiService) ProjectProjectIdPodPodIdPut(ctx context.Context, projectId string, podId string, account string, pod Pod) (ImplResponse, error) {
+	// TODO - update ProjectProjectIdPodPodIdPut with the required logic for this service method.
 	// Add api_pod_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, Pod{}) or use other options such as http.Ok ...
@@ -123,7 +146,7 @@ func (s *PodApiService) ProjectProjectIdPodPodIdPatch(ctx context.Context, proje
 	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
 	//return Response(500, Error{}), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("ProjectProjectIdPodPodIdPatch method not implemented")
+	return Response(http.StatusNotImplemented, nil), errors.New("ProjectProjectIdPodPodIdPut method not implemented")
 }
 
 // ProjectProjectIdPodPost - Create a new pod

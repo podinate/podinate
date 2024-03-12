@@ -118,7 +118,38 @@ paths:
       summary: Get information about the current account.
       tags:
       - Account
-    patch:
+    post:
+      description: "Create a new logically separate account, for example for a given\
+        \ client or team."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Account'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: Account created successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Create a new account
+      tags:
+      - Account
+    put:
       description: "Update an existing account, for example to change the display\
         \ name"
       parameters:
@@ -157,37 +188,6 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: An internal server error
       summary: Update an existing account
-      tags:
-      - Account
-    post:
-      description: "Create a new logically separate account, for example for a given\
-        \ client or team."
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Account'
-      responses:
-        "201":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Account'
-          description: Account created successfully
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: "Request issued incorrectly, for example missing parameters\
-            \ or wrong endpoint"
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: An internal server error
-      summary: Create a new account
       tags:
       - Account
   /project:
@@ -385,7 +385,7 @@ paths:
       tags:
       - Project
       x-speakeasy-entity-operation: Project#get
-    patch:
+    put:
       description: "Allows you to update or edit an existing project. For example,\
         \ you can update the tag to deploy when you have made and pushed a new build,\
         \ or change the image to run entirely."
@@ -677,7 +677,7 @@ paths:
       tags:
       - Pod
       x-speakeasy-entity-operation: Pod#get
-    patch:
+    put:
       description: Update a pod
       parameters:
       - explode: false
@@ -741,7 +741,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: An internal server error
-      summary: Update a pod
+      summary: Update a pod's spec
       tags:
       - Pod
       x-speakeasy-entity-operation: Pod#update
@@ -828,6 +828,81 @@ paths:
       tags:
       - Pod
       x-speakeasy-entity-operation: Pod#logs
+  /project/{project_id}/pod/{pod_id}/exec:
+    post:
+      description: Execute a command in a pod
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: pod_id
+        required: true
+        schema:
+          description: The pod to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_project__project_id__pod__pod_id__exec_post_request'
+      responses:
+        "200":
+          content:
+            text/plain:
+              schema:
+                example: bin dev etc home lib lib64 media mnt opt proc root run sbin
+                  srv sys tmp usr var
+                type: string
+          description: The output of the command
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The command could not be executed due to a permissions error
+      summary: Execute a command in a pod
+      tags:
+      - Pod
+      x-speakeasy-entity-operation: Pod#exec
   /user/login:
     post:
       description: Login to Podinate
@@ -1285,6 +1360,7 @@ components:
           type: string
           x-speakeasy-param-readonly: true
       required:
+      - id
       - image
       - name
       - tag
@@ -1464,6 +1540,19 @@ components:
       - limit
       - page
       - total
+      type: object
+    _project__project_id__pod__pod_id__exec_post_request:
+      properties:
+        command:
+          description: The command to execute
+          example:
+          - ls
+          - /
+          items:
+            type: string
+          type: array
+      required:
+      - command
       type: object
     _user_login_post_request:
       properties:

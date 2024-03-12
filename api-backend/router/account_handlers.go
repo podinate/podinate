@@ -41,8 +41,8 @@ func (s *AccountAPIService) AccountGet(ctx context.Context, requestedAccount str
 	return responder.Response(http.StatusNotFound, "Account not found"), nil
 }
 
-// AccountPatch - Update the current account
-func (s *AccountAPIService) AccountPatch(ctx context.Context, requestedAccount string, accountNew api.Account) (api.ImplResponse, error) {
+// AccountPut - Update the current account
+func (s *AccountAPIService) AccountPut(ctx context.Context, requestedAccount string, accountNew api.Account) (api.ImplResponse, error) {
 	// TODO - update AccountPatch with the required logic for this service method.
 	workAccount, apiErr := account.GetByID(requestedAccount)
 	if apiErr != nil {

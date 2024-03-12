@@ -1,4 +1,4 @@
-package apiclient
+package sdk
 
 import (
 	"github.com/johncave/podinate/lib/api_client"
@@ -32,6 +32,30 @@ func volumeFromAPI(apiVolume api_client.Volume) Volume {
 
 	if apiVolume.Class != nil {
 		out.Class = *apiVolume.Class
+	}
+
+	return out
+}
+
+// volumesToAPI converts a pod VolumeSlice to an API Volume array
+func volumesToAPI(volumes VolumeSlice) []api_client.Volume {
+	apiVolumes := make([]api_client.Volume, len(volumes))
+	for i, volume := range volumes {
+		apiVolumes[i] = volumeToAPI(volume)
+	}
+	return apiVolumes
+}
+
+// volumeToAPI converts a pod Volume to an API Volume
+func volumeToAPI(volume Volume) api_client.Volume {
+	out := api_client.Volume{
+		Name:      volume.Name,
+		MountPath: volume.MountPath,
+		Size:      int32(volume.Size),
+	}
+
+	if volume.Class != "" {
+		out.Class = &volume.Class
 	}
 
 	return out

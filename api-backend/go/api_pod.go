@@ -63,6 +63,12 @@ func (c *PodApiController) Routes() Routes {
 			c.ProjectProjectIdPodPodIdDelete,
 		},
 		{
+			"ProjectProjectIdPodPodIdExecPost",
+			strings.ToUpper("Post"),
+			"/v0/project/{project_id}/pod/{pod_id}/exec",
+			c.ProjectProjectIdPodPodIdExecPost,
+		},
+		{
 			"ProjectProjectIdPodPodIdGet",
 			strings.ToUpper("Get"),
 			"/v0/project/{project_id}/pod/{pod_id}",
@@ -75,10 +81,10 @@ func (c *PodApiController) Routes() Routes {
 			c.ProjectProjectIdPodPodIdLogsGet,
 		},
 		{
-			"ProjectProjectIdPodPodIdPatch",
-			strings.ToUpper("Patch"),
+			"ProjectProjectIdPodPodIdPut",
+			strings.ToUpper("Put"),
 			"/v0/project/{project_id}/pod/{pod_id}",
-			c.ProjectProjectIdPodPodIdPatch,
+			c.ProjectProjectIdPodPodIdPut,
 		},
 		{
 			"ProjectProjectIdPodPost",
@@ -123,6 +129,34 @@ func (c *PodApiController) ProjectProjectIdPodPodIdDelete(w http.ResponseWriter,
 	podIdParam := params["pod_id"]
 	accountParam := r.Header.Get("account")
 	result, err := c.service.ProjectProjectIdPodPodIdDelete(r.Context(), projectIdParam, podIdParam, accountParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// ProjectProjectIdPodPodIdExecPost - Execute a command in a pod
+func (c *PodApiController) ProjectProjectIdPodPodIdExecPost(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	projectIdParam := params["project_id"]
+	podIdParam := params["pod_id"]
+	accountParam := r.Header.Get("account")
+	projectProjectIdPodPodIdExecPostRequestParam := ProjectProjectIdPodPodIdExecPostRequest{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&projectProjectIdPodPodIdExecPostRequestParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertProjectProjectIdPodPodIdExecPostRequestRequired(projectProjectIdPodPodIdExecPostRequestParam); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.ProjectProjectIdPodPodIdExecPost(r.Context(), projectIdParam, podIdParam, accountParam, projectProjectIdPodPodIdExecPostRequestParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -178,8 +212,8 @@ func (c *PodApiController) ProjectProjectIdPodPodIdLogsGet(w http.ResponseWriter
 
 }
 
-// ProjectProjectIdPodPodIdPatch - Update a pod
-func (c *PodApiController) ProjectProjectIdPodPodIdPatch(w http.ResponseWriter, r *http.Request) {
+// ProjectProjectIdPodPodIdPut - Update a pod's spec
+func (c *PodApiController) ProjectProjectIdPodPodIdPut(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	projectIdParam := params["project_id"]
 	podIdParam := params["pod_id"]
@@ -195,7 +229,7 @@ func (c *PodApiController) ProjectProjectIdPodPodIdPatch(w http.ResponseWriter, 
 		c.errorHandler(w, r, err, nil)
 		return
 	}
-	result, err := c.service.ProjectProjectIdPodPodIdPatch(r.Context(), projectIdParam, podIdParam, accountParam, podParam)
+	result, err := c.service.ProjectProjectIdPodPodIdPut(r.Context(), projectIdParam, podIdParam, accountParam, podParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

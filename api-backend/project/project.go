@@ -108,10 +108,10 @@ func (p *Project) Patch(requested api.Project) *apierror.ApiError {
 }
 
 // CreateTest spins up a new project into which some tests can be putted
-func CreateTest() (Project, *apierror.ApiError) {
+func CreateTest() (*Project, *apierror.ApiError) {
 	newAcc, err := account.CreateTest()
 	if err != nil {
-		return Project{}, err
+		return nil, err
 	}
 
 	//lh.Log.Debug("Created test account", "account", newAcc)
@@ -121,7 +121,8 @@ func CreateTest() (Project, *apierror.ApiError) {
 	name := generateRandomString(10)
 
 	newProj := api.Project{Id: id, Name: name}
-	return Create(newProj, *newAcc)
+	out, err := Create(newProj, *newAcc)
+	return &out, err
 }
 
 func generateRandomString(length int) string {

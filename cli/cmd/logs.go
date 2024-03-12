@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	apiclient "github.com/johncave/podinate/cli/apiclient"
+	"github.com/johncave/podinate/cli/sdk"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,7 +25,7 @@ var logsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		podID := args[0]
 		projectID := viper.GetString("project")
-		theProject, err := apiclient.ProjectGetByID(projectID)
+		theProject, err := sdk.ProjectGetByID(projectID)
 		cobra.CheckErr(err)
 		thePod, err := theProject.GetPodByID(podID)
 		cobra.CheckErr(err)

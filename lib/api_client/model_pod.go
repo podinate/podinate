@@ -20,7 +20,7 @@ var _ MappedNullable = &Pod{}
 // Pod A pod is a group of container instances with identical settings, and are the basic unit of deployment on Podinate
 type Pod struct {
 	// The short name (slug/url) of the pod
-	Id *string `json:"id,omitempty"`
+	Id string `json:"id"`
 	// The name of the pod
 	Name string `json:"name"`
 	// The container image to run for this pod
@@ -45,8 +45,9 @@ type Pod struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPod(name string, image string, tag string) *Pod {
+func NewPod(id string, name string, image string, tag string) *Pod {
 	this := Pod{}
+	this.Id = id
 	this.Name = name
 	this.Image = image
 	this.Tag = tag
@@ -61,36 +62,28 @@ func NewPodWithDefaults() *Pod {
 	return &this
 }
 
-// GetId returns the Id field value if set, zero value otherwise.
+// GetId returns the Id field value
 func (o *Pod) GetId() string {
-	if o == nil || IsNil(o.Id) {
+	if o == nil {
 		var ret string
 		return ret
 	}
-	return *o.Id
+
+	return o.Id
 }
 
-// GetIdOk returns a tuple with the Id field value if set, nil otherwise
+// GetIdOk returns a tuple with the Id field value
 // and a boolean to check if the value has been set.
 func (o *Pod) GetIdOk() (*string, bool) {
-	if o == nil || IsNil(o.Id) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Id, true
+	return &o.Id, true
 }
 
-// HasId returns a boolean if a field has been set.
-func (o *Pod) HasId() bool {
-	if o != nil && !IsNil(o.Id) {
-		return true
-	}
-
-	return false
-}
-
-// SetId gets a reference to the given string and assigns it to the Id field.
+// SetId sets field value
 func (o *Pod) SetId(v string) {
-	o.Id = &v
+	o.Id = v
 }
 
 // GetName returns the Name field value
@@ -367,9 +360,7 @@ func (o Pod) MarshalJSON() ([]byte, error) {
 
 func (o Pod) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Id) {
-		toSerialize["id"] = o.Id
-	}
+	toSerialize["id"] = o.Id
 	toSerialize["name"] = o.Name
 	toSerialize["image"] = o.Image
 	toSerialize["tag"] = o.Tag

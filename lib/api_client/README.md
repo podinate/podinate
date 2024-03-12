@@ -79,18 +79,19 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AccountApi* | [**AccountDelete**](docs/AccountApi.md#accountdelete) | **Delete** /account | Delete the account and all associated resources!
 *AccountApi* | [**AccountGet**](docs/AccountApi.md#accountget) | **Get** /account | Get information about the current account.
-*AccountApi* | [**AccountPatch**](docs/AccountApi.md#accountpatch) | **Patch** /account | Update an existing account
 *AccountApi* | [**AccountPost**](docs/AccountApi.md#accountpost) | **Post** /account | Create a new account
+*AccountApi* | [**AccountPut**](docs/AccountApi.md#accountput) | **Put** /account | Update an existing account
 *PodApi* | [**ProjectProjectIdPodGet**](docs/PodApi.md#projectprojectidpodget) | **Get** /project/{project_id}/pod | Get a list of pods for a given project
 *PodApi* | [**ProjectProjectIdPodPodIdDelete**](docs/PodApi.md#projectprojectidpodpodiddelete) | **Delete** /project/{project_id}/pod/{pod_id} | Delete a pod
+*PodApi* | [**ProjectProjectIdPodPodIdExecPost**](docs/PodApi.md#projectprojectidpodpodidexecpost) | **Post** /project/{project_id}/pod/{pod_id}/exec | Execute a command in a pod
 *PodApi* | [**ProjectProjectIdPodPodIdGet**](docs/PodApi.md#projectprojectidpodpodidget) | **Get** /project/{project_id}/pod/{pod_id} | Get a pod by ID
 *PodApi* | [**ProjectProjectIdPodPodIdLogsGet**](docs/PodApi.md#projectprojectidpodpodidlogsget) | **Get** /project/{project_id}/pod/{pod_id}/logs | Get the logs for a pod
-*PodApi* | [**ProjectProjectIdPodPodIdPatch**](docs/PodApi.md#projectprojectidpodpodidpatch) | **Patch** /project/{project_id}/pod/{pod_id} | Update a pod
+*PodApi* | [**ProjectProjectIdPodPodIdPut**](docs/PodApi.md#projectprojectidpodpodidput) | **Put** /project/{project_id}/pod/{pod_id} | Update a pod&#39;s spec
 *PodApi* | [**ProjectProjectIdPodPost**](docs/PodApi.md#projectprojectidpodpost) | **Post** /project/{project_id}/pod | Create a new pod
 *ProjectApi* | [**ProjectGet**](docs/ProjectApi.md#projectget) | **Get** /project | Returns a list of projects.
 *ProjectApi* | [**ProjectIdDelete**](docs/ProjectApi.md#projectiddelete) | **Delete** /project/{id} | Delete an existing project
 *ProjectApi* | [**ProjectIdGet**](docs/ProjectApi.md#projectidget) | **Get** /project/{id} | Get an existing project given by ID
-*ProjectApi* | [**ProjectIdPatch**](docs/ProjectApi.md#projectidpatch) | **Patch** /project/{id} | Update an existing project
+*ProjectApi* | [**ProjectIdPut**](docs/ProjectApi.md#projectidput) | **Put** /project/{id} | Update an existing project
 *ProjectApi* | [**ProjectPost**](docs/ProjectApi.md#projectpost) | **Post** /project | Create a new project
 *UserApi* | [**UserGet**](docs/UserApi.md#userget) | **Get** /user | Get the current user
 *UserApi* | [**UserLoginCallbackProviderGet**](docs/UserApi.md#userlogincallbackproviderget) | **Get** /user/login/callback/{provider} | User login callback URL for oauth providers
@@ -111,6 +112,7 @@ Class | Method | HTTP request | Description
  - [ProjectGet200ResponseItemsInner](docs/ProjectGet200ResponseItemsInner.md)
  - [ProjectProjectIdPodGet200Response](docs/ProjectProjectIdPodGet200Response.md)
  - [ProjectProjectIdPodGet200ResponseItemsInner](docs/ProjectProjectIdPodGet200ResponseItemsInner.md)
+ - [ProjectProjectIdPodPodIdExecPostRequest](docs/ProjectProjectIdPodPodIdExecPostRequest.md)
  - [Service](docs/Service.md)
  - [User](docs/User.md)
  - [UserLoginInitiateGet200Response](docs/UserLoginInitiateGet200Response.md)

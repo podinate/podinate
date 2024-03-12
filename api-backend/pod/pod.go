@@ -24,6 +24,7 @@ const (
 	ActionUpdate   = "pod:update"
 	ActionDelete   = "pod:delete"
 	ActionViewLogs = "pod:view"
+	ActionExec     = "pod:execute"
 )
 
 type Pod struct {
@@ -204,6 +205,10 @@ func Create(ctx context.Context, theProject *project.Project, requestedPod api.P
 		return Pod{}, &apierror.ApiError{Code: http.StatusConflict, Message: "A pod with this ID already exists"}
 	}
 
+	if err := ValidateNewPod(requestedPod); err != nil {
+		return Pod{}, err
+	}
+
 	// Start creating the pod
 	out := Pod{
 		Uuid:        uuid, // Note: UUID blank (should be fine?)
@@ -287,9 +292,25 @@ func Create(ctx context.Context, theProject *project.Project, requestedPod api.P
 	return out, nil
 }
 
-func (p *Pod) ToAPI() api.Pod {
-	lh.Log.Debug("HELLO WTF", "pod", p)
+// ValidateNewPod checks if a pod is valid
+func ValidateNewPod(pod api.Pod) *apierror.ApiError {
+	if pod.Id == "" {
+		return apierror.New(http.StatusBadRequest, "Pod ID is required")
+	}
+	if pod.Name == "" {
+		return apierror.New(http.StatusBadRequest, "Pod name is required")
+	}
+	if pod.Image == "" {
+		return apierror.New(http.StatusBadRequest, "Pod image is required")
+	}
+	if pod.Tag == "" {
+		return apierror.New(http.StatusBadRequest, "Pod tag is required")
+	}
 
+	return nil
+}
+
+func (p *Pod) ToAPI() api.Pod {
 	out := api.Pod{
 		Id:          p.ID,
 		Name:        p.Name,
@@ -302,8 +323,7 @@ func (p *Pod) ToAPI() api.Pod {
 		Volumes:     p.Volumes.ToAPI(),
 	}
 
-	lh.Log.Debug("Converted pod to API", "pod", p, "apiPod", out)
-
+	//lh.Log.Debug("Converted pod to API", "pod", p, "apiPod", out)
 	return out
 
 }
@@ -452,7 +472,10 @@ func (p *Pod) GetLogsBuffer(ctx context.Context, lines int, follow bool) (io.Rea
 	}
 
 	req := config.Client.CoreV1().Pods(p.Project.GetNamespaceName()).GetLogs(p.ID+"-0", &podLogOpts)
-	podLogs, err := req.Stream(ctx)
+
+	//req := config.Client.RESTClient().Get().Namespace(p.Project.GetNamespaceName()).Resource("pods").Name(p.ID+"-0").SubResource("log").Param("tailLines", strconv.Itoa(lines)).Param("follow", "true")
+
+	podLogs, err := req.Stream(context.Background())
 	if err != nil {
 		return nil, apierror.NewWithError(http.StatusInternalServerError, "error getting logs from kubernetes", err)
 	}

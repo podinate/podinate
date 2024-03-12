@@ -71,7 +71,7 @@ func (p *Pod) loadVolumes() error {
 		if err != nil {
 			return err
 		}
-		lh.Log.Debugw("Loaded volume", "volume", v)
+		//lh.Log.Debugw("Loaded volume", "volume", v)
 		p.Volumes = append(p.Volumes, v)
 	}
 	return nil

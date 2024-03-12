@@ -6,9 +6,10 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**ProjectProjectIdPodGet**](PodApi.md#ProjectProjectIdPodGet) | **Get** /project/{project_id}/pod | Get a list of pods for a given project
 [**ProjectProjectIdPodPodIdDelete**](PodApi.md#ProjectProjectIdPodPodIdDelete) | **Delete** /project/{project_id}/pod/{pod_id} | Delete a pod
+[**ProjectProjectIdPodPodIdExecPost**](PodApi.md#ProjectProjectIdPodPodIdExecPost) | **Post** /project/{project_id}/pod/{pod_id}/exec | Execute a command in a pod
 [**ProjectProjectIdPodPodIdGet**](PodApi.md#ProjectProjectIdPodPodIdGet) | **Get** /project/{project_id}/pod/{pod_id} | Get a pod by ID
 [**ProjectProjectIdPodPodIdLogsGet**](PodApi.md#ProjectProjectIdPodPodIdLogsGet) | **Get** /project/{project_id}/pod/{pod_id}/logs | Get the logs for a pod
-[**ProjectProjectIdPodPodIdPatch**](PodApi.md#ProjectProjectIdPodPodIdPatch) | **Patch** /project/{project_id}/pod/{pod_id} | Update a pod
+[**ProjectProjectIdPodPodIdPut**](PodApi.md#ProjectProjectIdPodPodIdPut) | **Put** /project/{project_id}/pod/{pod_id} | Update a pod&#39;s spec
 [**ProjectProjectIdPodPost**](PodApi.md#ProjectProjectIdPodPost) | **Post** /project/{project_id}/pod | Create a new pod
 
 
@@ -156,6 +157,83 @@ Name | Type | Description  | Notes
 
 - **Content-Type**: Not defined
 - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## ProjectProjectIdPodPodIdExecPost
+
+> string ProjectProjectIdPodPodIdExecPost(ctx, projectId, podId).Account(account).ProjectProjectIdPodPodIdExecPostRequest(projectProjectIdPodPodIdExecPostRequest).Execute()
+
+Execute a command in a pod
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+    projectId := "hello-world" // string | 
+    podId := "hello-world" // string | 
+    account := "my-account" // string | The account to use for the request
+    projectProjectIdPodPodIdExecPostRequest := *openapiclient.NewProjectProjectIdPodPodIdExecPostRequest([]string{"Command_example"}) // ProjectProjectIdPodPodIdExecPostRequest |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PodApi.ProjectProjectIdPodPodIdExecPost(context.Background(), projectId, podId).Account(account).ProjectProjectIdPodPodIdExecPostRequest(projectProjectIdPodPodIdExecPostRequest).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PodApi.ProjectProjectIdPodPodIdExecPost``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `ProjectProjectIdPodPodIdExecPost`: string
+    fmt.Fprintf(os.Stdout, "Response from `PodApi.ProjectProjectIdPodPodIdExecPost`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**projectId** | **string** |  | 
+**podId** | **string** |  | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiProjectProjectIdPodPodIdExecPostRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+ **account** | **string** | The account to use for the request | 
+ **projectProjectIdPodPodIdExecPostRequest** | [**ProjectProjectIdPodPodIdExecPostRequest**](ProjectProjectIdPodPodIdExecPostRequest.md) |  | 
+
+### Return type
+
+**string**
+
+### Authorization
+
+[APIKeyAuth](../README.md#APIKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: text/plain, application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)
@@ -316,11 +394,11 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
-## ProjectProjectIdPodPodIdPatch
+## ProjectProjectIdPodPodIdPut
 
-> Pod ProjectProjectIdPodPodIdPatch(ctx, projectId, podId).Account(account).Pod(pod).Execute()
+> Pod ProjectProjectIdPodPodIdPut(ctx, projectId, podId).Account(account).Pod(pod).Execute()
 
-Update a pod
+Update a pod's spec
 
 
 
@@ -340,17 +418,17 @@ func main() {
     projectId := "hello-world" // string | 
     podId := "hello-world" // string | 
     account := "my-account" // string | The account to use for the request
-    pod := *openapiclient.NewPod("Hello World", "wordpress", "6.0") // Pod | A JSON object containing the information needed to update a pod
+    pod := *openapiclient.NewPod("hello-world", "Hello World", "wordpress", "6.0") // Pod | A JSON object containing the information needed to update a pod
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PodApi.ProjectProjectIdPodPodIdPatch(context.Background(), projectId, podId).Account(account).Pod(pod).Execute()
+    resp, r, err := apiClient.PodApi.ProjectProjectIdPodPodIdPut(context.Background(), projectId, podId).Account(account).Pod(pod).Execute()
     if err != nil {
-        fmt.Fprintf(os.Stderr, "Error when calling `PodApi.ProjectProjectIdPodPodIdPatch``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Error when calling `PodApi.ProjectProjectIdPodPodIdPut``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
     }
-    // response from `ProjectProjectIdPodPodIdPatch`: Pod
-    fmt.Fprintf(os.Stdout, "Response from `PodApi.ProjectProjectIdPodPodIdPatch`: %v\n", resp)
+    // response from `ProjectProjectIdPodPodIdPut`: Pod
+    fmt.Fprintf(os.Stdout, "Response from `PodApi.ProjectProjectIdPodPodIdPut`: %v\n", resp)
 }
 ```
 
@@ -365,7 +443,7 @@ Name | Type | Description  | Notes
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiProjectProjectIdPodPodIdPatchRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiProjectProjectIdPodPodIdPutRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
@@ -416,7 +494,7 @@ import (
 func main() {
     projectId := "hello-world" // string | 
     account := "my-account" // string | The account to use for the request
-    pod := *openapiclient.NewPod("Hello World", "wordpress", "6.0") // Pod | A JSON object containing the information needed to create a new pod
+    pod := *openapiclient.NewPod("hello-world", "Hello World", "wordpress", "6.0") // Pod | A JSON object containing the information needed to create a new pod
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)

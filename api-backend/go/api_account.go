@@ -61,16 +61,16 @@ func (c *AccountApiController) Routes() Routes {
 			c.AccountGet,
 		},
 		{
-			"AccountPatch",
-			strings.ToUpper("Patch"),
-			"/v0/account",
-			c.AccountPatch,
-		},
-		{
 			"AccountPost",
 			strings.ToUpper("Post"),
 			"/v0/account",
 			c.AccountPost,
+		},
+		{
+			"AccountPut",
+			strings.ToUpper("Put"),
+			"/v0/account",
+			c.AccountPut,
 		},
 	}
 }
@@ -103,31 +103,6 @@ func (c *AccountApiController) AccountGet(w http.ResponseWriter, r *http.Request
 
 }
 
-// AccountPatch - Update an existing account
-func (c *AccountApiController) AccountPatch(w http.ResponseWriter, r *http.Request) {
-	accountParam := r.Header.Get("account")
-	account2Param := Account{}
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
-	if err := d.Decode(&account2Param); err != nil {
-		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
-		return
-	}
-	if err := AssertAccountRequired(account2Param); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	result, err := c.service.AccountPatch(r.Context(), accountParam, account2Param)
-	// If an error occurred, encode the error with the status code
-	if err != nil {
-		c.errorHandler(w, r, err, &result)
-		return
-	}
-	// If no error, encode the body and the result code
-	EncodeJSONResponse(result.Body, &result.Code, w)
-
-}
-
 // AccountPost - Create a new account
 func (c *AccountApiController) AccountPost(w http.ResponseWriter, r *http.Request) {
 	accountParam := Account{}
@@ -142,6 +117,31 @@ func (c *AccountApiController) AccountPost(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	result, err := c.service.AccountPost(r.Context(), accountParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// AccountPut - Update an existing account
+func (c *AccountApiController) AccountPut(w http.ResponseWriter, r *http.Request) {
+	accountParam := r.Header.Get("account")
+	account2Param := Account{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&account2Param); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	if err := AssertAccountRequired(account2Param); err != nil {
+		c.errorHandler(w, r, err, nil)
+		return
+	}
+	result, err := c.service.AccountPut(r.Context(), accountParam, account2Param)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

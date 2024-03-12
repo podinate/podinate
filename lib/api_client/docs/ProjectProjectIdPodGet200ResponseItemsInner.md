@@ -4,7 +4,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Id** | Pointer to **string** | The short name (slug/url) of the pod | [optional] 
+**Id** | **string** | The short name (slug/url) of the pod | 
 **Name** | **string** | The name of the pod | 
 **Image** | **string** | The container image to run for this pod | 
 **Tag** | **string** | The image tag to run for this pod | 
@@ -19,7 +19,7 @@ Name | Type | Description | Notes
 
 ### NewProjectProjectIdPodGet200ResponseItemsInner
 
-`func NewProjectProjectIdPodGet200ResponseItemsInner(name string, image string, tag string, ) *ProjectProjectIdPodGet200ResponseItemsInner`
+`func NewProjectProjectIdPodGet200ResponseItemsInner(id string, name string, image string, tag string, ) *ProjectProjectIdPodGet200ResponseItemsInner`
 
 NewProjectProjectIdPodGet200ResponseItemsInner instantiates a new ProjectProjectIdPodGet200ResponseItemsInner object
 This constructor will assign default values to properties that have it defined,
@@ -53,11 +53,6 @@ and a boolean to check if the value has been set.
 
 SetId sets Id field to given value.
 
-### HasId
-
-`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasId() bool`
-
-HasId returns a boolean if a field has been set.
 
 ### GetName
 
