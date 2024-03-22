@@ -3,7 +3,6 @@ package package_parser
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/hashicorp/hcl2/hcl"
@@ -126,7 +125,9 @@ func (p *Package) Apply() error {
 				return err
 			}
 			continue
-		} else if sdkerr.Code == http.StatusNotFound {
+			//	}
+			//fmt.Printf("Creating pod: %+v %s\n", thePod, sdkerr.Error())
+		} else if sdkerr.Error() == "404: Pod not found" {
 			//fmt.Println("Error getting pod", sdkerr, sdkerr == nil, existing)
 			//fmt.Printf("Created pod: %+v\n", thePod)
 			_, err = theProject.CreatePod(*thePod)

@@ -40,10 +40,9 @@ func Test_api_client_ProjectApiService(t *testing.T) {
 
 		var id string
 
-		resp, httpRes, err := apiClient.ProjectApi.ProjectIdDelete(context.Background(), id).Execute()
+		httpRes, err := apiClient.ProjectApi.ProjectIdDelete(context.Background(), id).Execute()
 
 		require.Nil(t, err)
-		require.NotNil(t, resp)
 		assert.Equal(t, 200, httpRes.StatusCode)
 
 	})
@@ -62,13 +61,13 @@ func Test_api_client_ProjectApiService(t *testing.T) {
 
 	})
 
-	t.Run("Test ProjectApiService ProjectIdPatch", func(t *testing.T) {
+	t.Run("Test ProjectApiService ProjectIdPut", func(t *testing.T) {
 
 		t.Skip("skip test") // remove to run test
 
 		var id string
 
-		resp, httpRes, err := apiClient.ProjectApi.ProjectIdPatch(context.Background(), id).Execute()
+		resp, httpRes, err := apiClient.ProjectApi.ProjectIdPut(context.Background(), id).Execute()
 
 		require.Nil(t, err)
 		require.NotNil(t, resp)

@@ -184,14 +184,27 @@ func getStatefulSetSpec(theProject *project.Project, requested api.Pod) (*appsv1
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  requested.Id,
-							Image: requested.Image + ":" + requested.Tag,
+							Name:    requested.Id,
+							Image:   requested.Image + ":" + requested.Tag,
+							Command: requested.Command,
+							Args:    requested.Arguments,
 						},
 					},
 				},
 			},
 		},
 	}
+
+	// // Add command to the pod spec
+	// if requested.Command != nil {
+	// 	lh.Log.Debugw("Adding command to pod spec", "command", requested.Command)
+	// 	out.Spec.Template.Spec.Containers[0].Command = requested.Command
+	// } else {
+	// 	lh.Log.Debugw("No command to add to pod spec", "command", requested.Command)
+	// }
+
+	// // Add arguments to the pod spec
+	// if requested.Arguments != nil {
 
 	// Add environment variables to the pod spec
 	for _, envVar := range requested.Environment {

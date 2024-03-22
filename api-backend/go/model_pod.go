@@ -24,6 +24,12 @@ type Pod struct {
 	// The image tag to run for this pod
 	Tag string `json:"tag"`
 
+	// The command to run when the pod starts. This overrides the ENTRYPOINT defined in the Dockerfile of the container.
+	Command []string `json:"command,omitempty"`
+
+	// The arguments to pass to the command when the pod starts. If you specify arguments but not command, the arguments will be passed to the ENTRYPOINT command defined in the Dockerfile of the container.
+	Arguments []string `json:"arguments,omitempty"`
+
 	// The storage volumes attached to this pod
 	Volumes []Volume `json:"volumes,omitempty"`
 

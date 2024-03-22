@@ -73,7 +73,7 @@ var getPodsCmd = &cobra.Command{
 			p := i.Pod
 
 			rows = append(rows, bubbletable.Row{
-				p.Id, p.Name, "", p.Image + ":" + p.Tag,
+				p.Id, p.Name, *p.Status, p.Image + ":" + p.Tag,
 			})
 		}
 

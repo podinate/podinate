@@ -1316,6 +1316,25 @@ components:
           description: The image tag to run for this pod
           example: "6.0"
           type: string
+        command:
+          description: The command to run when the pod starts. This overrides the
+            ENTRYPOINT defined in the Dockerfile of the container.
+          example:
+          - npm
+          - start
+          items:
+            type: string
+          type: array
+        arguments:
+          description: "The arguments to pass to the command when the pod starts.\
+            \ If you specify arguments but not command, the arguments will be passed\
+            \ to the ENTRYPOINT command defined in the Dockerfile of the container."
+          example:
+          - --port
+          - "3000"
+          items:
+            type: string
+          type: array
         volumes:
           description: The storage volumes attached to this pod
           example:

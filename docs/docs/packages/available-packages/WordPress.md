@@ -1,8 +1,14 @@
-# Containerised WordPress Reference
-The default image for WordPress is based on Debian and runs the Apache web server in prefork mode, the prefork mode is known to be slow and could be improved by switching to mpm.
+# WordPress
+WordPress is the world's most widely used CMS and blogging platform. As such it's believed to power over 50 million websites worldwide. WordPress uses [MariaDB](../MariaDB) as its database engine. 
+
 
 ## Running on Podinate
-WordPress is available as a template on Podinate. Run `podinate launch`, select "an existing app" and select WordPress from the list. 
+WordPress is available as a Podinate package. To install it run:
+```bash
+podinate install wordpress
+```
+
+There are no required values for the package. 
 
 ## Speed / Resource Usage 
 By default the image uses Apache in prefork mode. It would be a lot more resource efficient to switch to MPM, or to php-fpm within the image. 

@@ -27,6 +27,10 @@ type Pod struct {
 	Image string `json:"image"`
 	// The image tag to run for this pod
 	Tag string `json:"tag"`
+	// The command to run when the pod starts. This overrides the ENTRYPOINT defined in the Dockerfile of the container.
+	Command []string `json:"command,omitempty"`
+	// The arguments to pass to the command when the pod starts. If you specify arguments but not command, the arguments will be passed to the ENTRYPOINT command defined in the Dockerfile of the container.
+	Arguments []string `json:"arguments,omitempty"`
 	// The storage volumes attached to this pod
 	Volumes []Volume `json:"volumes,omitempty"`
 	// The environment variables to pass to the pod
@@ -156,6 +160,70 @@ func (o *Pod) GetTagOk() (*string, bool) {
 // SetTag sets field value
 func (o *Pod) SetTag(v string) {
 	o.Tag = v
+}
+
+// GetCommand returns the Command field value if set, zero value otherwise.
+func (o *Pod) GetCommand() []string {
+	if o == nil || IsNil(o.Command) {
+		var ret []string
+		return ret
+	}
+	return o.Command
+}
+
+// GetCommandOk returns a tuple with the Command field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pod) GetCommandOk() ([]string, bool) {
+	if o == nil || IsNil(o.Command) {
+		return nil, false
+	}
+	return o.Command, true
+}
+
+// HasCommand returns a boolean if a field has been set.
+func (o *Pod) HasCommand() bool {
+	if o != nil && !IsNil(o.Command) {
+		return true
+	}
+
+	return false
+}
+
+// SetCommand gets a reference to the given []string and assigns it to the Command field.
+func (o *Pod) SetCommand(v []string) {
+	o.Command = v
+}
+
+// GetArguments returns the Arguments field value if set, zero value otherwise.
+func (o *Pod) GetArguments() []string {
+	if o == nil || IsNil(o.Arguments) {
+		var ret []string
+		return ret
+	}
+	return o.Arguments
+}
+
+// GetArgumentsOk returns a tuple with the Arguments field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pod) GetArgumentsOk() ([]string, bool) {
+	if o == nil || IsNil(o.Arguments) {
+		return nil, false
+	}
+	return o.Arguments, true
+}
+
+// HasArguments returns a boolean if a field has been set.
+func (o *Pod) HasArguments() bool {
+	if o != nil && !IsNil(o.Arguments) {
+		return true
+	}
+
+	return false
+}
+
+// SetArguments gets a reference to the given []string and assigns it to the Arguments field.
+func (o *Pod) SetArguments(v []string) {
+	o.Arguments = v
 }
 
 // GetVolumes returns the Volumes field value if set, zero value otherwise.
@@ -364,6 +432,12 @@ func (o Pod) ToMap() (map[string]interface{}, error) {
 	toSerialize["name"] = o.Name
 	toSerialize["image"] = o.Image
 	toSerialize["tag"] = o.Tag
+	if !IsNil(o.Command) {
+		toSerialize["command"] = o.Command
+	}
+	if !IsNil(o.Arguments) {
+		toSerialize["arguments"] = o.Arguments
+	}
 	if !IsNil(o.Volumes) {
 		toSerialize["volumes"] = o.Volumes
 	}

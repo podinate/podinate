@@ -1,0 +1,5 @@
+Part,Minimum,Recommended,Example
+CPU,Dual Core,Quad Core,Ryzen 5 5600G
+RAM,4GB,16GB+,96GB DDR4
+SSD,128GB,512GB,256GB SATA (boot) + 1TB NVMe
+HDD,No Hard Drive,1TB+,5x 10TB HGST Enterprise

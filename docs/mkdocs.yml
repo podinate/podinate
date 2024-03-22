@@ -11,17 +11,29 @@ nav:
     - Installation: getting-started/installation.md
     - Run Your App: getting-started/your-app.md
     - Add The Team: getting-started/collaborate.md
-  - Application Reference:
-    - application-reference/index.md
-    - WordPress: application-reference/WordPress.md
-    - MariaDB: application-reference/MariaDB.md
   - Packages:
-    - packages/packages-overview.md
+    - Overview: packages/packages-overview.md
     - Package Structure: packages/package-structure.md
     - Publishing: packages/publishing.md
+    - Packages Reference:
+      - application-reference/index.md
+      - WordPress: packages/available-packages/WordPress.md
+      - MariaDB: packages/available-packages/MariaDB.md
+  - Reference:
+    - Hardware: 
+      - reference/hardware/index.md
+      - Raspberry Pi: reference/hardware/raspberry-pi.md
+      - Mini PC / NUC: reference/hardware/mini-pc.md
+      - Homelab: reference/hardware/homelab.md
+    - Storage: 
+      - reference/storage/index.md
+      - ZFS: reference/storage/ZFS.md
+      - Cloud Storage: reference/storage/cloud-storage.md
 
 plugins:
+  - search
   - tags
+  - table-reader
 #   - social
 
 theme: 
@@ -41,3 +53,20 @@ theme:
     - navigation.indexes
     - navigation.path
     - search.suggest
+    - search.highlight
+    - search.term
+    - content.code.copy
+
+markdown_extensions:
+  # Code blocks 
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.emoji
+  # Note / tip / warning admonitions
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences

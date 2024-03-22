@@ -1,0 +1,26 @@
+# Install
+
+The Podinate CLI `install` command is used to install a package. 
+
+
+## Install Custom Package
+
+```bash
+podinate install
+```
+If you run `podinate install` without any arguments, Podinate will first look for a `./podinate` folder in the current directory, and install it as a package. If there is none, Podinate will attempt to install all of the `.pod` files it finds in the current directory. 
+
+## Install a Package
+```bash
+podinate install <package>
+```
+Podinate will attempt to install the given package. 
+
+## Search for Packages
+```bash
+podinate search <query>
+```
+Podinate will search through the configured package repositories and list the results. 
+
+## Repository Management
+Podinte 

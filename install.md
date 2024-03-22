@@ -55,3 +55,82 @@ kubectl -n podinate get pods
 ```bash
 bash -c "kubectl -n podinate exec -it postgres-0 -- psql 'postgresql://postgres:\$\$(kubectl -n podinate get secret masterdb-secret -o jsonpath='{.data.superUserPassword}' | base64 --decode ; echo)@localhost/podinate'" < masterdb.sql
 ```
+
+
+# Install Steps
+Okay ignore what's above here's just the raw steps. 
+
+Plan is for this to be a bash script designed to run on Ubuntu. When it comes time to install it on another platform (eg, k3d for local dev clusters), we can simply create the cluster using exec, and then create an Ubuntu Job in K8s with the relevant permissions to run this script. 
+
+- Checks
+    - Is the cluster up? 
+- Ask for user email
+- Install certbot
+    - Kubectl apply -f raw.github.com/.../some.yaml
+    - Create a cluster issuer for Let's Encrypt
+- Create the Podinate Postgres instance
+    - Kubectl apply -f 
+- Run a Job to migrate the cluster to the latest schema
+    - Using Goerd
+- Install the Podinate controller
+    - Kubectl apply -f from github
+- Check connection to the Podinate controller
+
+- Most of the above is done, this is new:
+- Create initial admin user
+- Create credential for admin user
+- Use credential to create default account
+- Present the login information to the user 
+
+# Demo Steps
+## Introduction
+- `podinate get projects`
+    - Show one existing project
+- `podinate -p tunnel get pods`
+    - Show one pod, cloudflare tunnel
+- `podinate -p tunnel logs cloudflare-tunnel`
+    - Show that Cloudflare tunnel is successfully running
+
+## Hello world 
+- `cat hello-world.pod`
+    - Show a project called hello-world
+    - Show a pod called Ubuntu
+- `podinate apply hello-world.pod`
+    - Project is successfully created
+    - Pod is successfully created
+- `podinate -p hello-world get pods`
+    - Shows the running ubuntu pod 
+- `podinate -p hello-world shell hello-world`
+    - Get a shell on the hello-world pod
+    - Demonstrate a working Ubuntu pod
+- `podinate delete hello-world.pod`
+    - Pod is successfully deleted
+    - Project is successfully deleted
+- `podinate get projects`
+    - Shows the project is deleted
+
+## Network access
+- `cat wordpress.pod`
+    - Show a new project 
+    - Show the two pods
+    - Show the environment variables
+    - Show how the pods have services
+- `podinate apply wordpress.pod`
+    - Project is created
+    - Pods are created
+    - Services are created
+    - Volumes are created
+- `podinate -p blog get pods`
+    - Show that mariadb and wordpress are up
+- `open blog.podinate.app`
+    - Show working wordpress website
+
+What's needed:
+
+- ~~Add services to podi~~
+- ~~Add volumes to podi~~
+
+
+- ~~Get logs -f to work~~
+- Get exec -it to work (uses above)
+- Add optional command = to pod 

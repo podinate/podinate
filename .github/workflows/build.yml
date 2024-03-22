@@ -1,0 +1,54 @@
+name: Build Docker Images
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log into the GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Controller Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./api-backend/Dockerfile
+          push: true
+          tags: ghcr.io/Podinate/controller:latest
+          labels: |
+            org.opencontainers.image.title=Podinate controller
+            org.opencontainers.image.description=The alternative, friendly manager for your Kubernetes clusters. This is the controller to install on your Kubernetes cluster.
+            org.opencontainers.image.authors=John Cave
+            org.opencontainers.image.url=www.podinate.com
+
+      - name: Build and Push CLI Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./cli/Dockerfile
+          push: true
+          tags: ghcr.io/Podinate/cli:latest
+          labels: |
+            org.opencontainers.image.title=Podinate CLI
+            org.opencontainers.image.description=The alternative, friendly manager for your Kubernetes clusters. This CLI image can be used to interact with your Podinate cluster.
+            org.opencontainers.image.authors=John Cave
+            org.opencontainers.image.url=www.podinate.com
+
+      
+

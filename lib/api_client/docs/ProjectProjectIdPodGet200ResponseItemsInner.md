@@ -8,6 +8,8 @@ Name | Type | Description | Notes
 **Name** | **string** | The name of the pod | 
 **Image** | **string** | The container image to run for this pod | 
 **Tag** | **string** | The image tag to run for this pod | 
+**Command** | Pointer to **[]string** | The command to run when the pod starts. This overrides the ENTRYPOINT defined in the Dockerfile of the container. | [optional] 
+**Arguments** | Pointer to **[]string** | The arguments to pass to the command when the pod starts. If you specify arguments but not command, the arguments will be passed to the ENTRYPOINT command defined in the Dockerfile of the container. | [optional] 
 **Volumes** | Pointer to [**[]Volume**](Volume.md) | The storage volumes attached to this pod | [optional] 
 **Environment** | Pointer to [**[]EnvironmentVariable**](EnvironmentVariable.md) | The environment variables to pass to the pod | [optional] 
 **Services** | Pointer to [**[]Service**](Service.md) | The services to expose for this pod | [optional] 
@@ -113,6 +115,56 @@ and a boolean to check if the value has been set.
 
 SetTag sets Tag field to given value.
 
+
+### GetCommand
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetCommand() []string`
+
+GetCommand returns the Command field if non-nil, zero value otherwise.
+
+### GetCommandOk
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetCommandOk() (*[]string, bool)`
+
+GetCommandOk returns a tuple with the Command field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCommand
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetCommand(v []string)`
+
+SetCommand sets Command field to given value.
+
+### HasCommand
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasCommand() bool`
+
+HasCommand returns a boolean if a field has been set.
+
+### GetArguments
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetArguments() []string`
+
+GetArguments returns the Arguments field if non-nil, zero value otherwise.
+
+### GetArgumentsOk
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetArgumentsOk() (*[]string, bool)`
+
+GetArgumentsOk returns a tuple with the Arguments field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetArguments
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetArguments(v []string)`
+
+SetArguments sets Arguments field to given value.
+
+### HasArguments
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasArguments() bool`
+
+HasArguments returns a boolean if a field has been set.
 
 ### GetVolumes
 

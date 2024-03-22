@@ -23,7 +23,7 @@ var execCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		podID := args[0]
 		projectID := viper.GetString("project")
-		theProject, err := sdk.ProjectGetByID(projectID)
+		theProject, err := sdk.GetProjectByID(projectID)
 		if err != nil {
 			return err
 		}

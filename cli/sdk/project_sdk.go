@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 
 	"github.com/johncave/podinate/lib/api_client"
 	"github.com/spf13/viper"
@@ -16,8 +17,13 @@ type Project struct {
 // GetProjectByID returns a project by its ID
 func GetProjectByID(id string) (*Project, error) {
 	// Get the project from the API
-	resp, _, err := C.ProjectApi.ProjectIdGet(context.Background(), id).Account(viper.GetString("account")).Execute()
-	if err != nil {
+
+	if id == "" {
+		return nil, errors.New("No project selected")
+	}
+
+	resp, r, err := C.ProjectApi.ProjectIdGet(context.Background(), id).Account(viper.GetString("account")).Execute()
+	if err := handleAPIError(r, err); err != nil {
 		return nil, err
 	}
 	return &Project{
@@ -43,18 +49,19 @@ func CreateProject(id string, name string) (*Project, error) {
 	}, nil
 }
 
-func ProjectGetByID(id string) (*Project, error) {
-	// Get the project from the API
-	resp, _, err := C.ProjectApi.ProjectIdGet(context.Background(), id).Account(viper.GetString("account")).Execute()
-	if err != nil {
-		return nil, err
-	}
-	return &Project{
-		ID:         *resp.Id,
-		Name:       *resp.Name,
-		ResourceID: *resp.ResourceId,
-	}, nil
-}
+// func ProjectGetByID(id string) (*Project, error) {
+// 	// Get the project from the API
+// 	resp, r, err := C.ProjectApi.ProjectIdGet(context.Background(), id).Account(viper.GetString("account")).Execute()
+// 	fmt.Println("ProjectGetByID", id)
+// 	if err := handleAPIError(r, err); err != nil {
+// 		return nil, err
+// 	}
+// 	return &Project{
+// 		ID:         *resp.Id,
+// 		Name:       *resp.Name,
+// 		ResourceID: *resp.ResourceId,
+// 	}, nil
+// }
 
 func GetAllProjects(accountID string) ([]Project, error) {
 	// Get the project from the API

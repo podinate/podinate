@@ -104,7 +104,7 @@ func (p *Pod) getServiceSpec() *[]corev1.Service {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      service.Name,
 				Namespace: p.getNamespaceName(),
-				Annotations: map[string]string{
+				Labels: map[string]string{
 					"podinate.com/project":     p.Project.ID,
 					"podinate.com/pod":         p.ID,
 					"podinate.com/domain-name": service.DomainName,

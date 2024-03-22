@@ -1,0 +1,6 @@
+RAID Level,ZFS Equivalent,Description
+RAID0,Striped vdev,Data is spread across all disks with **no protection** from failure
+RAID1,Mirrored vdev,Data is mirrored across two or more disks; if one fails read from the other
+RAID5,RAIDZ1,Data is spread across all disks with one disk of redundancy
+RAID6,RAIDZ2,Data is spread across all disks with two disks of redundancy
+-,RAIDZ3,Data is spread across all disks with three disks of redundancy

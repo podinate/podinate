@@ -3,7 +3,6 @@ package router
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -50,6 +49,7 @@ func (c *PodAPIShim) Routes() api.Routes {
 
 // ProjectProjectIdPodPodIdLogsGet - Get the logs for a pod
 func (s *PodAPIShim) ProjectProjectIdPodPodIdLogsGet(w http.ResponseWriter, r *http.Request) {
+	// Parameter grabbing logic from the original function
 	params := mux.Vars(r)
 	query := r.URL.Query()
 	projectID := params["project_id"]
@@ -61,8 +61,8 @@ func (s *PodAPIShim) ProjectProjectIdPodPodIdLogsGet(w http.ResponseWriter, r *h
 		return
 	}
 
+	// If the client wants to stream logs
 	follow := false
-
 	if query.Get("follow") != "" {
 		follow, err = strconv.ParseBool(query.Get("follow"))
 		if err != nil {
@@ -98,35 +98,40 @@ func (s *PodAPIShim) ProjectProjectIdPodPodIdLogsGet(w http.ResponseWriter, r *h
 	}
 	defer in.Close()
 
-	// buf := new(bytes.Buffer)
-	// n, err := buf.ReadFrom(in)
-	// n, err := io.Copy(w, in)
-	// if err != nil {
-	// 	lh.Debug(r.Context(), "Error writing logs to response", "error", err, "bytes_written", n, "lines", lines)
-	// 	apierror.New(http.StatusInternalServerError, "Error writing logs to response "+err.Error()).EncodeJSONResponse(w)
-	// 	return
-	// }
-
 	lh.Debug(r.Context(), "Writing logs to response", "lines", lines)
+
+	// go func(w http.ResponseWriter) {
+	// 	for {
+	// 		if w == nil {
+	// 			return
+	// 		}
+	// 		if f, ok := w.(http.Flusher); ok {
+	// 			lh.Debug(r.Context(), "Flushing logs to response")
+	// 			f.Flush()
+	// 		}
+	// 		time.Sleep(1 * time.Second)
+	// 	}
+	// }(w)
+
+	// io.Copy(w, in)
+
+	// Lord, forgive me for this code
 	totalRead := int64(0)
 	for {
-		n, err := io.CopyN(w, in, 100)
+		// Copy one byte at a time to the response writer
+		n, err := io.CopyN(w, in, 1)
 		totalRead += n
-		// print bytes read followed by a carriage return
-		fmt.Printf("Bytes read: %d\r", totalRead)
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println("Finished copying") // print a newline
 				break
 			}
-			fmt.Println("Error copying:", err)
 			return
-			// handle error
+		}
+		// Immediately yeet the buffer
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
 		}
 	}
-	// lh.Debug(r.Context(), "Wrote logs to response, closing buffer", "bytes_written", n, "lines", lines)
-	// in.Close()
-	//w.Write([]byte("hello"))
 
 }
 

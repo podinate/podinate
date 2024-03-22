@@ -25,11 +25,10 @@ var logsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		podID := args[0]
 		projectID := viper.GetString("project")
-		theProject, err := sdk.ProjectGetByID(projectID)
+		theProject, err := sdk.GetProjectByID(projectID)
 		cobra.CheckErr(err)
 		thePod, err := theProject.GetPodByID(podID)
 		cobra.CheckErr(err)
-		//fmt.Printf("%+v\n", thePod)
 		lines, err := cmd.Flags().GetInt("tail")
 		cobra.CheckErr(err)
 		follow, err := cmd.Flags().GetBool("follow")

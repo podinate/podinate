@@ -33,6 +33,8 @@ type Pod struct {
 	Name        string
 	Image       string
 	Tag         string
+	Command     []string
+	Arguments   []string
 	Environment EnvironmentSlice
 	Services    ServiceSlice
 	Volumes     VolumeSlice
@@ -84,10 +86,10 @@ func GetByID(ctx context.Context, theProject *project.Project, id string) (Pod, 
 	}
 
 	// Get all the pods in the statefulset
+	// We will use this to get details that are stored in the Kubernetes cluster
 	options := metav1.ListOptions{
 		LabelSelector: "podinate.com/pod=" + id,
 	}
-	// var kpods *corev1.PodList
 
 	var kpods *corev1.PodList
 	for tries := 0; tries < 5; tries++ {
@@ -110,7 +112,10 @@ func GetByID(ctx context.Context, theProject *project.Project, id string) (Pod, 
 		time.Sleep(10 * time.Millisecond)
 	}
 
+	// Copy the info from Kubernetes to the pod
 	out.Status = string(kpods.Items[0].Status.Phase)
+	out.Command = kpods.Items[0].Spec.Containers[0].Command
+	out.Arguments = kpods.Items[0].Spec.Containers[0].Args
 
 	//lh.Debug(ctx, "Pod got by ID", "pod", out)
 
@@ -217,6 +222,7 @@ func Create(ctx context.Context, theProject *project.Project, requestedPod api.P
 		Image:       requestedPod.Image,
 		Tag:         requestedPod.Tag,
 		Project:     theProject,
+		Command:     requestedPod.Command,
 		Status:      "Creating",
 		Environment: EnvVarFromAPIMany(requestedPod.Environment),
 		Services:    servicesFromAPI(requestedPod.Services),
@@ -317,6 +323,7 @@ func (p *Pod) ToAPI() api.Pod {
 		Image:       p.Image,
 		Tag:         p.Tag,
 		Status:      p.Status,
+		Command:     p.Command,
 		Environment: EnvVarToAPIMany(p.Environment),
 		ResourceId:  p.GetResourceID(),
 		Services:    ServicesToAPI(p.Services),
@@ -475,7 +482,7 @@ func (p *Pod) GetLogsBuffer(ctx context.Context, lines int, follow bool) (io.Rea
 
 	//req := config.Client.RESTClient().Get().Namespace(p.Project.GetNamespaceName()).Resource("pods").Name(p.ID+"-0").SubResource("log").Param("tailLines", strconv.Itoa(lines)).Param("follow", "true")
 
-	podLogs, err := req.Stream(context.Background())
+	podLogs, err := req.Stream(ctx)
 	if err != nil {
 		return nil, apierror.NewWithError(http.StatusInternalServerError, "error getting logs from kubernetes", err)
 	}

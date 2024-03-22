@@ -1,0 +1,2 @@
+# LVM with Podinate
+Podinate can use LVM based storage through the [OpenEBS LVM Provisioner](https://github.com/openebs/lvm-localpv)

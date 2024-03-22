@@ -1,0 +1,5 @@
+{
+    "yaml.schemas": {
+        "https://json.schemastore.org/github-workflow.json": "file:///home/john/Code/podinate/.github/workflows/goreleaser.yml"
+    }
+}

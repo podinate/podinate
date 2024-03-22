@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -19,6 +18,8 @@ type Pod struct {
 	Name        string           `json:"name"`
 	Image       string           `json:"image"`
 	Tag         string           `json:"tag"`
+	Command     []string         `json:"command"`
+	Arguments   []string         `json:"arguments"`
 	Status      string           `json:"status"`
 	CreatedAt   string           `json:"created_at"`
 	ResourceID  string           `json:"resource_id"`
@@ -28,7 +29,7 @@ type Pod struct {
 }
 
 // GetPodByID returns a pod by ID from the given project
-func (p *Project) GetPodByID(id string) (*Pod, *SDKError) {
+func (p *Project) GetPodByID(id string) (*Pod, error) {
 	resp, r, err := C.PodApi.ProjectProjectIdPodPodIdGet(context.Background(), p.ID, id).Account(viper.GetString("account")).Execute()
 	if err := handleAPIError(r, err); err != nil {
 		return nil, err
@@ -91,6 +92,8 @@ func getPodFromApi(p *Project, in *api_client.Pod) *Pod {
 		Name:        in.Name,
 		Image:       in.Image,
 		Tag:         in.Tag,
+		Command:     in.Command,
+		Arguments:   in.Arguments,
 		Status:      *in.Status,
 		ResourceID:  *in.ResourceId,
 		Project:     p,
@@ -116,7 +119,7 @@ func (p *Pod) GetLogsBuffer(lines int, follow bool) (io.ReadCloser, error) {
 	req.Header.Set("Authorization", viper.GetString("api_key"))
 	req.Header.Set("Account", viper.GetString("account"))
 	r, err := hc.Do(req)
-	fmt.Println("r", r, "err", err)
+	//fmt.Println("r", r, "err", err)
 	return r.Body, err
 }
 
@@ -143,6 +146,8 @@ func (p *Pod) ToAPI() api_client.Pod {
 		Name:        p.Name,
 		Image:       p.Image,
 		Tag:         p.Tag,
+		Command:     p.Command,
+		Arguments:   p.Arguments,
 		Environment: environmentVariablesToAPI(p.Environment),
 		Volumes:     volumesToAPI(p.Volumes),
 		Services:    servicesToAPI(p.Services),

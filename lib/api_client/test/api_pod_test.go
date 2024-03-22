@@ -43,7 +43,21 @@ func Test_api_client_PodApiService(t *testing.T) {
 		var projectId string
 		var podId string
 
-		resp, httpRes, err := apiClient.PodApi.ProjectProjectIdPodPodIdDelete(context.Background(), projectId, podId).Execute()
+		httpRes, err := apiClient.PodApi.ProjectProjectIdPodPodIdDelete(context.Background(), projectId, podId).Execute()
+
+		require.Nil(t, err)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
+	t.Run("Test PodApiService ProjectProjectIdPodPodIdExecPost", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		var projectId string
+		var podId string
+
+		resp, httpRes, err := apiClient.PodApi.ProjectProjectIdPodPodIdExecPost(context.Background(), projectId, podId).Execute()
 
 		require.Nil(t, err)
 		require.NotNil(t, resp)
@@ -66,14 +80,29 @@ func Test_api_client_PodApiService(t *testing.T) {
 
 	})
 
-	t.Run("Test PodApiService ProjectProjectIdPodPodIdPatch", func(t *testing.T) {
+	t.Run("Test PodApiService ProjectProjectIdPodPodIdLogsGet", func(t *testing.T) {
 
 		t.Skip("skip test") // remove to run test
 
 		var projectId string
 		var podId string
 
-		resp, httpRes, err := apiClient.PodApi.ProjectProjectIdPodPodIdPatch(context.Background(), projectId, podId).Execute()
+		resp, httpRes, err := apiClient.PodApi.ProjectProjectIdPodPodIdLogsGet(context.Background(), projectId, podId).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
+	t.Run("Test PodApiService ProjectProjectIdPodPodIdPut", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		var projectId string
+		var podId string
+
+		resp, httpRes, err := apiClient.PodApi.ProjectProjectIdPodPodIdPut(context.Background(), projectId, podId).Execute()
 
 		require.Nil(t, err)
 		require.NotNil(t, resp)

@@ -46,11 +46,11 @@ func Test_api_client_AccountApiService(t *testing.T) {
 
 	})
 
-	t.Run("Test AccountApiService AccountPatch", func(t *testing.T) {
+	t.Run("Test AccountApiService AccountPost", func(t *testing.T) {
 
 		t.Skip("skip test") // remove to run test
 
-		resp, httpRes, err := apiClient.AccountApi.AccountPatch(context.Background()).Execute()
+		resp, httpRes, err := apiClient.AccountApi.AccountPost(context.Background()).Execute()
 
 		require.Nil(t, err)
 		require.NotNil(t, resp)
@@ -58,11 +58,11 @@ func Test_api_client_AccountApiService(t *testing.T) {
 
 	})
 
-	t.Run("Test AccountApiService AccountPost", func(t *testing.T) {
+	t.Run("Test AccountApiService AccountPut", func(t *testing.T) {
 
 		t.Skip("skip test") // remove to run test
 
-		resp, httpRes, err := apiClient.AccountApi.AccountPost(context.Background()).Execute()
+		resp, httpRes, err := apiClient.AccountApi.AccountPut(context.Background()).Execute()
 
 		require.Nil(t, err)
 		require.NotNil(t, resp)

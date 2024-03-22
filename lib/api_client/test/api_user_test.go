@@ -72,6 +72,18 @@ func Test_api_client_UserApiService(t *testing.T) {
 
 	})
 
+	t.Run("Test UserApiService UserLoginPost", func(t *testing.T) {
+
+		t.Skip("skip test") // remove to run test
+
+		resp, httpRes, err := apiClient.UserApi.UserLoginPost(context.Background()).Execute()
+
+		require.Nil(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, 200, httpRes.StatusCode)
+
+	})
+
 	t.Run("Test UserApiService UserLoginRedirectTokenGet", func(t *testing.T) {
 
 		t.Skip("skip test") // remove to run test

@@ -380,6 +380,7 @@ func readConfigFile() (*GlobalConfigFile, error) {
 
 // handleAPIError handles API errors
 func handleAPIError(r *http.Response, err error) *SDKError {
+	//fmt.Println("handleAPIError", r, err)
 	if r == nil {
 		return newError(0, "Could not connect to Podinate API: "+err.Error())
 	}
