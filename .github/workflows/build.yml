@@ -30,7 +30,7 @@ jobs:
           context: .
           file: ./api-backend/Dockerfile
           push: true
-          tags: ghcr.io/Podinate/controller:latest
+          tags: ghcr.io/podinate/controller:latest
           labels: |
             org.opencontainers.image.title=Podinate controller
             org.opencontainers.image.description=The alternative, friendly manager for your Kubernetes clusters. This is the controller to install on your Kubernetes cluster.
@@ -43,7 +43,7 @@ jobs:
           context: .
           file: ./cli/Dockerfile
           push: true
-          tags: ghcr.io/Podinate/cli:latest
+          tags: ghcr.io/podinate/cli:latest
           labels: |
             org.opencontainers.image.title=Podinate CLI
             org.opencontainers.image.description=The alternative, friendly manager for your Kubernetes clusters. This CLI image can be used to interact with your Podinate cluster.
