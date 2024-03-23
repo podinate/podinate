@@ -45,6 +45,7 @@ brews:
     repository:
       owner: podinate
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
 
 
 changelog:
