@@ -11,7 +11,11 @@ docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
     -i /local/api/openapi.yaml \
     -g go \
     -o /local/lib/api_client \
-    --additional-properties packageName=api_client
+    --additional-properties packageName=api_client \
+    --additional-properties goSourceFilePackage=api_client \
+    --git-user-id=Podinate \
+    --git-repo-id=podinate/lib/api_client
+
 
 echo "Using sudo to fix user permissions on generated files."
 
