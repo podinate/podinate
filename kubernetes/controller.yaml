@@ -66,10 +66,10 @@ metadata:
   labels:
     app: podinate-controller
 spec:
-  clusterIP: None
-  nodePort: 31443
+  type: NodePort
   ports:
     - port: 3000
+      nodePort: 31443
       name: podinate-controller
   selector:
     app: podinate-controller

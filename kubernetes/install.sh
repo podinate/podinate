@@ -125,6 +125,7 @@ data:
     #!/bin/bash
     go install github.com/covrom/goerd/cmd/goerd@latest
     curl -O https://raw.githubusercontent.com/podinate/podinate/main/database/goerd.yaml
+    printenv
     goerd -c apply -from goerd.yaml -to "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
 
 ---
