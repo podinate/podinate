@@ -76,11 +76,11 @@ Plan is for this to be a bash script designed to run on Ubuntu. When it comes ti
     - Kubectl apply -f from github
 - Check connection to the Podinate controller
 
-- Most of the above is done, this is new:
+- Most of the above is just yaml wrangling, this is new:
 - Create initial admin user
 - Create credential for admin user
 - Use credential to create default account
-- Present the login information to the user 
+- Present the login information to the user (base64-encoded?)
 
 # Demo Steps
 ## Introduction

@@ -1,0 +1,334 @@
+#================================================================================
+# GoERD configuration file
+# This file defines all the tables in the format preferred by the goerd tool
+# The goerd tool is used to manage postgres schema and migrations
+# https://github.com/covrom/goerd
+#================================================================================
+name: "podinate"
+schema: public
+tables:
+  account:
+    type: TABLE
+    columns:
+      created:
+        type: timestamp without time zone
+        default: CURRENT_TIMESTAMP
+      flags:
+        type: jsonb
+        nullable: true
+      id:
+        type: text
+        nullable: true
+      name:
+        type: text
+        nullable: true
+      owner_uuid:
+        type: uuid
+        nullable: true
+      uuid:
+        type: uuid
+        pk: true
+    constraints:
+      unique_account_slug:
+        type: UNIQUE
+        columns: [id]
+    relations:
+      user:
+        name: owner_uuid
+        columns: [owner_uuid]
+        parentColumns: [uuid]
+  api_key:
+    type: TABLE
+    columns:
+      decription:
+        type: text
+        nullable: true
+      expires:
+        type: timestamp without time zone
+        nullable: true
+      issued:
+        type: timestamp without time zone
+        default: CURRENT_TIMESTAMP
+      key:
+        type: text
+      last_used:
+        type: timestamp without time zone
+        nullable: true
+      name:
+        type: text
+      user_uuid:
+        type: uuid
+    relations:
+      user:
+        name: api_key_user_uuid
+        columns: [user_uuid]
+        parentColumns: [uuid]
+  login_session:
+    type: TABLE
+    columns:
+      key:
+        type: text
+        pk: true
+      session_id:
+        type: uuid
+        pk: true
+      value:
+        type: text
+        nullable: true
+  oauth_login:
+    type: TABLE
+    columns:
+      access_token:
+        type: text
+      authorised_user:
+        type: uuid
+      provider:
+        type: text
+        pk: true
+      provider_id:
+        type: text
+        pk: true
+      provider_username:
+        type: text
+        nullable: true
+      refresh_token:
+        type: text
+    relations:
+      user:
+        name: authorised_user_uuid
+        columns: [authorised_user]
+        parentColumns: [uuid]
+  pod_services:
+    type: TABLE
+    columns:
+      domain_name:
+        type: text
+        nullable: true
+      name:
+        type: text
+        nullable: true
+      pod_uuid:
+        type: uuid
+        nullable: true
+      port:
+        type: smallint
+      protocol:
+        type: varchar(4)
+        nullable: true
+      target_port:
+        type: smallint
+        nullable: true
+      uuid:
+        type: uuid
+        pk: true
+        default: gen_random_uuid()
+    constraints:
+      unique_domain_name:
+        type: UNIQUE
+        columns: [domain_name]
+    relations:
+      project_pods:
+        name: pod_uuid_fk
+        columns: [pod_uuid]
+        parentColumns: [uuid]
+  pod_volumes:
+    type: TABLE
+    columns:
+      mount_path:
+        type: text
+      name:
+        type: text
+      pod_uuid:
+        type: uuid
+      size:
+        type: smallint
+      uuid:
+        type: uuid
+        pk: true
+    relations:
+      project_pods:
+        name: pod_uuid_fk
+        columns: [pod_uuid]
+        parentColumns: [uuid]
+  policy:
+    type: TABLE
+    columns:
+      account_uuid:
+        type: uuid
+        nullable: true
+      added_by:
+        type: uuid
+        nullable: true
+      content:
+        type: text
+        nullable: true
+      current_version:
+        type: smallint
+        nullable: true
+      date_added:
+        type: timestamp without time zone
+        nullable: true
+        default: CURRENT_TIMESTAMP
+      id:
+        type: text
+        nullable: true
+      notes:
+        type: text
+        nullable: true
+      uuid:
+        type: uuid
+        pk: true
+        default: gen_random_uuid()
+    relations:
+      account:
+        name: account_uuid_fk
+        columns: [account_uuid]
+        parentColumns: [uuid]
+  policy_attachment:
+    type: TABLE
+    columns:
+      account_uuid:
+        type: uuid
+        pk: true
+      attached_by:
+        type: text
+        nullable: true
+      date_attached:
+        type: timestamp without time zone
+        nullable: true
+        default: CURRENT_TIMESTAMP
+      policy_uuid:
+        type: uuid
+        pk: true
+      requestor_id:
+        type: text
+        pk: true
+      valid_until:
+        type: timestamp without time zone
+        nullable: true
+    relations:
+      account:
+        name: account_uuid
+        columns: [account_uuid]
+        parentColumns: [uuid]
+      policy:
+        name: policy_uuid
+        columns: [policy_uuid]
+        parentColumns: [uuid]
+  policy_version:
+    type: TABLE
+    columns:
+      comment:
+        type: text
+      content:
+        type: text
+        nullable: true
+      date_made:
+        type: timestamp without time zone
+        nullable: true
+        default: CURRENT_TIMESTAMP
+      policy_uuid:
+        type: uuid
+        nullable: true
+      user_uuid:
+        type: uuid
+        nullable: true
+      uuid:
+        type: uuid
+        pk: true
+        default: gen_random_uuid()
+      version_number:
+        type: smallint
+    relations:
+      policy:
+        name: policy_uuid
+        columns: [policy_uuid]
+        parentColumns: [uuid]
+  project:
+    type: TABLE
+    columns:
+      account_uuid:
+        type: uuid
+        nullable: true
+      created:
+        type: timestamp without time zone
+        nullable: true
+        default: CURRENT_TIMESTAMP
+      id:
+        type: text
+      name:
+        type: text
+        nullable: true
+      uuid:
+        type: uuid
+        pk: true
+        default: gen_random_uuid()
+    constraints:
+      unique_project_slug_per_account:
+        type: UNIQUE
+        columns: [id, account_uuid]
+    relations:
+      account:
+        name: account_fk
+        columns: [account_uuid]
+        parentColumns: [uuid]
+  project_pods:
+    type: TABLE
+    columns:
+      environment:
+        type: jsonb
+        nullable: true
+      id:
+        type: text
+        nullable: true
+      image:
+        type: text
+        nullable: true
+      name:
+        type: text
+        nullable: true
+      project_uuid:
+        type: uuid
+        nullable: true
+      tag:
+        type: text
+        nullable: true
+      uuid:
+        type: uuid
+        pk: true
+        default: gen_random_uuid()
+    relations:
+      project:
+        name: project_fk
+        columns: [project_uuid]
+        parentColumns: [uuid]
+  user:
+    type: TABLE
+    columns:
+      avatar_url:
+        type: text
+        nullable: true
+      created:
+        type: timestamp without time zone
+        nullable: true
+        default: CURRENT_TIMESTAMP
+      display_name:
+        type: text
+        nullable: true
+      email:
+        type: text
+      flags:
+        type: jsonb
+        nullable: true
+      id:
+        type: text
+      main_provider:
+        type: text
+        nullable: true
+      password_hash:
+        type: text
+        nullable: true
+      uuid:
+        type: uuid
+        pk: true
+        default: gen_random_uuid()

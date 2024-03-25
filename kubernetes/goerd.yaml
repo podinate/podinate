@@ -1,0 +1,43 @@
+# Goerd is what we use to manage postgres schema and migrations 
+
+# Path: kubernetes/goerd.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: goerd-migration-script
+  namespace: podinate
+data:
+  migration.sh: |
+    #!/bin/bash
+    go install github.com/covrom/goerd/cmd/goerd@latest
+    
+    goerd 
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: goerd
+  namespace: podinate
+spec:
+  containers:
+    - name: goerd
+      image: golang:1.22
+      command: [ "/bin/bash", "-c", "--" ]
+      args: [ "while true; do sleep 30; done;" ]
+      env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: masterdb-secret
+              key: superUserPassword
+        - name: POSTGRES_DB
+          value: podinate
+        - name: POSTGRES_HOST
+          value: masterdb
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: GOERD_MIGRATIONS_DIR
+          value: /migrations
