@@ -61,11 +61,22 @@ else
     exit 1
 fi
 
+# Clear to prevent blue screen from prompt continuing to show
+clear
+
 EMAIL=$(echo $details | awk '{print $1}')
 echo "Email: $EMAIL"
 
 echo "Setting up certbot..."
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.0/cert-manager.yaml
+
+# Wait for cert-manager to be ready
+echo "Waiting for cert-manager to be ready..."
+until kubectl -n cert-manager wait pod --for condition=Ready -l app.kubernetes.io/name=cert-manager-webhook --timeout 180s
+do 
+    echo "Hold up, Kubernetes cluster isn't ready..."
+    sleep 5
+done
 
 cat <<EOF | kubectl apply -f -
 apiVersion: cert-manager.io/v1
@@ -108,6 +119,8 @@ stringData:
   replicationUserPassword: $(openssl rand -base64 32 | tr -cd '[:alpha:]')
 EOF
 
+echo "Waiting for Postgres to be ready..."
+kubectl -n podinate wait pod --for=condition=Ready -l app=postgres --timeout 120s
 
 # Run the Postgres migrations
 echo "Setting up database..."
@@ -122,11 +135,12 @@ metadata:
   namespace: podinate
 data:
   migration.sh: |
-    #!/bin/bash
     go install github.com/covrom/goerd/cmd/goerd@latest
     curl -O https://raw.githubusercontent.com/podinate/podinate/main/database/goerd.yaml
-    printenv
-    goerd -c apply -from goerd.yaml -to "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
+    printenv | sort
+    DESTINATION=postgres://\$POSTGRES_USER:\$POSTGRES_PASSWORD@\$POSTGRES_HOST:\$POSTGRES_PORT/\$POSTGRES_DB
+    echo "Destination: \$DESTINATION"
+    goerd -c apply -from goerd.yaml -to \$DESTINATION
 
 ---
 apiVersion: batch/v1
@@ -143,7 +157,7 @@ spec:
       containers:
         - name: goerd
           image: golang:1.22
-          command: [ "/migrations/migration.sh" ]
+          command: [ "bash", "/migrations/migration.sh" ]
           env:
             - name: POSTGRES_USER
               value: postgres
@@ -173,7 +187,8 @@ spec:
             defaultMode: 0777
 EOF
 
-kubectl -n podinate wait pod --for=condition=Ready -l job-name=goerd
+echo "Waiting for migratior to be ready..."
+kubectl -n podinate wait pod --for=condition=Ready -l job-name=goerd --timeout 120s
 kubectl -n podinate logs -f -l job-name=goerd
 
 # Install the Podinate controller

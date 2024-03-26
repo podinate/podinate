@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: StatefulSet 
+metadata:
+  name: atlas
+  namespace: podinate
+  labels:
+    app: atlas
+spec:
+  selector:
+    matchLabels:
+      app: atlas
+  template:
+    metadata:
+      labels:
+        app: atlas
+    spec:
+      containers:
+        - name: atlas
+          image: arigaio/atlas:latest-alpine
+          command: [ "sleep", "9999999999" ]
+          # args: [ "while true; do sleep 30; done;" ]
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: masterdb-secret
+                  key: superUserPassword
+            - name: POSTGRES_DB
+              value: podinate
+            - name: POSTGRES_HOST
+              value: postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: atlas_MIGRATIONS_DIR
+              value: /migrations

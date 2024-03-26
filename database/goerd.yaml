@@ -63,18 +63,18 @@ tables:
         name: api_key_user_uuid
         columns: [user_uuid]
         parentColumns: [uuid]
-  login_session:
-    type: TABLE
-    columns:
-      key:
-        type: text
-        pk: true
-      session_id:
-        type: uuid
-        pk: true
-      value:
-        type: text
-        nullable: true
+  # login_session:
+  #   type: TABLE
+  #   columns:
+  #     key:
+  #       type: text
+  #       pk: true
+  #     session_id:
+  #       type: uuid
+  #       pk: true
+  #     value:
+  #       type: text
+  #       nullable: true
   oauth_login:
     type: TABLE
     columns:

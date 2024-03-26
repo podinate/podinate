@@ -1,0 +1,55 @@
+# Goerd is what we use to manage postgres schema and migrations 
+
+## Path: kubernetes/goerd.yaml
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: goerd-migration-script
+#   namespace: podinate
+# data:
+#   migration.sh: |
+#     #!/bin/bash
+#     go install github.com/covrom/goerd/cmd/goerd@latest
+#     curl -O https://raw.githubusercontent.com/podinate/podinate/main/database/goerd.yaml
+#     goerd -c apply -from goerd.yaml -to "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
+
+# ---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: atlas
+  namespace: podinate
+  labels:
+    app: atlas
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: atlas
+          image: arigaio/atlas
+          #command: [ "/migrations/migration.sh" ]
+          args: [
+            "schema",
+            "apply",
+            "--url",
+            "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable",
+            "--to",
+            "https://raw.githubusercontent.com/podinate/podinate/main/database/atlas.yaml"
+          ]
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: masterdb-secret
+                  key: superUserPassword
+            - name: POSTGRES_DB
+              value: podinate
+            - name: POSTGRES_HOST
+              value: postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: GOERD_MIGRATIONS_DIR
+              value: /migrations
