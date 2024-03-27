@@ -1,19 +1,18 @@
 # Goerd is what we use to manage postgres schema and migrations 
 
 ## Path: kubernetes/goerd.yaml
-# apiVersion: v1
-# kind: ConfigMap
-# metadata:
-#   name: goerd-migration-script
-#   namespace: podinate
-# data:
-#   migration.sh: |
-#     #!/bin/bash
-#     go install github.com/covrom/goerd/cmd/goerd@latest
-#     curl -O https://raw.githubusercontent.com/podinate/podinate/main/database/goerd.yaml
-#     goerd -c apply -from goerd.yaml -to "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: migration-script
+  namespace: podinate
+data:
+  migration.sh: |
+    #!/bin/sh
+    wget https://raw.githubusercontent.com/podinate/podinate/main/database/atlas.hcl
+    /atlas schema apply --url "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:5432/$POSTGRES_DB?sslmode=disable" --to file://atlas.hcl --auto-approve
 
-# ---
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -27,15 +26,11 @@ spec:
       restartPolicy: Never
       containers:
         - name: atlas
-          image: arigaio/atlas
+          image: arigaio/atlas:latest-alpine
           #command: [ "/migrations/migration.sh" ]
-          args: [
-            "schema",
-            "apply",
-            "--url",
-            "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB?sslmode=disable",
-            "--to",
-            "https://raw.githubusercontent.com/podinate/podinate/main/database/atlas.yaml"
+          command: [
+            "sh",
+            "/migrations/migration.sh"
           ]
           env:
             - name: POSTGRES_USER
@@ -51,5 +46,15 @@ spec:
               value: postgres
             - name: POSTGRES_PORT
               value: "5432"
-            - name: GOERD_MIGRATIONS_DIR
-              value: /migrations
+          volumeMounts:
+            - name: migration-script
+              mountPath: /migrations
+
+      volumes:
+        - name: migration-script
+          configMap:
+            name: migration-script
+            items:
+              - key: migration.sh
+                path: migration.sh
+            defaultMode: 0777

@@ -72,9 +72,9 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 
 # Wait for cert-manager to be ready
 echo "Waiting for cert-manager to be ready..."
-until kubectl -n cert-manager wait pod --for condition=Ready -l app.kubernetes.io/name=cert-manager-webhook --timeout 180s
+until kubectl -n cert-manager wait pod --for condition=Ready -l app.kubernetes.io/component=webhook --timeout 180s
 do 
-    echo "Hold up, Kubernetes cluster isn't ready..."
+    echo "Waiting for Kubernetes cluster to be ready..."
     sleep 5
 done
 
@@ -119,45 +119,43 @@ stringData:
   replicationUserPassword: $(openssl rand -base64 32 | tr -cd '[:alpha:]')
 EOF
 
-echo "Waiting for Postgres to be ready..."
-kubectl -n podinate wait pod --for=condition=Ready -l app=postgres --timeout 120s
+echo "Waiting for database to be ready..."
+kubectl -n podinate wait pod --for=condition=Ready -l app=postgres --timeout 180s
 
 # Run the Postgres migrations
 echo "Setting up database..."
 cat << EOF | kubectl apply -f - 
-# Goerd is what we use to manage postgres schema and migrations 
-
-## Path: kubernetes/goerd.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: goerd-migration-script
+  name: migration-script
   namespace: podinate
 data:
   migration.sh: |
-    go install github.com/covrom/goerd/cmd/goerd@latest
-    curl -O https://raw.githubusercontent.com/podinate/podinate/main/database/goerd.yaml
-    printenv | sort
-    DESTINATION=postgres://\$POSTGRES_USER:\$POSTGRES_PASSWORD@\$POSTGRES_HOST:\$POSTGRES_PORT/\$POSTGRES_DB
-    echo "Destination: \$DESTINATION"
-    goerd -c apply -from goerd.yaml -to \$DESTINATION
+    #!/bin/sh
+    wget https://raw.githubusercontent.com/podinate/podinate/main/database/atlas.hcl
+    /atlas schema apply --url "postgres://\$POSTGRES_USER:\$POSTGRES_PASSWORD@\$POSTGRES_HOST:5432/\$POSTGRES_DB?sslmode=disable" --to file://atlas.hcl --auto-approve
 
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: goerd
+  name: atlas
   namespace: podinate
   labels:
-    app: goerd
+    app: atlas
 spec:
   template:
     spec:
       restartPolicy: Never
       containers:
-        - name: goerd
-          image: golang:1.22
-          command: [ "bash", "/migrations/migration.sh" ]
+        - name: atlas
+          image: arigaio/atlas:latest-alpine
+          #command: [ "/migrations/migration.sh" ]
+          command: [
+            "sh",
+            "/migrations/migration.sh"
+          ]
           env:
             - name: POSTGRES_USER
               value: postgres
@@ -172,25 +170,35 @@ spec:
               value: postgres
             - name: POSTGRES_PORT
               value: "5432"
-            - name: GOERD_MIGRATIONS_DIR
-              value: /migrations
           volumeMounts:
-            - name: goerd-migration-script
+            - name: migration-script
               mountPath: /migrations
+
       volumes:
-        - name: goerd-migration-script
+        - name: migration-script
           configMap:
-            name: goerd-migration-script
+            name: migration-script
             items:
               - key: migration.sh
                 path: migration.sh
             defaultMode: 0777
 EOF
 
-echo "Waiting for migratior to be ready..."
-kubectl -n podinate wait pod --for=condition=Ready -l job-name=goerd --timeout 120s
-kubectl -n podinate logs -f -l job-name=goerd
+echo "Waiting for migrator setup..."
+kubectl -n podinate wait pod --for=condition=Ready -l job-name=atlas --timeout 120s
+kubectl -n podinate logs -f -l job-name=atlas
+
+until kubectl -n podinate wait --for condition=complete job/atlas --timeout 10s
+do
+    echo "Migrations not complete. Let's try again..."
+    sleep 1
+    kubectl -n podinate logs -f -l job-name=atlas
+done
+
 
 # Install the Podinate controller
 echo "Installing Podinate controller..."
+kubectl -n podinate delete deployment podinate-controller
 kubectl -n podinate apply -f https://raw.githubusercontent.com/podinate/podinate/main/kubernetes/controller.yaml
+
+echo "Yippee! Podinate controller installed."

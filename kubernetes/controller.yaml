@@ -1,9 +1,9 @@
 # the kubernetes yaml for a deployment running the image cosmtrek/air
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: podinate
----
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: podinate
+# ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

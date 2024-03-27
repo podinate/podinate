@@ -20,22 +20,14 @@ Podinate CLI vX.X.X
 
 ## Create a Cluster
 
+Podinate uses Kubernetes to provide cluster services. If you just want to create a simple single-node cluster, the installer will do that for you. If you want to do something more custom, start with the [K3s Quickstart](https://docs.k3s.io/quick-start) documentation. If you want to install a cluster on multiple hosts we highly recommend the great [K3sup project](https://docs.k3s.io/quick-start).
 
-If you're creating a new cluster from scratch, we recommend a standard Ubuntu 22.04 installation as a starting point. If you don't have an existing Kubernetes cluster you want to use, run the following command to install the recommended K3s cluster. 
+### Install Podinate Cluster
+The Podinate installer is designed to run on a fresh, dedicated Ubuntu 24.04 instance. This could be a virtual machine on your homelab, or a VM instance from your favourite cloud provider. The instance should have at least 2GB of ram. In the command prompt of your server instance, run:
 ```bash
-curl -sfL https://get.k3s.io | sh -
+curl -sfL https://raw.githubusercontent.com/podinate/podinate/main/kubernetes/install.sh | sudo bash
 ```
-For more information on K3s visit the [K3s Quickstart](https://docs.k3s.io/quick-start) documentation. If you want to install a cluster on multiple hosts we highly recommend the great [K3sup project](https://docs.k3s.io/quick-start).
-
-### Install Podinate controller
-Now we will install Podinate onto the newly created cluster. In the command prompt of your server instance, run:
-```bash
-curl -Lo https://raw.github.com/Podinate/podinate/.../server.sh | sudo bash
-```
-Podinate will use the standard $KUBECONFIG environment variable to connect to the cluster. If you want to use a specific kubeconfig file and context within the file, use the following command.
-```bash
-curl -Lo https://raw.github.com/Podinate/podinate/.../server.sh | KUBECONFIG=~/.kube/config CONTEXT=<your-context> sudo bash
-```
+If Podinate detects an existing cluster, it will ask if you want to install Podinate cluster to that Kubernetes cluster.
 
 ??? note
     This will install:
@@ -81,7 +73,7 @@ Podinate divides your pods and other resources into Projects. This means you can
 ```bash
 podinate get projects
 ```
-This will show a pretty table of your projects with only one entry: `Quick Start`. Let's set that as the default for your project.
+This will show a table of your projects with only one entry: `Quick Start`. Let's set that as the default for your project.
 
 ```bash
 echo "project: quick-start" > podinate.yaml
@@ -89,7 +81,7 @@ echo "project: quick-start" > podinate.yaml
 Now while you are in this directory, Podinate will look at the Project with the ID `quick-start` by default.
 
 ## Introducing Pods
-A Podinate Pod is a container running in your cluster. You may be familiar with the concept of a Pod from other container managers like Kubernetes and Podman, and the concept is similar here. 
+A Podinate Pod is a container running in your cluster. You may be familiar with the concept of a Pod from other container managers like Kubernetes and Podman. 
 ```bash
 podinate get pods 
 ```
