@@ -11,6 +11,6 @@ RUN go get -d -v ./...
 RUN go build -a -installsuffix cgo -o controller .
 
 FROM ubuntu AS runtime
-COPY --from=build /go/src/api-backend/controller ./
-EXPOSE 8080/tcp
-ENTRYPOINT ["./controller"]
+COPY --from=build /go/src/api-backend/controller /usr/bin/controller
+EXPOSE 3000/tcp
+ENTRYPOINT ["/bin/controller"]

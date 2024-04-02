@@ -76,9 +76,9 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 
 # Wait for cert-manager to be ready
 echo "5. Waiting for Kubernetes install..."
-until kubectl -n cert-manager wait pod --for condition=Ready -l app.kubernetes.io/component=webhook --timeout 180s
+until kubectl -n cert-manager wait pod --for condition=Ready -l app.kubernetes.io/component=webhook --timeout 20s
 do 
-    echo "5. Waiting for Kubernetes cluster to be ready..."
+    echo "5. Kubernetes cluster still not ready, please wait..."
     sleep 5
 done
 
@@ -213,7 +213,35 @@ echo "8. Initializing Podinate (nearly done!)..."
 IP=$(ip -4 -o addr show scope global | grep enp | awk '{gsub(/\/.*/,"",$4); print $4}')
 
 # Runs Podinate init to create the initial user and copies the profile out
-kubectl -n podinate exec -it $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}') -- podinate init --email $EMAIL --ip $IP
-kubectl -n podinate cp $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}'):/profile.yaml config.yaml
+kubectl -n podinate exec -it $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}') -- controller init --email $EMAIL --ip $IP
+kubectl -n podinate cp $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}'):/profile.yaml credentials.yaml
 
-echo "Yippee! Podinate controller installed."
+if podinate; then 
+    echo "9. Podinate CLI installed."
+    cat credentials.yaml | podinate login
+else
+    if brew info; then 
+        echo "9. Upgrading Podinate CLI via Homebrew..."
+        brew upgrade podinate
+    else
+        echo "9. Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+        test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+        echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+
+        echo "9. Installing Podinate CLI via Homebrew..."
+        brew tap podinate/tap
+        brew install podinate
+    fi
+fi
+
+
+echo "Yippee! Podinate controller installed. You can now run 'podinate' to interact with your new Podinate cluster.\n"
+
+echo "If you want to log in to Podinate on your local machine, run 'podinate login' and paste the following:\n\n"
+
+cat credentials.yaml
+
+echo "\n\n"
+echo "If this is your first time using Podinate, try our quickstart guide at https://docs.podinate.com/getting-started/quick-start/"
