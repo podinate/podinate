@@ -29,14 +29,22 @@ make dev-port-forward:
 postgres-shell:
 	bash -c "kubectl -n podinate exec -it postgres-0 -- psql 'postgresql://postgres:$$(kubectl -n podinate get secret masterdb-secret -o jsonpath='{.data.superUserPassword}' | base64 --decode ; echo)@localhost/podinate'"
 
+# Apply postgres migrations with atlas
+postgres-migrate:
+	kubectl apply -f kubernetes/atlas.yaml
+	kubectl wait pod --for=condition=Ready atlas-0
+	kubectl cp database/atlas.hcl atlas-0:/
+	kubectl exec -it atlas-0 -- /migrations/migration.sh
+	kubectl delete -f kubernetes/atlas.yaml
+	
 # After API spec change, rebuild the generate code
 api-generate:
 	bash api/generate.sh
 
-salt-sync:
-	ssh ubuntu@salt.podinate.com "rm -rf ~/salt/*"
-	scp -r infrastructure/salt/* ubuntu@salt.podinate.com:~/salt/
-	ssh ubuntu@salt.podinate.com "sudo cp -r ~/salt/* /srv/salt/"
+# salt-sync:
+# 	ssh ubuntu@salt.podinate.com "rm -rf ~/salt/*"
+# 	scp -r infrastructure/salt/* ubuntu@salt.podinate.com:~/salt/
+# 	ssh ubuntu@salt.podinate.com "sudo cp -r ~/salt/* /srv/salt/"
 
-salt-apply: salt-sync
-	ssh ubuntu@salt.podinate.com "sudo salt '*' state.apply"
+# salt-apply: salt-sync
+# 	ssh ubuntu@salt.podinate.com "sudo salt '*' state.apply"

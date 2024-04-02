@@ -18,10 +18,11 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
+	tea "github.com/charmbracelet/bubbletea"
+	textarea "github.com/johncave/podinate/cli/tui/textarea"
 	api "github.com/johncave/podinate/lib/api_client"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
-	"golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/yaml.v3"
 )
 
@@ -161,6 +162,15 @@ type Profile struct {
 	APIUrl string `yaml:"api_url"`
 }
 
+func SaveYamlProfile(in string) error {
+	var profile Profile
+	err := yaml.Unmarshal([]byte(in), &profile)
+	if err != nil {
+		return err
+	}
+	return SaveProfile(profile.APIUrl, profile.Name, profile.APIKey)
+}
+
 // SaveProfile saves the profile to the config file
 func SaveProfile(apiURL string, profileName string, apiKey string) error {
 	// TODO: Check for existing profiles
@@ -274,23 +284,74 @@ func StartLogin() {
 	// input := tea.NewProgram(textinput.New("Podinate API URL", "https://localhost:31337"))
 	// input.Run()
 
-	var apiURL string
-	var username string
+	// input = tea.NewProgram(textinput.New("Username", ""))
 
-	fmt.Print("Enter your Podinate API URL: ")
-	fmt.Scanln(&apiURL)
+	// var value *string
 
-	fmt.Print("Username: ")
-	fmt.Scanln(&username)
+	var profile string
 
-	fmt.Print("Password: ")
-	pass, err := terminal.ReadPassword(0)
+	fi, err := os.Stdin.Stat()
 	if err != nil {
-		fmt.Println("Error reading password:", err)
+		panic(err)
+	}
+	// Checking to see if there is data being piped in
+	if fi.Mode()&os.ModeNamedPipe == 0 {
+		// No data being piped in, so we need to get the data from the user
+
+		model := textarea.New()
+
+		input := tea.NewProgram(model)
+		m, err := input.Run()
+		if err != nil {
+			fmt.Println("Error running program:", err)
+			os.Exit(1)
+		}
+
+		profile = m.(textarea.Model).Value
+
+	} else {
+		// Read the piped-in profile
+		bytes, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			fmt.Println("Error reading profile from stdin:", err)
+			os.Exit(1)
+		}
+
+		profile = string(bytes)
+	}
+
+	if viper.GetBool("verbose") {
+		fmt.Println(profile)
+	}
+
+	if profile == "" {
+		fmt.Println("No profile provided")
 		os.Exit(1)
 	}
 
-	doLogin(apiURL, username, string(pass))
+	err = SaveYamlProfile(profile)
+	if err != nil {
+		fmt.Println("Not a valid profile:", err)
+		os.Exit(1)
+	}
+
+	// var profileString string
+	// // var username string
+
+	// fmt.Print("Paste your Podinate profile file:\n\n")
+	// fmt.Scanln(&profileString)
+
+	// fmt.Print("Username: ")
+	// fmt.Scanln(&username)
+
+	// fmt.Print("Password: ")
+	// pass, err := terminal.ReadPassword(0)
+	// if err != nil {
+	// 	fmt.Println("Error reading password:", err)
+	// 	os.Exit(1)
+	// }
+
+	// doLogin(apiURL, username, string(pass))
 
 	fmt.Println("You are logged in")
 }

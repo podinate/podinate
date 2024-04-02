@@ -9,28 +9,32 @@ metadata:
 data:
   migration.sh: |
     #!/bin/sh
-    wget https://raw.githubusercontent.com/podinate/podinate/main/database/atlas.hcl
-    /atlas schema apply --url "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:5432/$POSTGRES_DB?sslmode=disable" --to file://atlas.hcl --auto-approve
+    /atlas schema apply --url "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:5432/$POSTGRES_DB?sslmode=disable" --to file://atlas.hcl
 
 ---
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: StatefulSet 
 metadata:
   name: atlas
   namespace: podinate
   labels:
     app: atlas
 spec:
+  selector:
+    matchLabels:
+      app: atlas
   template:
+    metadata:
+      labels:
+        app: atlas
     spec:
-      restartPolicy: Never
       containers:
         - name: atlas
           image: arigaio/atlas:latest-alpine
-          #command: [ "/migrations/migration.sh" ]
+          # this is a utility container
+          # See the make postgres-migrate target in the Makefile
           command: [
-            "sh",
-            "/migrations/migration.sh"
+            "sleep", "9999999999999"
           ]
           env:
             - name: POSTGRES_USER

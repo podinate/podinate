@@ -10,27 +10,11 @@
 package main
 
 import (
-	"log"
-	"net/http"
-
+	_ "github.com/johncave/podinate/api-backend/config"
+	cmd "github.com/johncave/podinate/api-backend/servercmd"
 	_ "github.com/lib/pq"
-
-	"github.com/johncave/podinate/api-backend/config"
-	"github.com/johncave/podinate/api-backend/router"
 )
 
 func main() {
-	log.Printf("Server initialising...")
-
-	//lh.Init()
-
-	// err := config.Init()
-	// if err != nil {
-	// 	lh.Log.Panicw("Error initialising config", "error", err)
-	// }
-	log.Println("Server configured...")
-
-	theRouter := router.GetRouter()
-	log.Fatal(http.ListenAndServe(":3000", theRouter))
-	config.Cleanup()
+	cmd.Execute()
 }

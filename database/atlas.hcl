@@ -438,6 +438,25 @@ table "project_pods" {
     on_delete   = SET_NULL
   }
 }
+table "settings" {
+  schema = schema.public
+  column "section" {
+    null = false
+    type = text
+  }
+  column "key" {
+    null = false
+    type = text
+  }
+  column "value" {
+    null = true
+    type = text
+  }
+  primary_key {
+    columns = [column.section, column.key]
+  }
+
+}
 table "user" {
   schema = schema.public
   column "uuid" {

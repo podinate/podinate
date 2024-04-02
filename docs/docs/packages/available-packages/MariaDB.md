@@ -36,7 +36,7 @@ More likely, you will want to use MariaDB as a sub-package when installing anoth
     ```
 
 ## Performance
-MariaDB is a high-performance and battle tested database engine, you should only run into performance issues if you are running a massive or complicated database. Alternatively, otherwise normal apps may have one or two very hot queries that can create excess load on the database. In these situations, we recommend the [ReadySet](https://readyset.io/) database caching engine, which supports both MariaDB(MySQL) and Postgres. 
+MariaDB is a high-performance and battle tested database engine, you should only run into performance issues if you are running a massive or complicated database. The first thing to try if you are running into performance issues should be to determine what indexes need to be added to your database schema. Beyond that, most apps tend to have one or two very common queries that can create excess load on the database. In these situations, consider checking out the [ReadySet](https://readyset.io/) database caching engine, which supports both MariaDB(MySQL) and Postgres. 
 
 !!! note
     By default, ReadySet does not cache anything. For safety, you must log into its provided web interface and enable caching for specific queries. 
