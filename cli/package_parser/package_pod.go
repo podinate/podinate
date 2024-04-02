@@ -11,7 +11,7 @@ type Pod struct {
 	ProjectID   string   `cty:"project_id"`
 	Name        string   `cty:"name"`
 	Image       string   `cty:"image"`
-	Tag         string   `cty:"tag"`
+	Tag         *string  `cty:"tag"`
 	Command     []string `cty:"command"`
 	Arguments   []string `cty:"arguments"`
 	Environment map[string]struct {
@@ -54,7 +54,7 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 		"tag": &hcldec.AttrSpec{
 			Name:     "tag",
 			Type:     cty.String,
-			Required: true,
+			Required: false,
 		},
 		"command": &hcldec.AttrSpec{
 			Name:     "command",
@@ -178,11 +178,16 @@ func (p *Pod) ToSDK() (*sdk.Pod, error) {
 		ID:        p.ID,
 		Name:      p.Name,
 		Image:     p.Image,
-		Tag:       p.Tag,
 		Command:   p.Command,
 		Arguments: p.Arguments,
 		Services:  services,
 		Volumes:   volumes,
+	}
+
+	if p.Tag != nil {
+		out.Tag = *p.Tag
+	} else {
+		out.Tag = "latest"
 	}
 
 	for k, v := range p.Environment {

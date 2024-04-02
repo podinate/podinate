@@ -30,14 +30,15 @@ If Podinate detects an existing cluster, it will ask if you want to install Podi
 <!-- You can now use Podinate as you might Docker. Most commands are the same. For example `podinate build` will run a build in the Podinate cluster and cache the file locally.  -->
 
 ### Install the CLI (Optional)
-The Podinate server installer will set up the Podinate command line client on the server. If you want to be able to control your Podinate server from your local command line, the CLI is available through Homebrew for both Mac and Linux. If you don't have Homebrew, run the command on the [Homebrew homepage](https://brew.sh/) to install it. 
+The Podinate server installer will set up the Podinate command line client for the root user on the server. If you want to be able to control your Podinate server from your local command line, the CLI is available through Homebrew for both Mac and Linux. If you don't have Homebrew, run the command on the [Homebrew homepage](https://brew.sh/) to install it. 
 ```bash
 brew tap podinate/tap
 brew install podinate
 ```
 This will install Podinate CLI from our Homebrew tap. 
 
-The server installer will print out a credentials file. You can add the server to the Podinate CLI by running:
+### Login to Podinate
+The server installer will set up the Podinate credentials for the root user, and print out the credentials file at the end of the installation process. If you want to use Podinate as another user, or from your local machine, you can add the server by running: 
 ```bash
 podinate login
 ```
@@ -65,7 +66,7 @@ pod "ubuntu" {
 ```
 We can now create our Ubuntu Pod by running;
 ```bash
-podinate install ubuntu.pod
+podinate apply ubuntu.pod
 ```
 The process should only take a second, and now we have a running Ubuntu Pod. 
 

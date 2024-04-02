@@ -24,7 +24,7 @@ var projectHCLSpec = &hcldec.BlockMapSpec{
 		"account_id": &hcldec.AttrSpec{
 			Name:     "account_id",
 			Type:     cty.String,
-			Required: true,
+			Required: false,
 		},
 	},
 }
