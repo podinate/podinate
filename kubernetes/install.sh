@@ -199,6 +199,9 @@ do
     kubectl -n podinate logs -f -l job-name=atlas
 done
 
+kubectl -n podinate delete job atlas
+kubectl -n podinate delete configmap migration-script
+
 
 # Install the Podinate controller
 echo "7. Installing Podinate controller..."
@@ -213,35 +216,25 @@ echo "8. Initializing Podinate (nearly done!)..."
 IP=$(ip -4 -o addr show scope global | grep enp | awk '{gsub(/\/.*/,"",$4); print $4}')
 
 # Runs Podinate init to create the initial user and copies the profile out
-kubectl -n podinate exec -it $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}') -- controller init --email $EMAIL --ip $IP
-kubectl -n podinate cp $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}'):/profile.yaml credentials.yaml
-
-if podinate; then 
-    echo "9. Podinate CLI installed."
-    cat credentials.yaml | podinate login
-else
-    if brew info; then 
-        echo "9. Upgrading Podinate CLI via Homebrew..."
-        brew upgrade podinate
-    else
-        echo "9. Installing Homebrew..."
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-        test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-
-        echo "9. Installing Podinate CLI via Homebrew..."
-        brew tap podinate/tap
-        brew install podinate
-    fi
+NEW_INSTALL=false 
+if kubectl -n podinate exec -it $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}') -- controller init --email $EMAIL --ip $IP; then
+    NEW_INSTALL=true
+    kubectl -n podinate cp $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}'):/profile.yaml credentials.yaml
 fi
 
+echo "9. Installing Podinate CLI..."
+curl -sfL https://github.com/podinate/podinate/releases/latest/download/podinate_Linux_x86_64.tar.gz | tar -xz -C /usr/local/bin
+chmod +x /usr/local/bin/podinate
 
-echo "Yippee! Podinate controller installed. You can now run 'podinate' to interact with your new Podinate cluster.\n"
+if $NEW_INSTALL ; then
+    cat credentials.yaml | podinate login
+fi
 
-echo "If you want to log in to Podinate on your local machine, run 'podinate login' and paste the following:\n\n"
+printf "Yippee! Podinate controller installed. You can now run 'podinate' to interact with your new Podinate cluster.\n\n"
+
+printf "If you want to log in to Podinate on your local machine, run 'podinate login' and paste the following:\n\n"
 
 cat credentials.yaml
 
-echo "\n\n"
+printf "\n\n"
 echo "If this is your first time using Podinate, try our quickstart guide at https://docs.podinate.com/getting-started/quick-start/"

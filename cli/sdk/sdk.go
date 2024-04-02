@@ -6,6 +6,7 @@ package sdk
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -176,7 +177,7 @@ func SaveProfile(apiURL string, profileName string, apiKey string) error {
 	// TODO: Check for existing profiles
 
 	currentConfig, err := readConfigFile()
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) { // If the file doesn't exist, that's fine
 		return err
 	}
 
@@ -187,14 +188,19 @@ func SaveProfile(apiURL string, profileName string, apiKey string) error {
 	}
 
 	overwrote := false
-	for i, p := range currentConfig.Profiles {
-		if p.Name == profileName {
-			if viper.GetBool("verbose") {
-				log.Printf("Profile already exists: %+v, overwriting\n", p)
+	// Skip if no current config
+	if currentConfig != nil {
+		for i, p := range currentConfig.Profiles {
+			if p.Name == profileName {
+				if viper.GetBool("verbose") {
+					log.Printf("Profile already exists: %+v, overwriting\n", p)
+				}
+				currentConfig.Profiles[i] = newProfile
+				overwrote = true
 			}
-			currentConfig.Profiles[i] = newProfile
-			overwrote = true
 		}
+	} else {
+		currentConfig = &GlobalConfigFile{}
 	}
 
 	if !overwrote {
@@ -217,6 +223,11 @@ func SaveProfile(apiURL string, profileName string, apiKey string) error {
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
+		}
+
+		err = os.MkdirAll(home+"/.config/podinate", os.ModePerm)
+		if err != nil {
+			return err
 		}
 		filePath = home + "/.config/podinate/credentials.yaml"
 	}

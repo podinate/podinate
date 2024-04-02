@@ -2,25 +2,10 @@
 
 This guide aims to get you started with Podinate and start familiarising yourself with the platform. We will install the Podinate CLI on your local machine, set up a server, and run an example workload. 
 
-## Install the CLI
-Podinate CLI is what you will use to interact with the Podinate server. It is currently available through Homebrew for both Mac and Linux. Let's get it installed.
-```bash
-brew install Podinate/tap/podinate
-```
-This will install Podinate CLI from our Homebrew tap. 
-
-Verify that the CLI was successfully installed:
-```bash
-podinate version
-```
-The output will look like:
-```
-Podinate CLI vX.X.X
-```
 
 ## Create a Cluster
 
-Podinate uses Kubernetes to provide cluster services. If you just want to create a simple single-node cluster, the installer will do that for you. If you want to do something more custom, start with the [K3s Quickstart](https://docs.k3s.io/quick-start) documentation. If you want to install a cluster on multiple hosts we highly recommend the great [K3sup project](https://docs.k3s.io/quick-start).
+Podinate uses Kubernetes to provide cluster services. If you just want to create a simple single-node cluster, the installer will do that for you. You can then add more nodes later. If you want to do something more custom, start with the [K3s Quickstart](https://docs.k3s.io/quick-start) documentation. If you want to install a cluster on multiple hosts we highly recommend the great [K3sup project](https://docs.k3s.io/quick-start).
 
 ### Install Podinate Cluster
 The Podinate installer is designed to run on a fresh, dedicated Ubuntu 24.04 instance. This could be a virtual machine on your homelab, or a VM instance from your favourite cloud provider. The instance should have at least 2GB of ram. In the command prompt of your server instance, run:
@@ -43,6 +28,22 @@ If Podinate detects an existing cluster, it will ask if you want to install Podi
 
 ## Let's Podinate!
 <!-- You can now use Podinate as you might Docker. Most commands are the same. For example `podinate build` will run a build in the Podinate cluster and cache the file locally.  -->
+
+### Install the CLI (Optional)
+The Podinate server installer will set up the Podinate command line client on the server. If you want to be able to control your Podinate server from your local command line, the CLI is available through Homebrew for both Mac and Linux. If you don't have Homebrew, run the command on the [Homebrew homepage](https://brew.sh/) to install it. 
+```bash
+brew tap podinate/tap
+brew install podinate
+```
+This will install Podinate CLI from our Homebrew tap. 
+
+The server installer will print out a credentials file. You can add the server to the Podinate CLI by running:
+```bash
+podinate login
+```
+Paste the credentials file, then press `control + s` to save the new profile.
+
+### Run an Ubuntu Pod
 
 First, let's create an Ubuntu Pod we can play with. First let's create a directory to hold this tutorial. 
 ```bash
@@ -85,9 +86,22 @@ A Podinate Pod is a container running in your cluster. You may be familiar with 
 ```bash
 podinate get pods 
 ```
-This will show a table of your pods, you should see only one called `Quick Start Ubuntu`, running the ubuntu:latest image. 
+This will show a table of your pods, you should see only one called `Quick Start Ubuntu`, running the `ubuntu:latest` image. 
 
-## Get Ubuntu Shell
+### Check Pod Logs 
+The Pod logs will contain the output of the program running inside the container. In this case, we didn't specify one so the default Entrypoint from the Dockerfile is used. 
+```bash
+podinate logs ubuntu
+```
+This is a very useful tool to see what is going on in the Pod. 
+
+### Run Command in Pod
+Podinate can run any command inside of our pod. This command will let us list the contents of the `/var` directory, for example. 
+```bash
+podinate exec ubuntu -- ls /var
+```
+
+### (Coming Soon) Get Ubuntu Shell
 We can now get a shell on the ubuntu pod by running the following command; 
 ```bash
 podinate shell ubuntu
@@ -97,5 +111,4 @@ The `podinate shell` command is a convenient way to get inside of a container an
 echo "Hello"
 ping podinate.com -c 5
 curl https://api64.ipify.org
-```
-
+``` 

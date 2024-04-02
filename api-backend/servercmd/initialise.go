@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -51,14 +52,14 @@ var initCmd = &cobra.Command{
 		}
 
 		//Check if any users exist in the database
-		// var uuid string
-		// err := config.DB.QueryRow("SELECT uuid FROM \"user\" LIMIT 1").Scan(&uuid)
-		// if err == nil {
-		// 	return errors.New("Configuration already initialised")
-		// }
-		// if err != sql.ErrNoRows {
-		// 	return err
-		// }
+		var uuid string
+		err := config.DB.QueryRow("SELECT uuid FROM \"user\" LIMIT 1").Scan(&uuid)
+		if err == nil {
+			return errors.New("Configuration already initialised")
+		}
+		if err != sql.ErrNoRows {
+			return err
+		}
 
 		// Generate a random username in the format word-word8888
 		username, err := passit.Repeat(passit.EFFLargeWordlist, "-", 2).Password(rand.Reader)
