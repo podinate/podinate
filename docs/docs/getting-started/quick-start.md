@@ -14,17 +14,13 @@ curl -sfL https://raw.githubusercontent.com/podinate/podinate/main/kubernetes/in
 ```
 If Podinate detects an existing cluster, it will ask if you want to install Podinate cluster to that Kubernetes cluster.
 
-??? note
-    This will install:
+??? note "Curl not installed?"
 
-    - Certbot manager 
-    - Podinate Postgres database
-    - Set up Postgres tables
-    - Podinate controller
-    - (future) ask about storage
-    - Create default Podinate account 
-    - Create admin Podinate user
-    - Install the admin credentials to the local machine
+    In some environments, curl may not be installed. To install it, run:
+    ```bash
+    apt-get update
+    apt-get install -y curl
+    ```
 
 ## Let's Podinate!
 <!-- You can now use Podinate as you might Docker. Most commands are the same. For example `podinate build` will run a build in the Podinate cluster and cache the file locally.  -->
@@ -68,6 +64,8 @@ pod "ubuntu" {
     project_id = "quick-start"
 }
 ```
+This file creates two things. At the top, it creates a Project called Quick Start, then it creates a Pod called `ubuntu`, which runs the latest Ubuntu image, and runs a certain command in a loop. We'll learn more about Projects and Pods in the next sections. 
+
 We can now create our Ubuntu Pod by running;
 ```bash
 podinate apply ubuntu.pod
@@ -96,9 +94,9 @@ This will show a table of your pods, you should see only one called `Quick Start
 ### Check Pod Logs 
 The Pod logs will contain the output of the program running inside the container. In this case, we didn't specify one so the default Entrypoint from the Dockerfile is used. 
 ```bash
-podinate logs ubuntu
+podinate logs -f ubuntu
 ```
-This is a very useful tool to see what is going on in the Pod. 
+You'll now be seeing "Hello from Podinate!" logged every two seconds. This is a very useful tool to see what is going on in the Pod. The `-f` means to keep following the log and show any new lines that come up. You can omit it if you just want to see the current contents of the log. 
 
 ### Run Command in Pod
 Podinate can run any command inside of our pod. This command will let us list the contents of the `/var` directory, for example. 
