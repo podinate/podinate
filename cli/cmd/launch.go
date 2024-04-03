@@ -20,6 +20,8 @@ var launchCmd = &cobra.Command{
 	Short: "Launch an app on Podinate",
 	Long:  `Logs in then provides options to get an app running on Podinate`,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Don't run this command, it's not ready yet")
+		os.Exit(1)
 
 		//fmt.Printf("Response: %+v, r: %+v\n", resp, r)
 		//fmt.Printf("URL: %s, Token: %s\n", *resp.Url, *resp.Token)

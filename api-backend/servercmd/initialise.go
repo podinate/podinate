@@ -86,7 +86,7 @@ var initCmd = &cobra.Command{
 		}
 		store := base64.StdEncoding.EncodeToString(hash)
 		var adminID string
-		err = config.DB.QueryRow("INSERT INTO \"user\" (id, display_name, email, password_hash) VALUES (username, 'Administrator', email, $1) returning uuid", store).Scan(&adminID)
+		err = config.DB.QueryRow("INSERT INTO \"user\" (id, display_name, email, password_hash) VALUES ($1, 'Administrator', $2, $3) returning uuid", username, email, store).Scan(&adminID)
 		if err != nil {
 			lh.Log.Fatalw("Error creating initial administrator account", "error", err)
 		}
