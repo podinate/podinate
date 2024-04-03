@@ -85,17 +85,17 @@ func init() {
 	// Create admin account if not exists in the database
 	// Horrible hack replace asap
 	// TODO - replace this with a proper migration
-	var uuid string
-	err = DB.QueryRow("SELECT uuid FROM \"user\" WHERE id = 'administrator' AND main_provider IS NULL LIMIT 1").Scan(&uuid)
+	// var uuid string
+	// err = DB.QueryRow("SELECT uuid FROM \"user\" WHERE id = 'administrator' AND main_provider IS NULL LIMIT 1").Scan(&uuid)
 
-	lh.Log.Infow("Checking for administrator account", "error", err)
-	if err == sql.ErrNoRows {
-		// Create the admin account
+	// lh.Log.Infow("Checking for administrator account", "error", err)
+	// if err == sql.ErrNoRows {
+	// 	// Create the admin account
 
-	} else {
-		lh.Log.Infow("Administrator account already exists")
+	// } else {
+	// 	lh.Log.Infow("Administrator account already exists")
 
-	}
+	// }
 
 	log.Println("Connected to database")
 }

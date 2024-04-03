@@ -56,11 +56,13 @@ Now copy the following into `ubuntu.pod`.
 ```hcl title="ubuntu.pod"
 project "quick-start" {
     name = "Quick Start"
+    account = "default"
 }
 
 pod "ubuntu" {
     name = "Quick Start Ubuntu"
     image = "ubuntu"
+    tag = "latest" 
     project_id = "quick-start"
 }
 ```

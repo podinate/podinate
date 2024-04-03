@@ -13,6 +13,7 @@ import (
 
 	"github.com/johncave/podinate/api-backend/account"
 	"github.com/johncave/podinate/api-backend/config"
+	"github.com/johncave/podinate/api-backend/iam"
 	lh "github.com/johncave/podinate/api-backend/loghandler"
 	"github.com/johncave/podinate/api-backend/user"
 	"gopkg.in/yaml.v3"
@@ -85,7 +86,7 @@ var initCmd = &cobra.Command{
 		}
 		store := base64.StdEncoding.EncodeToString(hash)
 		var adminID string
-		err = config.DB.QueryRow("INSERT INTO \"user\" (id, display_name, email, password_hash) VALUES ('administrator', 'Administrator', 'administrator@mypodinate.com', $1) returning uuid", store).Scan(&adminID)
+		err = config.DB.QueryRow("INSERT INTO \"user\" (id, display_name, email, password_hash) VALUES (username, 'Administrator', email, $1) returning uuid", store).Scan(&adminID)
 		if err != nil {
 			lh.Log.Fatalw("Error creating initial administrator account", "error", err)
 		}
@@ -103,7 +104,24 @@ var initCmd = &cobra.Command{
 			Id:   "default",
 			Name: "default",
 		}
-		_, err = account.Create(defaultAccount, u)
+		newAcc, err := account.Create(defaultAccount, u)
+		if err != nil {
+			lh.Log.Fatalw("Error creating initial default account", "error", err)
+		}
+
+		// Add initial policies to the account
+		superAdminPolicyDocument := `
+version: 2023.1
+statements:
+	- effect: allow
+	actions: ["**"]
+	resources: ["**"]`
+		superAdminPolicy, err := iam.CreatePolicyForAccount(&newAcc, "super-administrator", superAdminPolicyDocument, "Default policy created during initial account creation")
+		err = superAdminPolicy.AttachToRequestor(u, u)
+		if err != nil {
+			// We can pass this error directly to the API response
+			lh.Log.Fatalw("Error attaching super-administrator policy to initial default account", "error", err)
+		}
 
 		apiKey, err := u.IssueAPIKey("Initial Credentials")
 		if err != nil {
