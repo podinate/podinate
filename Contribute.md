@@ -7,7 +7,11 @@ If you're looking for something to contribute, check out our [Github Project](ht
 ## Repo Structure
 We use a monorepo, each top level folder here represents a single service, or holds some shared libraries. These are the most important ones:
 - **api** - holds the OpenAPI definition for the Podinate API. 
-- **controller**
+- **controller** - this is the backend that implements the Podinate API. It is installed into a Kubernetes cluster using the Kubernetes YAML in `kubernetes/controller.yaml`.
+- **database** - the database schema for the controller. 
+- **docs** - the mkdocs site at [docs.podinate.com](https://docs.podinate.com), probably the most important folder.
+- **kubernetes** - Kubernetes YAML for installing Podinate and supporting services.
+- **lib** - shared libraries, currently just the generated OpenAPI client for the OpenAPI spec. 
 
  In the `api` folder is our API definition, if updated generate the updated client and server packages with the script `make api-generate`. It will ask you for a sudo password so it can update some permission issues from running the generator inside a Docker container. 
 
@@ -16,76 +20,66 @@ There is a Readme.md file inside important package folders. Please make sure to 
 
 ## Getting started with development
 
-### Local Kubernetes environment
-To get a complete working Podinate server, we need to get a local Kubernetes environment going:
-#### Ubuntu:
-```
-sudo apt-get install k3d
-```
+### Creating Development Environment
+To get a complete working Podinate server, we need to get a local Kubernetes environment. For this we use K3d which we can install like so:
 #### Arch:
-```
+```bash
 sudo yay -S rancher-k3d-bin
 ```
 
-### Create a new Kubernetes cluster
-Create a new Kubernetes cluster to run the code in
+#### curl | sudo bash
+```bash
+curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 ```
-k3d cluster create podinate-dev
-```
-If you already have a k3d cluster running for something else, try this: 
-```
-k3d cluster create podinate-dev --api-port 6444
-```
-Check the cluster all looks okay. If the single node's status is "Ready" then so are you. 
-```
-$ kubectl get node 
-NAME                        STATUS   ROLES                  AGE   VERSION
-k3d-podinate-dev-server-0   Ready    control-plane,master   86d   v1.27.4+k3s1
-```
-You'll probably be typing `kubectl` a lot, so aliasing kubectl to just k is highly recommended.
-```
-$ alias k=kubectl
-$ k get node
-NAME                        STATUS   ROLES                  AGE   VERSION
-k3d-podinate-dev-server-0   Ready    control-plane,master   86d   v1.27.4+k3s1
+
+We also need the Node tool Kubycat, which will sync the controller code into the Kubernetes cluster so we can easily develop on it. 
+```bash
+npm install -g kubycat
+
+## May be needed on some systems
+apt-get install fswatch 
 ```
 
 
-### Spin up API server and Postgres
-First we spin up Postgres in our new kubernetes cluster: 
+### Create a New Development Cluster
+Once K3d is installed, we have a Make script to create a development cluster and deploy the Podinate controller to it. Run that now. 
+```bash
+make dev-cluster
 ```
-k create namespace podinate
-k apply -f kubernetes/masterdb-postgres.yaml
-```
-Then install the API
-```
-k apply -f kubernetes/controller.yaml
+The script will run through various steps, and will pause at the database migrations step to confirm you want to apply it. Press enter for apply and let the process continue. 
 
+This script will create a folder called `testapp` and put the credentials file in there. 
+
+From here we recommend creating three new tabs in your terminal / IDE. Run the following commands in three of them, and the fourth will be your work terminal to run `podinate` commands. 
+
+In the first terminal tab, run:
+```bash
+make dev-code-upload
 ```
-This creates a pod running a hot-reload script for development. First upload the entire backend code, then I recommend using Kubycat to upload any changes into the pod during development. 
+This will upload all of the code in `controller` to the running controller pod, and start Kubycat (installed earlier) to sync up any code changes. 
+
+In the second terminal, run:
+```bash
+make dev-backend-logs 
 ```
-make dev-code-api
-sudo npm install -g kubycat
-kubycat ./kubycat.yaml # Leave this running to develop the backend 
+This will follow the logs of what's happening in the backend Pod. 
+
+In the third terminal, run:
+```bash
+make dev-port-forward
+```
+This will open a port forward from your local machine to the controller inside the Kubernetes cluster. 
+
+Finally, in the last terminal tab, run the following:
+```bash
+cd testapp
+alias podinate="go run ../cli"
+alias p=podinate
+cat credentials.yaml | podinate login
+podinate get projects 
 ```
 
-
-To interact with it for development, forward port 3001 on your local machine to the API in the cluster
-```
-k -n podinate get pods
-k -n podinate port-forward pods/controller-deployment-54c7b6895f-tg594 3001:3000 # Leave running to develop the backend
-```
-
-
-### Load the SQL file into Postgres
-To get a postgres shell in the backend postgres instance, run the following
-```
-make postgres-shell
-```
-Then copy in the `database/masterdb.sql` file. 
-
-## Use Insomnia
-Load the `API/Insomnia.json` file into Insomnia to see the endpoints. First create an account, then a project, then create a pod inside the project. 
+You can now develop Podinate! 
 
 ## Get Started Developing
 Each top level folder has a Readme. Please read `controller/Readme.md` and `cli/Readme.md` to get started.  
