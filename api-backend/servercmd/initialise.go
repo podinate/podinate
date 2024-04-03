@@ -113,9 +113,9 @@ var initCmd = &cobra.Command{
 		superAdminPolicyDocument := `
 version: 2023.1
 statements:
-	- effect: allow
-	actions: ["**"]
-	resources: ["**"]`
+  - effect: allow
+    actions: ["**"]
+    resources: ["**"]`
 		superAdminPolicy, err := iam.CreatePolicyForAccount(&newAcc, "super-administrator", superAdminPolicyDocument, "Default policy created during initial account creation")
 		apierr = superAdminPolicy.AttachToRequestor(u, u)
 		if apierr != nil {

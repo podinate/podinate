@@ -123,6 +123,10 @@ stringData:
   replicationUserPassword: $(openssl rand -base64 32 | tr -cd '[:alpha:]')
 EOF
 
+# Restart the Postgres Statefulset to apply the new password
+kubectl -n podinate rollout restart statefulset postgres
+sleep 10
+
 echo "6. Waiting for database to be ready..."
 kubectl -n podinate wait pod --for=condition=Ready -l app=postgres --timeout 180s
 
