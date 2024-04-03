@@ -40,6 +40,19 @@ npm install -g kubycat
 apt-get install fswatch 
 ```
 
+### Clone the Git Repository
+Of course, we have to check out the git repository first. 
+```bash
+# Using ssh key
+git clone git@github.com:podinate/podinate.git
+# Using https
+git clone https://github.com/podinate/podinate.git
+```
+
+Then `cd` into the new directory:
+```bash
+cd podinate
+```
 
 ### Create a New Development Cluster
 Once K3d is installed, we have a Make script to create a development cluster and deploy the Podinate controller to it. Run that now. 
