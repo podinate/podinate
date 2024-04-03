@@ -19,7 +19,7 @@ dev-backend-shell:
 	kubectl -n podinate exec -it deployment/podinate-controller -- /bin/bash
 
 dev-code-upload:
-	./api-backend/scripts/initial-code-upload.sh
+	./controller/scripts/initial-code-upload.sh
 	kubycat ./kubycat.yaml
 
 make dev-port-forward:

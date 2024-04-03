@@ -4,7 +4,7 @@
 docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
     -i /local/api/openapi.yaml \
     -g go-server \
-    -o /local/api-backend \
+    -o /local/controller \
     --additional-properties outputAsLibrary=true,serverPort=3000
 
 docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
@@ -19,7 +19,7 @@ docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
 
 echo "Using sudo to fix user permissions on generated files."
 
-sudo chown $USER:$(id -g) -R ./lib/api_client ./api-backend/go 
+sudo chown $USER:$(id -g) -R ./lib/api_client ./controller/go 
 
 # Wipe out the default go.mod and go.sum files
 rm ./lib/api_client/go.mod
@@ -29,7 +29,7 @@ echo "Running go fmt on generated code."
 
 # Run fmt on the code to fix errors that the generator creates
 go fmt ./lib/api_client/...
-go fmt ./api-backend/go/...
+go fmt ./controller/go/...
 
 # echo "Generating Terraform SDK."
 

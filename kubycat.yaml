@@ -14,7 +14,7 @@ kubycat:
       context: k3d-podinate
       base: /home/john/Code/podinate
       from:
-        - api-backend
+        - controller
         - go.mod
         - go.sum
       to: /go/src/github.com/johncave/podinate
