@@ -4,7 +4,7 @@ tmp/
 testapp/*
 !testapp/Readme.md
 
-
+docs/.cache
 
 
 # Binaries for programs and plugins

@@ -34,6 +34,7 @@ plugins:
   - search
   - tags
   - table-reader
+  - privacy
 #   - social
 
 theme: 
