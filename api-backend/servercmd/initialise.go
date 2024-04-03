@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -52,15 +51,15 @@ var initCmd = &cobra.Command{
 			return errors.New("IP address required")
 		}
 
-		//Check if any users exist in the database
-		var uuid string
-		err := config.DB.QueryRow("SELECT uuid FROM \"user\" LIMIT 1").Scan(&uuid)
-		if err == nil {
-			return errors.New("Configuration already initialised")
-		}
-		if err != sql.ErrNoRows {
-			return err
-		}
+		// //Check if any users exist in the database
+		// var uuid string
+		// err := config.DB.QueryRow("SELECT uuid FROM \"user\" LIMIT 1").Scan(&uuid)
+		// if err == nil {
+		// 	return errors.New("Configuration already initialised")
+		// }
+		// if err != sql.ErrNoRows {
+		// 	return err
+		// }
 
 		// Generate a random username in the format word-word8888
 		username, err := passit.Repeat(passit.EFFLargeWordlist, "-", 2).Password(rand.Reader)
@@ -96,7 +95,7 @@ var initCmd = &cobra.Command{
 		// Issue the new user an api key
 		u, err := user.GetByUUID(adminID)
 		if err != nil {
-			lh.Log.Fatalw("Error getting initial administrator account", "error", err)
+			return err
 		}
 
 		// Create the `default` account
@@ -104,9 +103,10 @@ var initCmd = &cobra.Command{
 			Id:   "default",
 			Name: "default",
 		}
-		newAcc, err := account.Create(defaultAccount, u)
-		if err != nil {
-			lh.Log.Fatalw("Error creating initial default account", "error", err)
+		lh.Log.Debugw("Creating default account", "account", defaultAccount, "owner", u, "error", err)
+		newAcc, apierr := account.Create(defaultAccount, u)
+		if apierr != nil {
+			return apierr
 		}
 
 		// Add initial policies to the account
@@ -117,10 +117,11 @@ statements:
 	actions: ["**"]
 	resources: ["**"]`
 		superAdminPolicy, err := iam.CreatePolicyForAccount(&newAcc, "super-administrator", superAdminPolicyDocument, "Default policy created during initial account creation")
-		err = superAdminPolicy.AttachToRequestor(u, u)
-		if err != nil {
+		apierr = superAdminPolicy.AttachToRequestor(u, u)
+		if apierr != nil {
 			// We can pass this error directly to the API response
-			lh.Log.Fatalw("Error attaching super-administrator policy to initial default account", "error", err)
+			lh.Log.Fatalw("Error attaching super-administrator policy to initial default account", "error", apierr)
+			return apierr
 		}
 
 		apiKey, err := u.IssueAPIKey("Initial Credentials")

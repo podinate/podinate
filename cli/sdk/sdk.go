@@ -232,7 +232,7 @@ func SaveProfile(apiURL string, profileName string, apiKey string) error {
 		filePath = home + "/.config/podinate/credentials.yaml"
 	}
 	fmt.Printf("Saving profile to %s\n", filePath)
-	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0600)
+	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}
