@@ -56,13 +56,15 @@ Now copy the following into `ubuntu.pod`.
 ```hcl title="ubuntu.pod"
 project "quick-start" {
     name = "Quick Start"
-    account = "default"
+    account_id = "default"
 }
 
 pod "ubuntu" {
     name = "Quick Start Ubuntu"
     image = "ubuntu"
     tag = "latest" 
+    command = [ "/bin/bash", "-c", "--" ]
+    arguments = [ "while true; do echo 'Hello from Podinate!'; sleep 2; done;" ]
     project_id = "quick-start"
 }
 ```
