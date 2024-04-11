@@ -71,7 +71,9 @@ Setting up a ZFS pool for Podinate is a pretty quick process. If you want to use
 Once we have a Dataset to use for Podinate, the next step is to set up the ZFS volume provisioner in our Kubernetes cluster.
 
 1. Install the OpenEBS ZFS Provisioner
-
+    ```bash
+    kubectl apply -f https://openebs.github.io/charts/zfs-operator.yaml
+    ```
 
 1. Create a storage class to use the dataset
     ```yaml

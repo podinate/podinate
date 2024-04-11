@@ -83,7 +83,7 @@ func (p *Pod) ensureNamespace() (*corev1.Namespace, error) {
 }
 
 func (p *Pod) getNamespaceName() string {
-	return p.Project.Account.ID + "-project-" + p.Project.ID
+	return p.Project.GetNamespaceName()
 }
 
 // getKubesDeployment returns a deployment in the specified namespace.
@@ -97,7 +97,7 @@ func getKubesStatefulSet(theProject *project.Project, id string) (*appsv1.Statef
 	}
 
 	deployment, err := clientset.AppsV1().
-		StatefulSets(theProject.Account.ID+"-project-"+theProject.ID).
+		StatefulSets(theProject.GetNamespaceName()).
 		Get(context.Background(), id, metav1.GetOptions{})
 
 	if err != nil {
@@ -151,7 +151,7 @@ func updateKubesDeployment(thePod Pod, requested api.Pod) *apierror.ApiError {
 	}
 
 	_, err = clientset.AppsV1().
-		StatefulSets(thePod.Project.Account.ID+"-project-"+thePod.Project.ID).
+		StatefulSets(thePod.Project.GetNamespaceName()).
 		Update(context.Background(), statefulSet, metav1.UpdateOptions{})
 	if err != nil {
 		fmt.Printf("error updating deployment: %v\n", err)
@@ -225,7 +225,7 @@ func getStatefulSetSpec(theProject *project.Project, requested api.Pod) (*appsv1
 		newPVC := corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      volume.Name,
-				Namespace: theProject.Account.ID + "-project-" + theProject.ID,
+				Namespace: theProject.GetNamespaceName(),
 				Annotations: map[string]string{
 					"volumeType": "local",
 				},
@@ -303,7 +303,7 @@ func deleteKubesDeployment(thePod Pod) error {
 
 	deletePolicy := metav1.DeletePropagationForeground
 	err = clientset.AppsV1().
-		StatefulSets(thePod.Project.Account.ID+"-project-"+thePod.Project.ID).
+		StatefulSets(thePod.Project.GetNamespaceName()).
 		Delete(context.Background(), thePod.ID, metav1.DeleteOptions{
 			PropagationPolicy: &deletePolicy,
 		})
