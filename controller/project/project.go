@@ -211,5 +211,8 @@ func (p *Project) deleteKubeNamespace() *apierror.ApiError {
 }
 
 func (p *Project) GetNamespaceName() string {
+	if p.Account.ID == "default" {
+		return p.ID
+	}
 	return p.Account.ID + "-project-" + p.ID
 }

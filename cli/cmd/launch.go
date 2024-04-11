@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	rootCmd.AddCommand(launchCmd)
-}
+// func init() {
+// 	rootCmd.AddCommand(launchCmd)
+// }
 
 var launchCmd = &cobra.Command{
 	Use:   "launch",

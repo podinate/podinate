@@ -15,10 +15,9 @@ Podinate provides the core services of a cloud, powered by Kubernetes, Ceph and 
 - **Pods** run your container images anywhere
 - **Registry** an image registry to store your container images. 
 - **Volumes** simple volumes to attach to your pods 
-- **Buckets** object storage powered by Minio
 - **Services** Podinate provides easy ingress management
 
 ## Package Management
-Podinate provides a powerful package manager backed by OpenTofu / Terraform. Adding your package to Podinate is as easy as pushing it to our Git repo. Learn more about (package management)[packages/packages-overview.md]. 
+Podinate provides a powerful package manager powered by PCL. Adding your package to Podinate is as easy as pushing it to our Git repo. Learn more about (package management)[packages/packages-overview.md]. 
 
 

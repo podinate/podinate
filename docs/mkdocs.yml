@@ -11,6 +11,12 @@ nav:
     - Installation: getting-started/installation.md
     - Run Your App: getting-started/your-app.md
     - Add The Team: getting-started/collaborate.md
+  - Podinate Configuration Language:
+    - pcl/index.md
+    - Overview: pcl/overview.md
+    - Projects: pcl/project.md
+    - Pods: pcl/pod.md
+    - SharedVolumes: pcl/shared-volume.md
   - Packages:
     - Overview: packages/packages-overview.md
     - Package Structure: packages/package-structure.md
@@ -25,9 +31,13 @@ nav:
       - Raspberry Pi: reference/hardware/raspberry-pi.md
       - Mini PC / NUC: reference/hardware/mini-pc.md
       - Homelab: reference/hardware/homelab.md
+    - Software:
+      - Dropbear: reference/software/dropbear.md
+      - Incus: reference/software/incus.md
     - Storage: 
       - reference/storage/index.md
-      - ZFS: reference/storage/ZFS.md
+      - LVM: reference/storage/lvm.md
+      - ZFS: reference/storage/zfs.md
       - Cloud Storage: reference/storage/cloud-storage.md
 
 plugins:
@@ -71,3 +81,5 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - toc:
+      permalink: true

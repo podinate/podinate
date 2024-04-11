@@ -31,4 +31,16 @@ Some of the most common workloads for a homelab include:
     - Penpot
     - OnlyOffice Server
 
-## 
+## Install
+The installation of the server for the Podinate reference Homelab went as follows:
+
+- Install Ubuntu Server.
+    - [Download Ubuntu Server](https://ubuntu.com/download/server) ISO
+    - Burn the ISO to a USB flash drive using [Balena Etcher](https://etcher.balena.io/)
+    - Start the machine, pressing the `esc` key on the keyboard to interrupt boot. 
+    - In the menu that appears, select the USB flash drive.
+- Perform Ubuntu Install
+    - Proceed through the first few steps of the installer 
+    - When you get to the partitioning step, select use entire disk
+    - Enable [full disk encryption](../../storage/lvm#encryption) if you can, 
+
