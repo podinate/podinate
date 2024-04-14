@@ -72,9 +72,18 @@ var getPodsCmd = &cobra.Command{
 		for _, i := range resp.Items {
 			p := i.Pod
 
-			rows = append(rows, bubbletable.Row{
-				p.Id, p.Name, *p.Status, p.Image + ":" + p.Tag,
-			})
+			var row bubbletable.Row
+			if p.Tag == nil {
+				row = bubbletable.Row{
+					p.Id, p.Name, *p.Status, p.Image,
+				}
+			} else {
+				row = bubbletable.Row{
+					p.Id, p.Name, *p.Status, p.Image + ":" + *p.Tag,
+				}
+			}
+
+			rows = append(rows, row)
 		}
 
 		m := table.New(columns, rows)

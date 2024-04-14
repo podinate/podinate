@@ -2,6 +2,7 @@ package project
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -12,7 +13,13 @@ import (
 	"github.com/johncave/podinate/controller/apierror"
 	"github.com/johncave/podinate/controller/config"
 	api "github.com/johncave/podinate/controller/go"
+	"github.com/johncave/podinate/controller/iam"
+	lh "github.com/johncave/podinate/controller/loghandler"
+	"github.com/johncave/podinate/controller/user"
 	"github.com/lib/pq"
+	"golang.org/x/exp/maps"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -108,10 +115,29 @@ func (p *Project) Patch(requested api.Project) *apierror.ApiError {
 }
 
 // CreateTest spins up a new project into which some tests can be putted
-func CreateTest() (*Project, *apierror.ApiError) {
-	newAcc, err := account.CreateTest()
+func CreateTest() (context.Context, *Project, *user.User, *apierror.ApiError) {
+	// Create test account
+	newAcc, u, err := account.CreateTest()
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
+	}
+
+	// First off, create a test context
+	ctx := iam.TestContext(u)
+
+	// Add initial policies to the account
+	superAdminPolicyDocument := `
+version: 2023.1
+statements:
+  - effect: allow
+    actions: ["**"]
+    resources: ["**"]`
+	superAdminPolicy, err := iam.CreatePolicyForAccount(newAcc, "super-administrator", superAdminPolicyDocument, "Default policy created during initial account creation")
+	err = superAdminPolicy.AttachToRequestor(u, u)
+	if err != nil {
+		// We can pass this error directly to the API response
+		lh.Log.Fatalw("Error attaching super-administrator policy to initial default account", "error", err)
+		return nil, nil, nil, err
 	}
 
 	//lh.Log.Debug("Created test account", "account", newAcc)
@@ -121,8 +147,27 @@ func CreateTest() (*Project, *apierror.ApiError) {
 	name := generateRandomString(10)
 
 	newProj := api.Project{Id: id, Name: name}
-	out, err := Create(newProj, *newAcc)
-	return &out, err
+	out, err := Create(ctx, newProj, *newAcc)
+
+	return ctx, &out, u, err
+}
+
+// DeleteTest deletes a test project
+func DeleteTest(ctx context.Context, p *Project, u *user.User) *apierror.ApiError {
+	err := p.Account.Delete()
+	if err != nil {
+		return err
+	}
+
+	err = p.Delete()
+	if err != nil {
+		return err
+	}
+	err = u.Delete(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func generateRandomString(length int) string {
@@ -135,13 +180,17 @@ func generateRandomString(length int) string {
 }
 
 // Create creates a new project in the database
-func Create(new api.Project, inAccount account.Account) (Project, *apierror.ApiError) {
+func Create(ctx context.Context, new api.Project, inAccount account.Account) (Project, *apierror.ApiError) {
 	//lh.Log.Debugw("Creating project", "project", new, "account", inAccount)
 	out := Project{ID: new.Id, Name: new.Name, Account: inAccount}
 	err := out.ValidateNew()
 	if err != nil {
 		return Project{}, err
 	}
+
+	// Create the Kubernetes Namespace
+	_, err = out.EnsureNamespace(ctx)
+
 	//res, dberr := config.DB.Exec("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", new.Id, new.Name, inAccount.Uuid)
 	dberr := config.DB.QueryRow("INSERT INTO project(uuid, id, name, account_uuid) VALUES(gen_random_uuid(), $1, $2, $3) RETURNING uuid", new.Id, new.Name, inAccount.GetUUID()).Scan(&out.Uuid)
 	// Check if insert was successful
@@ -155,6 +204,39 @@ func Create(new api.Project, inAccount account.Account) (Project, *apierror.ApiE
 
 	log.Printf("Created project %s / %s", out.ID, out.Name)
 	return out, nil
+}
+
+func (p *Project) EnsureNamespace(ctx context.Context) (*corev1.Namespace, *apierror.ApiError) {
+	fmt.Println("Create Kubernetes namespace")
+
+	// clientset, err := getKubesClient()
+	// if err != nil {
+	// 	log.Printf("error getting kubernetes client: %v\n", err)
+	// 	return nil, err
+	// }
+
+	nsSpec := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: p.GetNamespaceName(),
+		},
+	}
+	ns, err := config.Client.CoreV1().
+		Namespaces().
+		Create(context.Background(), nsSpec, metav1.CreateOptions{})
+	if errors.IsAlreadyExists(err) {
+		// Get the ns instead
+		ns, err := config.Client.CoreV1().Namespaces().Get(ctx, p.GetNamespaceName(), metav1.GetOptions{})
+		if err != nil {
+			lh.Error(ctx, "Error getting existing kubernetes namespace", err, "project", p, "namespace", nsSpec)
+			return ns, apierror.NewWithError(500, "error getting existing kubernetes namespace", err)
+		}
+		return ns, nil
+	}
+	if err != nil {
+		lh.Error(ctx, "Error creating kubernetes namespace", err, "project", p, "namespace", nsSpec)
+		return nil, apierror.NewWithError(500, "error creating kubernetes namespace", err)
+	}
+	return ns, nil
 }
 
 // ToAPI converts a project to an api.Project
@@ -204,6 +286,9 @@ func (p *Project) deleteKubeNamespace() *apierror.ApiError {
 	// Delete the namespace
 	err := config.Client.CoreV1().Namespaces().Delete(context.Background(), p.GetNamespaceName(), metav1.DeleteOptions{})
 	if err != nil {
+		if err != nil && err.Error() == "namespaces \""+p.GetNamespaceName()+"\" not found" {
+			return nil
+		}
 		log.Printf("error deleting namespace: %v\n", err)
 		return apierror.New(500, "error deleting namespace: "+err.Error())
 	}
@@ -215,4 +300,22 @@ func (p *Project) GetNamespaceName() string {
 		return p.ID
 	}
 	return p.Account.ID + "-project-" + p.ID
+}
+
+// GetLabels returns the labels for the project
+func (p *Project) GetLabels() map[string]string {
+	out := map[string]string{
+		"podinate.com/project": p.ID,
+	}
+
+	maps.Copy(out, p.Account.GetLabels())
+	return out
+}
+
+// GetAnnotations returns the annotations for the project
+func (p *Project) GetAnnotations() map[string]string {
+	out := map[string]string{}
+
+	maps.Copy(out, p.Account.GetAnnotations())
+	return out
 }

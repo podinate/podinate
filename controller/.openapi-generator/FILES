@@ -7,6 +7,8 @@ go/api_pod.go
 go/api_pod_service.go
 go/api_project.go
 go/api_project_service.go
+go/api_shared_volume.go
+go/api_shared_volume_service.go
 go/api_user.go
 go/api_user_service.go
 go/error.go
@@ -16,6 +18,7 @@ go/logger.go
 go/model__project__project_id__pod__pod_id__exec_post_request.go
 go/model__project__project_id__pod_get_200_response.go
 go/model__project__project_id__pod_get_200_response_items_inner.go
+go/model__project__project_id__shared_volumes_get_200_response.go
 go/model__project_get_200_response.go
 go/model__project_get_200_response_items_inner.go
 go/model__user_login_initiate_get_200_response.go
@@ -25,8 +28,10 @@ go/model_account.go
 go/model_environment_variable.go
 go/model_error.go
 go/model_pod.go
+go/model_pod_shared_volumes_inner.go
 go/model_project.go
 go/model_service.go
+go/model_shared_volume.go
 go/model_user.go
 go/model_volume.go
 go/routers.go

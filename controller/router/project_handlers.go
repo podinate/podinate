@@ -110,7 +110,7 @@ func (s *ProjectAPIService) ProjectPost(ctx context.Context, requestedAccount st
 	if !iam.RequestorCan(ctx, &theAccount, res, project.ActionCreate) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to create this project"), nil
 	}
-	created, apiErr := project.Create(newProject, theAccount)
+	created, apiErr := project.Create(ctx, newProject, theAccount)
 	if apiErr != nil {
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}

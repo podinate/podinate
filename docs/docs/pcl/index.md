@@ -1,4 +1,4 @@
-j# Podinate Configuration Language
+# Podinate Configuration Language
 
 Podinate does away with the hundred-line long YAML files associated with other container orchestration solutions. It uses Podinate Configuration Language (PCL) which uses the Hashicorp Configuration Language syntax you may be familiar with from Terraform. With PCL, you can define various aspects of your application, such as containers, volumes, services, and dependencies, in a concise and intuitive manner.
 
@@ -26,28 +26,29 @@ Here's an example of a simple application defined in PCL:
 project "file-server" {
     name = "File Server"
     account_id = "default"
+}
 
-    # Nginx http server
-    pod "nginx" {
-        name = "Files Archive"
-        image = "nginx"
-        tag = "latest" 
-        shared_volume "files" {
-            source = volumes.files
-            mount_path = "/var/www/html"
-        }
-
-        # Expose the web server on port 30080 of the cluster nodes
-        service "web" {
-            type = "http"
-            node_port = 30080
-        }
+# Nginx http server
+pod "nginx" {
+    name = "Files Archive"
+    image = "nginx"
+    tag = "latest" 
+    shared_volume {
+        source = "files"
+        path = "/var/www/html"
     }
 
-    shared_volume "files" {
-        size = 10 
+    # Expose the web server on port 30080 of the cluster nodes
+    service "web" {
+        type = "http"
+        node_port = 30080
     }
 }
+
+shared_volume "files" {
+    size = 10 
+}
+
 ```
 This PCL file will create three things: 
 

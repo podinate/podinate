@@ -24,20 +24,22 @@ type Volume struct {
 	// The size of the volume in GB
 	Size int32 `json:"size"`
 	// The path to mount the volume at
-	MountPath string `json:"mount_path"`
+	Path string `json:"path"`
 	// The class of the volume, for example \"standard\" or \"premium\"
 	Class *string `json:"class,omitempty"`
+	// The global Resource ID of the volume
+	ResourceId *string `json:"resource_id,omitempty"`
 }
 
 // NewVolume instantiates a new Volume object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewVolume(name string, size int32, mountPath string) *Volume {
+func NewVolume(name string, size int32, path string) *Volume {
 	this := Volume{}
 	this.Name = name
 	this.Size = size
-	this.MountPath = mountPath
+	this.Path = path
 	return &this
 }
 
@@ -97,28 +99,28 @@ func (o *Volume) SetSize(v int32) {
 	o.Size = v
 }
 
-// GetMountPath returns the MountPath field value
-func (o *Volume) GetMountPath() string {
+// GetPath returns the Path field value
+func (o *Volume) GetPath() string {
 	if o == nil {
 		var ret string
 		return ret
 	}
 
-	return o.MountPath
+	return o.Path
 }
 
-// GetMountPathOk returns a tuple with the MountPath field value
+// GetPathOk returns a tuple with the Path field value
 // and a boolean to check if the value has been set.
-func (o *Volume) GetMountPathOk() (*string, bool) {
+func (o *Volume) GetPathOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
-	return &o.MountPath, true
+	return &o.Path, true
 }
 
-// SetMountPath sets field value
-func (o *Volume) SetMountPath(v string) {
-	o.MountPath = v
+// SetPath sets field value
+func (o *Volume) SetPath(v string) {
+	o.Path = v
 }
 
 // GetClass returns the Class field value if set, zero value otherwise.
@@ -153,6 +155,38 @@ func (o *Volume) SetClass(v string) {
 	o.Class = &v
 }
 
+// GetResourceId returns the ResourceId field value if set, zero value otherwise.
+func (o *Volume) GetResourceId() string {
+	if o == nil || IsNil(o.ResourceId) {
+		var ret string
+		return ret
+	}
+	return *o.ResourceId
+}
+
+// GetResourceIdOk returns a tuple with the ResourceId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Volume) GetResourceIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ResourceId) {
+		return nil, false
+	}
+	return o.ResourceId, true
+}
+
+// HasResourceId returns a boolean if a field has been set.
+func (o *Volume) HasResourceId() bool {
+	if o != nil && !IsNil(o.ResourceId) {
+		return true
+	}
+
+	return false
+}
+
+// SetResourceId gets a reference to the given string and assigns it to the ResourceId field.
+func (o *Volume) SetResourceId(v string) {
+	o.ResourceId = &v
+}
+
 func (o Volume) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -165,9 +199,12 @@ func (o Volume) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["name"] = o.Name
 	toSerialize["size"] = o.Size
-	toSerialize["mount_path"] = o.MountPath
+	toSerialize["path"] = o.Path
 	if !IsNil(o.Class) {
 		toSerialize["class"] = o.Class
+	}
+	if !IsNil(o.ResourceId) {
+		toSerialize["resource_id"] = o.ResourceId
 	}
 	return toSerialize, nil
 }

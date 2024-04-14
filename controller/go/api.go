@@ -48,6 +48,17 @@ type ProjectApiRouter interface {
 	ProjectPost(http.ResponseWriter, *http.Request)
 }
 
+// SharedVolumeApiRouter defines the required methods for binding the api requests to a responses for the SharedVolumeApi
+// The SharedVolumeApiRouter implementation should parse necessary information from the http request,
+// pass the data to a SharedVolumeApiServicer to perform the required actions, then write the service results to the http response.
+type SharedVolumeApiRouter interface {
+	ProjectProjectIdSharedVolumesGet(http.ResponseWriter, *http.Request)
+	ProjectProjectIdSharedVolumesPost(http.ResponseWriter, *http.Request)
+	ProjectProjectIdSharedVolumesVolumeIdDelete(http.ResponseWriter, *http.Request)
+	ProjectProjectIdSharedVolumesVolumeIdGet(http.ResponseWriter, *http.Request)
+	ProjectProjectIdSharedVolumesVolumeIdPut(http.ResponseWriter, *http.Request)
+}
+
 // UserApiRouter defines the required methods for binding the api requests to a responses for the UserApi
 // The UserApiRouter implementation should parse necessary information from the http request,
 // pass the data to a UserApiServicer to perform the required actions, then write the service results to the http response.
@@ -95,6 +106,18 @@ type ProjectApiServicer interface {
 	ProjectIdGet(context.Context, string, string) (ImplResponse, error)
 	ProjectIdPut(context.Context, string, string, Project) (ImplResponse, error)
 	ProjectPost(context.Context, string, Project) (ImplResponse, error)
+}
+
+// SharedVolumeApiServicer defines the api actions for the SharedVolumeApi service
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can be ignored with the .openapi-generator-ignore file
+// and updated with the logic required for the API.
+type SharedVolumeApiServicer interface {
+	ProjectProjectIdSharedVolumesGet(context.Context, string, string, int32, int32) (ImplResponse, error)
+	ProjectProjectIdSharedVolumesPost(context.Context, string, string, SharedVolume) (ImplResponse, error)
+	ProjectProjectIdSharedVolumesVolumeIdDelete(context.Context, string, string, string) (ImplResponse, error)
+	ProjectProjectIdSharedVolumesVolumeIdGet(context.Context, string, string, string) (ImplResponse, error)
+	ProjectProjectIdSharedVolumesVolumeIdPut(context.Context, string, string, string, SharedVolume) (ImplResponse, error)
 }
 
 // UserApiServicer defines the api actions for the UserApi service

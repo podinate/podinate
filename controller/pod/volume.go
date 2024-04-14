@@ -7,10 +7,10 @@ import (
 )
 
 type Volume struct {
-	Name      string
-	MountPath string
-	Size      int
-	Class     string
+	Name  string
+	Path  string
+	Size  int
+	Class string
 }
 
 type VolumeSlice []Volume
@@ -27,10 +27,10 @@ func volumesFromAPI(apiVolumes []api.Volume) VolumeSlice {
 // volumeFromAPI converts an API Volume to a pod Volume
 func volumeFromAPI(apiVolume api.Volume) Volume {
 	out := Volume{
-		Name:      apiVolume.Name,
-		MountPath: apiVolume.MountPath,
-		Size:      int(apiVolume.Size),
-		Class:     apiVolume.Class,
+		Name:  apiVolume.Name,
+		Path:  apiVolume.Path,
+		Size:  int(apiVolume.Size),
+		Class: apiVolume.Class,
 	}
 	return out
 }
@@ -48,10 +48,10 @@ func (volumes VolumeSlice) ToAPI() []api.Volume {
 // ToAPI converts a pod Volume to an API Volume
 func (v *Volume) ToAPI() api.Volume {
 	out := api.Volume{
-		Name:      v.Name,
-		MountPath: v.MountPath,
-		Size:      int32(v.Size),
-		Class:     v.Class,
+		Name:  v.Name,
+		Path:  v.Path,
+		Size:  int32(v.Size),
+		Class: v.Class,
 	}
 	return out
 }
@@ -67,7 +67,7 @@ func (p *Pod) loadVolumes() error {
 
 	for rows.Next() {
 		var v Volume
-		err := rows.Scan(&v.Name, &v.MountPath, &v.Size)
+		err := rows.Scan(&v.Name, &v.Path, &v.Size)
 		if err != nil {
 			return err
 		}

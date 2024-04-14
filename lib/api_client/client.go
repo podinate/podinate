@@ -54,6 +54,8 @@ type APIClient struct {
 
 	ProjectApi *ProjectApiService
 
+	SharedVolumeApi *SharedVolumeApiService
+
 	UserApi *UserApiService
 }
 
@@ -76,6 +78,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.AccountApi = (*AccountApiService)(&c.common)
 	c.PodApi = (*PodApiService)(&c.common)
 	c.ProjectApi = (*ProjectApiService)(&c.common)
+	c.SharedVolumeApi = (*SharedVolumeApiService)(&c.common)
 	c.UserApi = (*UserApiService)(&c.common)
 
 	return c

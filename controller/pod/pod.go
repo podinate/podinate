@@ -3,6 +3,7 @@ package pod
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -14,8 +15,14 @@ import (
 	api "github.com/johncave/podinate/controller/go"
 	lh "github.com/johncave/podinate/controller/loghandler"
 	"github.com/johncave/podinate/controller/project"
+	"github.com/johncave/podinate/controller/shared_volume"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	// I don't think this will ever change but
+	DEFAULT_TAG = "latest"
 )
 
 const (
@@ -28,20 +35,21 @@ const (
 )
 
 type Pod struct {
-	Uuid        string
-	ID          string
-	Name        string
-	Image       string
-	Tag         string
-	Command     []string
-	Arguments   []string
-	Environment EnvironmentSlice
-	Services    ServiceSlice
-	Volumes     VolumeSlice
-	Status      string // Creating, OK, Down
-	Count       int
-	Ram         int
-	Project     *project.Project
+	Uuid          string
+	ID            string
+	Name          string
+	Image         string
+	Tag           string
+	Command       []string
+	Arguments     []string
+	Environment   EnvironmentSlice
+	Services      ServiceSlice
+	Volumes       VolumeSlice
+	SharedVolumes SharedVolumeSlice
+	Status        string // Creating, OK, Down
+	Count         int
+	Ram           int
+	Project       *project.Project
 
 	// TODO - add CPU requests / limits
 }
@@ -93,6 +101,7 @@ func GetByID(ctx context.Context, theProject *project.Project, id string) (Pod, 
 
 	var kpods *corev1.PodList
 	for tries := 0; tries < 5; tries++ {
+		fmt.Println(tries)
 		// If we create a Pod then immediately try to retrieve it from Kubernetes
 		// there may be a race condition IE in tests.
 		// Don't ask me about how this wasted an entire Friday evening.
@@ -105,17 +114,30 @@ func GetByID(ctx context.Context, theProject *project.Project, id string) (Pod, 
 		if len(kpods.Items) > 0 {
 			break
 		}
-		if tries > 5 {
+		if tries >= 4 {
 			lh.Error(ctx, "No pods found after 5 tries", "pods", kpods, "length", len(kpods.Items), "options", options, "namespace", theProject.GetNamespaceName())
-			return Pod{}, apierror.New(http.StatusInternalServerError, "No pods found after 5 tries")
+			return Pod{}, apierror.New(http.StatusInternalServerError, "Pod doesn't exist in Kubernetes")
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
+
+	lh.Debug(ctx, "Got kpods", "kpods", kpods, "length", len(kpods.Items))
 
 	// Copy the info from Kubernetes to the pod
 	out.Status = string(kpods.Items[0].Status.Phase)
 	out.Command = kpods.Items[0].Spec.Containers[0].Command
 	out.Arguments = kpods.Items[0].Spec.Containers[0].Args
+
+	for _, volume := range kpods.Items[0].Spec.Containers[0].VolumeMounts {
+		v, err := shared_volume.GetByID(ctx, theProject, volume.Name)
+		if err == nil {
+			// Shared volume found
+			out.SharedVolumes = append(out.SharedVolumes, SharedVolume{
+				ID:   v.ID,
+				Path: volume.MountPath,
+			})
+		}
+	}
 
 	//lh.Debug(ctx, "Pod got by ID", "pod", out)
 
@@ -153,43 +175,6 @@ func GetByProject(ctx context.Context, theProject *project.Project, page int32, 
 	lh.Info(ctx, "Pods retrieved", "project", theProject, "count", len(pods), "pods", pods)
 
 	return pods, nil
-	// rows, err := config.DB.Query("SELECT uuid, id, name, image, tag, environment FROM project_pods WHERE project_uuid = $1 OFFSET $2 LIMIT $3", theProject.Uuid, page, limit)
-	// if err != nil {
-	// 	return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve pods")
-	// }
-	// defer rows.Close()
-	// // Read all the pods for the project
-	// pods := make([]Pod, 0)
-	// for rows.Next() {
-	// 	var pod Pod
-	// 	err = rows.Scan(&pod.Uuid, &pod.ID, &pod.Name, &pod.Image, &pod.Tag, &pod.Environment)
-	// 	if err != nil {
-	// 		log.Println("DB error reading pods", err)
-	// 		return nil, apierror.New(http.StatusInternalServerError, "Could not retrieve pods")
-	// 	}
-	// 	pod.Project = theProject
-
-	// 	// Get the services for the pod
-	// 	pod.loadServices()
-
-	// 	// Get the status of the pod from kubernetes
-	// 	dep, err := getKubesDeployment(theProject, pod.ID)
-	// 	if err != nil {
-	// 		return nil, apierror.New(http.StatusInternalServerError, err.Error())
-	// 	}
-
-	// 	status := "Creating"
-	// 	if dep.Status.AvailableReplicas == dep.Status.Replicas {
-	// 		status = "OK"
-	// 	} else if dep.Status.AvailableReplicas == 0 {
-	// 		status = "Down"
-	// 	}
-
-	// 	pod.Status = status
-
-	// 	pods = append(pods, pod)
-	// }
-	// return pods, nil
 }
 
 // Create performs the initial registration of a pod in the database and the kubernetes cluster
@@ -216,25 +201,33 @@ func Create(ctx context.Context, theProject *project.Project, requestedPod api.P
 
 	// Start creating the pod
 	out := Pod{
-		Uuid:        uuid, // Note: UUID blank (should be fine?)
-		ID:          requestedPod.Id,
-		Name:        requestedPod.Name,
-		Image:       requestedPod.Image,
-		Tag:         requestedPod.Tag,
-		Project:     theProject,
-		Command:     requestedPod.Command,
-		Status:      "Creating",
-		Environment: EnvVarFromAPIMany(requestedPod.Environment),
-		Services:    servicesFromAPI(requestedPod.Services),
+		Uuid:          uuid, // Note: UUID blank (should be fine?)
+		ID:            requestedPod.Id,
+		Name:          requestedPod.Name,
+		Image:         requestedPod.Image,
+		Project:       theProject,
+		Command:       requestedPod.Command,
+		Status:        "Creating",
+		Environment:   EnvVarFromAPIMany(requestedPod.Environment),
+		Services:      servicesFromAPI(requestedPod.Services),
+		SharedVolumes: *SharedVolumesFromApiMany(requestedPod.SharedVolumes),
 	}
 
-	// Ensure namespace exists
-	ns, genericErr := out.ensureNamespace()
-	//ns, err := createKubesNamespace(theProject.GetResourceID())
+	if requestedPod.Tag != "" {
+		out.Tag = requestedPod.Tag
+	} else {
+		// No tag - swap in the default "latest"
+		out.Tag = DEFAULT_TAG
+		requestedPod.Tag = DEFAULT_TAG
+	}
+
+	// Get the Project to check the namespace exists
+	ns, genericErr := out.Project.EnsureNamespace(ctx)
 	if genericErr != nil {
 		return Pod{}, apierror.New(http.StatusInternalServerError, genericErr.Error())
 	}
 
+	// Create the Kubernetes deployment. This also creates volumes.
 	err := createKubesDeployment(ns, theProject, requestedPod)
 	if err != nil {
 		lh.Error(ctx, "Error creating kubes deployment", "err", err)
@@ -269,7 +262,7 @@ func Create(ctx context.Context, theProject *project.Project, requestedPod api.P
 
 	if len(requestedPod.Volumes) > 0 {
 		for _, volume := range requestedPod.Volumes {
-			_, dberr = config.DB.Exec("INSERT INTO pod_volumes (uuid, pod_uuid, name, mount_path, size) VALUES (gen_random_uuid(), $1, $2, $3, $4)", uuid, volume.Name, volume.MountPath, volume.Size)
+			_, dberr = config.DB.Exec("INSERT INTO pod_volumes (uuid, pod_uuid, name, mount_path, size) VALUES (gen_random_uuid(), $1, $2, $3, $4)", uuid, volume.Name, volume.Path, volume.Size)
 			if dberr != nil {
 				lh.Error(ctx, "DB error creating pod volume", dberr)
 				out.Delete(ctx)
@@ -309,8 +302,30 @@ func ValidateNewPod(pod api.Pod) *apierror.ApiError {
 	if pod.Image == "" {
 		return apierror.New(http.StatusBadRequest, "Pod image is required")
 	}
-	if pod.Tag == "" {
-		return apierror.New(http.StatusBadRequest, "Pod tag is required")
+
+	// Check if any mount points are the same
+	for i, volume := range pod.Volumes {
+		for j, otherVolume := range pod.Volumes {
+			if i != j && volume.Path == otherVolume.Path {
+				return apierror.New(http.StatusBadRequest, "Mount path "+volume.Path+" is used more than once")
+			}
+		}
+	}
+
+	// Check if any shared volume mountpoints are the same
+	for i, volume := range pod.SharedVolumes {
+		for j, otherVolume := range pod.SharedVolumes {
+			if i != j && volume.Path == otherVolume.Path {
+				return apierror.New(http.StatusBadRequest, "Mount path "+volume.Path+" is used more than once")
+			}
+		}
+
+		// Check if any sharedvolumes are the same as non-shared volumes
+		for _, otherVolume := range pod.Volumes {
+			if volume.Path == otherVolume.Path {
+				return apierror.New(http.StatusBadRequest, "Mount path "+volume.Path+" is used more than once")
+			}
+		}
 	}
 
 	return nil
@@ -318,16 +333,18 @@ func ValidateNewPod(pod api.Pod) *apierror.ApiError {
 
 func (p *Pod) ToAPI() api.Pod {
 	out := api.Pod{
-		Id:          p.ID,
-		Name:        p.Name,
-		Image:       p.Image,
-		Tag:         p.Tag,
-		Status:      p.Status,
-		Command:     p.Command,
-		Environment: EnvVarToAPIMany(p.Environment),
-		ResourceId:  p.GetResourceID(),
-		Services:    ServicesToAPI(p.Services),
-		Volumes:     p.Volumes.ToAPI(),
+		Id:            p.ID,
+		Name:          p.Name,
+		Image:         p.Image,
+		Tag:           p.Tag,
+		Status:        p.Status,
+		Command:       p.Command,
+		Arguments:     p.Arguments,
+		Environment:   EnvVarToAPIMany(p.Environment),
+		ResourceId:    p.GetResourceID(),
+		Services:      ServicesToAPI(p.Services),
+		Volumes:       p.Volumes.ToAPI(),
+		SharedVolumes: SharedVolumesToApiMany(p.SharedVolumes),
 	}
 
 	//lh.Log.Debug("Converted pod to API", "pod", p, "apiPod", out)
@@ -394,6 +411,7 @@ func (p *Pod) Update(ctx context.Context, requested api.Pod) *apierror.ApiError 
 	p.Status = "Updating"
 	p.Environment = EnvVarFromAPIMany(requested.Environment)
 	p.Services = servicesFromAPI(requested.Services)
+	p.SharedVolumes = *SharedVolumesFromApiMany(requested.SharedVolumes)
 
 	// Start creating the pod
 
@@ -450,7 +468,7 @@ func (p *Pod) Update(ctx context.Context, requested api.Pod) *apierror.ApiError 
 			return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
 		}
 		if exists {
-			_, dberr = config.DB.Exec("UPDATE pod_volumes SET mount_path = $3, size = $4 WHERE pod_uuid = $1 AND name = $2", p.Uuid, volume.Name, volume.MountPath, volume.Size)
+			_, dberr = config.DB.Exec("UPDATE pod_volumes SET mount_path = $3, size = $4 WHERE pod_uuid = $1 AND name = $2", p.Uuid, volume.Name, volume.Path, volume.Size)
 			if dberr != nil {
 				lh.Error(ctx, "DB error updating pod volume", dberr)
 				return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}
@@ -458,7 +476,7 @@ func (p *Pod) Update(ctx context.Context, requested api.Pod) *apierror.ApiError 
 			continue
 		} else {
 			// Finally, try create the volume
-			_, dberr = config.DB.Exec("INSERT INTO pod_volumes (uuid, pod_uuid, name, mount_path, size) VALUES (gen_random_uuid(), $1, $2, $3, $4)", p.Uuid, volume.Name, volume.MountPath, volume.Size)
+			_, dberr = config.DB.Exec("INSERT INTO pod_volumes (uuid, pod_uuid, name, mount_path, size) VALUES (gen_random_uuid(), $1, $2, $3, $4)", p.Uuid, volume.Name, volume.Path, volume.Size)
 			if dberr != nil {
 				lh.Error(ctx, "DB error creating pod volume", dberr)
 				return &apierror.ApiError{Code: http.StatusInternalServerError, Message: dberr.Error()}

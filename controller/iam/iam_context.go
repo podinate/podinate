@@ -55,3 +55,12 @@ func AddRequestorToRequest(r *http.Request) (*http.Request, error) {
 
 	return r, nil
 }
+
+// TestContext creates a context for testing
+func TestContext(u *user.User) context.Context {
+	// Get a LogHandler test context
+	ctx := lh.TestContext()
+	// Add the user to the context
+	ctx = context.WithValue(ctx, ContextKey("requestor"), u)
+	return ctx
+}

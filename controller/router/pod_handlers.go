@@ -9,6 +9,7 @@ import (
 	"github.com/johncave/podinate/controller/iam"
 	lh "github.com/johncave/podinate/controller/loghandler"
 	pod "github.com/johncave/podinate/controller/pod"
+	"github.com/johncave/podinate/controller/project"
 	"github.com/johncave/podinate/controller/responder"
 )
 
@@ -29,7 +30,7 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 	lh.Debug(ctx, "Getting pods for project", "projectID", projectID, "accountID", accountID, "page", page, "limit", limit)
 
 	// Get the account and project
-	theAccount, theProject, err := getAccountAndProject(accountID, projectID)
+	theProject, err := getProject(ctx, accountID, projectID)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}
@@ -44,7 +45,7 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 	var apiPods []api.ProjectProjectIdPodGet200ResponseItemsInner
 	for _, p := range pods {
 		//lh.Debug(ctx, "Pod Environment", "env", p.Environment)
-		if iam.RequestorCan(ctx, theAccount, p, pod.ActionView) {
+		if iam.RequestorCan(ctx, &theProject.Account, p, pod.ActionView) {
 			apiPods = append(apiPods, api.ProjectProjectIdPodGet200ResponseItemsInner{
 				Id:          p.ID,
 				Name:        p.Name,
@@ -66,6 +67,12 @@ func (s *PodAPIService) ProjectProjectIdPodGet(ctx context.Context, projectID st
 		Limit: limit,
 	}
 
+	if len(apiPods) == 0 {
+		if !iam.RequestorCan(ctx, &theProject.Account, theProject, project.ActionView) {
+			return responder.Response(http.StatusForbidden, "You do not have permission to view pods in this project"), nil
+		}
+	}
+
 	return responder.Response(http.StatusOK, out), nil
 }
 
@@ -74,7 +81,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdGet(ctx context.Context, project
 
 	log.Printf("%s %s %s", projectID, podID, accountID)
 
-	theAccount, theProject, err := getAccountAndProject(accountID, projectID)
+	theProject, err := getProject(ctx, accountID, projectID)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}
@@ -84,7 +91,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdGet(ctx context.Context, project
 		return responder.Response(apiErr.Code, apiErr.Message), nil
 	}
 
-	if !iam.RequestorCan(ctx, theAccount, p, pod.ActionView) {
+	if !iam.RequestorCan(ctx, &theProject.Account, p, pod.ActionView) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to view this pod"), nil
 	}
 
@@ -99,7 +106,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdPut(ctx context.Context, project
 	lh.Debug(ctx, "Updating pod", "project_id", projectID, "acc", accountID, "podId", podID, "pod", podIn)
 
 	// Get the account by ID
-	theAccount, theProject, err := getAccountAndProject(accountID, projectID)
+	theProject, err := getProject(ctx, accountID, projectID)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}
@@ -113,7 +120,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdPut(ctx context.Context, project
 	lh.Debug(ctx, "Got pod", "pod", thePod, "want", podIn)
 
 	// Check if the user can update the pod
-	if !iam.RequestorCan(ctx, theAccount, thePod, pod.ActionUpdate) {
+	if !iam.RequestorCan(ctx, &theProject.Account, thePod, pod.ActionUpdate) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to update this pod"), nil
 	}
 
@@ -132,12 +139,12 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdPut(ctx context.Context, project
 func (s *PodAPIService) ProjectProjectIdPodPost(ctx context.Context, projectId string, accountID string, requestedPod api.Pod) (api.ImplResponse, error) {
 	//lh.Debug(ctx, "Creating pod", "project_id", projectId, "acc", accountID, "pod", requestedPod)
 	// Get the account by ID
-	theAccount, theProject, err := getAccountAndProject(accountID, projectId)
+	theProject, err := getProject(ctx, accountID, projectId)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}
 
-	if !iam.RequestorCan(ctx, theAccount, theProject, pod.ActionCreate) {
+	if !iam.RequestorCan(ctx, &theProject.Account, theProject, pod.ActionCreate) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to create this pod in this project"), nil
 	}
 
@@ -157,7 +164,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 
 	log.Printf("%s %s %s", projectID, podID, accountID)
 
-	theAccount, theProject, err := getAccountAndProject(accountID, projectID)
+	theProject, err := getProject(ctx, accountID, projectID)
 	if err != nil {
 		return responder.Response(err.Code, err.Message), nil
 	}
@@ -169,7 +176,7 @@ func (s *PodAPIService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 	}
 
 	// Check if the user can delete the pod
-	if !iam.RequestorCan(ctx, theAccount, thePod, pod.ActionDelete) {
+	if !iam.RequestorCan(ctx, &theProject.Account, thePod, pod.ActionDelete) {
 		return responder.Response(http.StatusForbidden, "You do not have permission to delete this pod"), nil
 	}
 

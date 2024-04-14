@@ -93,6 +93,11 @@ Class | Method | HTTP request | Description
 *ProjectApi* | [**ProjectIdGet**](docs/ProjectApi.md#projectidget) | **Get** /project/{id} | Get an existing project given by ID
 *ProjectApi* | [**ProjectIdPut**](docs/ProjectApi.md#projectidput) | **Put** /project/{id} | Update an existing project
 *ProjectApi* | [**ProjectPost**](docs/ProjectApi.md#projectpost) | **Post** /project | Create a new project
+*SharedVolumeApi* | [**ProjectProjectIdSharedVolumesGet**](docs/SharedVolumeApi.md#projectprojectidsharedvolumesget) | **Get** /project/{project_id}/shared_volumes | Get a list of shared volumes for a given project
+*SharedVolumeApi* | [**ProjectProjectIdSharedVolumesPost**](docs/SharedVolumeApi.md#projectprojectidsharedvolumespost) | **Post** /project/{project_id}/shared_volumes | Create a new shared volume
+*SharedVolumeApi* | [**ProjectProjectIdSharedVolumesVolumeIdDelete**](docs/SharedVolumeApi.md#projectprojectidsharedvolumesvolumeiddelete) | **Delete** /project/{project_id}/shared_volumes/{volume_id} | Delete a shared volume
+*SharedVolumeApi* | [**ProjectProjectIdSharedVolumesVolumeIdGet**](docs/SharedVolumeApi.md#projectprojectidsharedvolumesvolumeidget) | **Get** /project/{project_id}/shared_volumes/{volume_id} | Get a shared volume by ID
+*SharedVolumeApi* | [**ProjectProjectIdSharedVolumesVolumeIdPut**](docs/SharedVolumeApi.md#projectprojectidsharedvolumesvolumeidput) | **Put** /project/{project_id}/shared_volumes/{volume_id} | Update a shared volume&#39;s spec
 *UserApi* | [**UserGet**](docs/UserApi.md#userget) | **Get** /user | Get the current user
 *UserApi* | [**UserLoginCallbackProviderGet**](docs/UserApi.md#userlogincallbackproviderget) | **Get** /user/login/callback/{provider} | User login callback URL for oauth providers
 *UserApi* | [**UserLoginCompleteGet**](docs/UserApi.md#userlogincompleteget) | **Get** /user/login/complete | Complete a user login
@@ -107,13 +112,16 @@ Class | Method | HTTP request | Description
  - [EnvironmentVariable](docs/EnvironmentVariable.md)
  - [Error](docs/Error.md)
  - [Pod](docs/Pod.md)
+ - [PodSharedVolumesInner](docs/PodSharedVolumesInner.md)
  - [Project](docs/Project.md)
  - [ProjectGet200Response](docs/ProjectGet200Response.md)
  - [ProjectGet200ResponseItemsInner](docs/ProjectGet200ResponseItemsInner.md)
  - [ProjectProjectIdPodGet200Response](docs/ProjectProjectIdPodGet200Response.md)
  - [ProjectProjectIdPodGet200ResponseItemsInner](docs/ProjectProjectIdPodGet200ResponseItemsInner.md)
  - [ProjectProjectIdPodPodIdExecPostRequest](docs/ProjectProjectIdPodPodIdExecPostRequest.md)
+ - [ProjectProjectIdSharedVolumesGet200Response](docs/ProjectProjectIdSharedVolumesGet200Response.md)
  - [Service](docs/Service.md)
+ - [SharedVolume](docs/SharedVolume.md)
  - [User](docs/User.md)
  - [UserLoginInitiateGet200Response](docs/UserLoginInitiateGet200Response.md)
  - [UserLoginPost200Response](docs/UserLoginPost200Response.md)

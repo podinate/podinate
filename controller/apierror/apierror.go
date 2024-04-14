@@ -32,6 +32,10 @@ func (e ApiError) EncodeJSONResponse(w http.ResponseWriter) {
 	api.EncodeJSONResponse(e, &e.Code, w)
 }
 
+func (e ApiError) ToResponse() api.ImplResponse {
+	return api.ImplResponse{Code: e.Code, Body: e}
+}
+
 // func New(code int, message string) *ApiError {
 // 	return &ApiError{Code: code, Message: message}
 // }

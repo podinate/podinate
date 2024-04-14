@@ -1,14 +1,18 @@
 package user
 
 import (
+	"context"
+	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/johncave/podinate/controller/apierror"
 	"github.com/johncave/podinate/controller/config"
 	api "github.com/johncave/podinate/controller/go"
 	"github.com/matthewhartstonge/argon2"
+	"go.tmthrgd.dev/passit"
 )
 
 // User is a user
@@ -69,6 +73,79 @@ func CheckInternalLogin(user_id string, password string) (*User, error) {
 	}
 
 	return &userOut, nil
+}
+
+// Create creates a new user in the database
+func Create(username *string, password *string, email *string, displayName *string) (*User, *string, *apierror.ApiError) {
+	// Generate a random UUID
+	uuid := uuid.New().String()
+	var err error
+
+	if username == nil {
+		// Generate a username
+		u, err := passit.Repeat(passit.EFFLargeWordlist, "-", 2).Password(rand.Reader)
+		if err != nil {
+			return nil, nil, apierror.NewWithError(http.StatusInternalServerError, "Error generating username", err)
+		}
+		code, err := passit.Repeat(passit.Digit, "", 4).Password(rand.Reader)
+		if err != nil {
+			return nil, nil, apierror.NewWithError(http.StatusInternalServerError, "Error generating username", err)
+		}
+		u = u + code
+		username = &u
+	}
+
+	if password == nil {
+		// Generate a password
+		p, err := passit.Repeat(passit.EFFLargeWordlist, " ", 5).Password(rand.Reader)
+		if err != nil {
+			return nil, nil, apierror.NewWithError(http.StatusInternalServerError, "Error generating password", err)
+		}
+		password = &p
+	}
+
+	if displayName == nil {
+		displayName = username
+	}
+
+	if email == nil {
+		e := "test@podinate.com"
+		email = &e
+	}
+
+	// Hash the password
+	argon := argon2.DefaultConfig()
+	hash, err := argon.HashEncoded([]byte(*password))
+	if err != nil {
+		return nil, nil, apierror.NewWithError(http.StatusInternalServerError, "Error hashing password", err)
+	}
+	store := base64.StdEncoding.EncodeToString(hash)
+
+	// Insert the user into the database
+	var userUUID string
+	err = config.DB.QueryRow("INSERT INTO \"user\" (uuid, id, email, display_name, password_hash) VALUES ($1, $2, $3, $4, $5) RETURNING uuid", uuid, *username, *email, *displayName, store).Scan(&userUUID)
+	if err != nil {
+		return nil, nil, apierror.NewWithError(http.StatusInternalServerError, "Error creating user", err)
+	}
+
+	// Return the user
+	user := User{
+		UUID:        uuid,
+		ID:          *username,
+		Email:       *email,
+		DisplayName: *displayName,
+	}
+	return &user, password, nil
+}
+
+// Delete deletes a user from the database
+func (u *User) Delete(ctx context.Context) *apierror.ApiError {
+	_, err := config.DB.Exec("DELETE FROM \"user\" WHERE uuid = $1", u.UUID)
+	if err != nil {
+		return apierror.NewWithError(http.StatusInternalServerError, "Error deleting user", err)
+	}
+
+	return nil
 }
 
 func (u *User) GetResourceID() string {

@@ -94,6 +94,7 @@ func initConfig() {
 	if viper.GetBool("verbose") {
 		log.Println("Verbose output enabled")
 		fmt.Printf("Config: %+v\n", viper.AllSettings())
+		//zap.NewAtomicLevel().SetLevel(zap.DebugLevel)
 	}
 	//fmt.Printf("Config: %+v\n", viper.AllSettings())
 }

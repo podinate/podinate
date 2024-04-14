@@ -5,6 +5,7 @@ api/openapi.yaml
 api_account.go
 api_pod.go
 api_project.go
+api_shared_volume.go
 api_user.go
 client.go
 configuration.go
@@ -14,6 +15,7 @@ docs/EnvironmentVariable.md
 docs/Error.md
 docs/Pod.md
 docs/PodApi.md
+docs/PodSharedVolumesInner.md
 docs/Project.md
 docs/ProjectApi.md
 docs/ProjectGet200Response.md
@@ -21,7 +23,10 @@ docs/ProjectGet200ResponseItemsInner.md
 docs/ProjectProjectIdPodGet200Response.md
 docs/ProjectProjectIdPodGet200ResponseItemsInner.md
 docs/ProjectProjectIdPodPodIdExecPostRequest.md
+docs/ProjectProjectIdSharedVolumesGet200Response.md
 docs/Service.md
+docs/SharedVolume.md
+docs/SharedVolumeApi.md
 docs/User.md
 docs/UserApi.md
 docs/UserLoginInitiateGet200Response.md
@@ -34,6 +39,7 @@ go.sum
 model__project__project_id__pod__pod_id__exec_post_request.go
 model__project__project_id__pod_get_200_response.go
 model__project__project_id__pod_get_200_response_items_inner.go
+model__project__project_id__shared_volumes_get_200_response.go
 model__project_get_200_response.go
 model__project_get_200_response_items_inner.go
 model__user_login_initiate_get_200_response.go
@@ -43,8 +49,10 @@ model_account.go
 model_environment_variable.go
 model_error.go
 model_pod.go
+model_pod_shared_volumes_inner.go
 model_project.go
 model_service.go
+model_shared_volume.go
 model_user.go
 model_volume.go
 response.go

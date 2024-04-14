@@ -10,19 +10,22 @@ import (
 	"github.com/hashicorp/hcl2/hclparse"
 	"github.com/johncave/podinate/cli/sdk"
 	"github.com/zclconf/go-cty/cty/gocty"
+	"go.uber.org/zap"
 )
 
 // Project represents a package to be installed, either the current state or the desired state
 type Package struct {
-	Projects []Project
-	Pods     []Pod
+	Projects      []Project
+	Pods          []Pod
+	SharedVolumes []SharedVolume
 }
 
 func Parse(path string) (*Package, error) {
 	fmt.Println("Parsing file: ", path)
 	spec := hcldec.ObjectSpec{
-		"pods":     podHCLSpec,
-		"projects": projectHCLSpec,
+		"pods":           podHCLSpec,
+		"projects":       projectHCLSpec,
+		"shared_volumes": sharedVolumeHCLSpec,
 	}
 	parser := hclparse.NewParser()
 	f, diags := parser.ParseHCLFile(path)
@@ -30,6 +33,11 @@ func Parse(path string) (*Package, error) {
 		WriteDiagnostics(diags, parser)
 		return nil, errors.New("Error parsing file")
 	}
+
+	// Needs a lot of work from here down...
+	// Need to decode the blocks one by one so we can handle errors better
+	// And so we can get values from the blocks to add to others
+
 	val, moreDiags := hcldec.Decode(f.Body, spec, nil)
 	diags = append(diags, moreDiags...)
 	if diags.HasErrors() {
@@ -40,13 +48,15 @@ func Parse(path string) (*Package, error) {
 	//var projects []Project
 
 	var thePackage Package
+
 	// Parse all the projects in the file
 	for i, projectIn := range val.GetAttr("projects").AsValueMap() {
 		var project Project
 		project.ID = i
 		err := gocty.FromCtyValue(projectIn, &project)
 		if err != nil {
-			fmt.Println(err)
+			//fmt.Printf("Issue in project %s, %s", i, err)
+			return nil, errors.New(fmt.Sprintf("Error parsing project %s, issue: %s", i, err))
 		}
 		thePackage.Projects = append(thePackage.Projects, project)
 	}
@@ -60,9 +70,21 @@ func Parse(path string) (*Package, error) {
 		pod.ID = i
 		err := gocty.FromCtyValue(podv, &pod)
 		if err != nil {
-			fmt.Println(err)
+			return nil, errors.New(fmt.Sprintf("Error parsing pod %s, issue: %s", i, err))
 		}
 		thePackage.Pods = append(thePackage.Pods, pod)
+	}
+
+	// Parse all the shared volumes in the file
+	sharedVolumeValues := val.GetAttr("shared_volumes").AsValueMap()
+	for i, sharedVolumeV := range sharedVolumeValues {
+		var sharedVolume SharedVolume
+		sharedVolume.ID = i
+		err := gocty.FromCtyValue(sharedVolumeV, &sharedVolume)
+		if err != nil {
+			fmt.Println(err)
+		}
+		thePackage.SharedVolumes = append(thePackage.SharedVolumes, sharedVolume)
 	}
 
 	return &thePackage, nil
@@ -100,6 +122,41 @@ func (p *Package) Apply() error {
 
 	}
 
+	// Deploy shared volumes
+	zap.S().Infow("Deploying shared volumes", "shared_volumes", p.SharedVolumes)
+	for _, sharedVolume := range p.SharedVolumes {
+		zap.S().Infow("Deploying shared volume", "shared_volume", sharedVolume)
+		theProject, err := sdk.GetProjectByID(sharedVolume.ProjectID)
+		if err != nil {
+			return err
+		}
+		theSharedVolume, err := sharedVolume.ToSDK()
+		if err != nil {
+			return err
+		}
+
+		zap.S().Infow("Getting shared volume", "shared_volume", theSharedVolume)
+		existing, sdkerr := theProject.GetSharedVolumeByID(theSharedVolume.ID)
+		zap.S().Infow("Got shared volume", "shared_volume", theSharedVolume, "existing", existing, "sdkerr", sdkerr)
+		if sdkerr == nil {
+			// Shared volume exists - try update it
+			zap.S().Infow("Shared volume exists - updating", "shared_volume", theSharedVolume)
+			err := existing.Update(theSharedVolume)
+			if err != nil {
+				return err
+			}
+			continue
+		} else if sdkerr.Code == 404 {
+			_, err = theProject.CreateSharedVolume(*theSharedVolume)
+			if err != nil {
+				return err
+			}
+			fmt.Println("Created shared volume: ", theSharedVolume.ID)
+		} else {
+			return sdkerr
+		}
+	}
+
 	for _, pod := range p.Pods {
 		//fmt.Printf("Deploying pod: %s\n", pod.Name)
 		theProject, err := sdk.GetProjectByID(pod.ProjectID)
@@ -120,7 +177,7 @@ func (p *Package) Apply() error {
 			//os.Exit(2)
 			fmt.Println("Updated pod: ", thePod.Name)
 
-			_, err := existing.Update(thePod)
+			err := existing.Update(thePod)
 			if err != nil {
 				return err
 			}
@@ -135,6 +192,8 @@ func (p *Package) Apply() error {
 				return err
 			}
 			fmt.Println("Created pod: ", thePod.Name)
+		} else {
+			return sdkerr
 		}
 
 	}
@@ -157,21 +216,51 @@ func (p *Package) Delete() error {
 			return err
 		}
 		thePod, err := pod.ToSDK()
+		zap.S().Debugw("Got pod to SDK", "pod", thePod, "err", err)
 		if err != nil {
 			return err
 		}
 
 		// Check if pod exists, update if so
 		existing, sdkerr := theProject.GetPodByID(thePod.ID)
+		zap.S().Debugw("Got pod", "pod", thePod, "existing", existing, "sdkerr", sdkerr)
 		if sdkerr == nil {
 			// Pod exists - try update it
 			err := existing.Delete()
+			zap.S().Debugw("Deleted pod", "pod", thePod, "err", err)
 			if err != nil {
 				return err
 			}
 			continue
 		}
 
+	}
+
+	// Delete shared volumes
+	fmt.Println("Deleting shared volumes...")
+	for _, sharedVolume := range p.SharedVolumes {
+		fmt.Printf("Deleting shared volume: %s\n", sharedVolume.ID)
+		theProject, err := sdk.GetProjectByID(sharedVolume.ProjectID)
+		if err != nil {
+			return err
+		}
+		theSharedVolume, err := sharedVolume.ToSDK()
+		if err != nil {
+			return err
+		}
+
+		// Check if shared volume exists, and delete
+		existing, sdkerr := theProject.GetSharedVolumeByID(theSharedVolume.ID)
+		zap.S().Debugw("Got shared volume", "shared_volume", theSharedVolume, "existing", existing, "sdkerr", sdkerr)
+		if sdkerr == nil {
+			// Shared volume exists - try update it
+			err := existing.Delete()
+			zap.S().Debugw("Deleted shared volume", "shared_volume", theSharedVolume, "err", err)
+			if err != nil {
+				return err
+			}
+			continue
+		}
 	}
 
 	fmt.Println("Deleting projects...")
@@ -200,7 +289,7 @@ func (p *Package) Delete() error {
 
 }
 
-// WriteDiagnostic writes the diagnostics to the given writer
+// WriteDiagnostic writes the diagnostics to stdout
 func WriteDiagnostics(diags hcl.Diagnostics, parser *hclparse.Parser) {
 	wr := hcl.NewDiagnosticTextWriter(os.Stdout, parser.Files(), 80, true)
 	// Handle errors

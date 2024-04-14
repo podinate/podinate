@@ -11,7 +11,7 @@ kubycat:
       notify: true
       shell: /bin/sh
       config: ~/.kube/config
-      context: k3d-podinate
+      context: k3d-podinate-dev
       base: /home/john/Code/podinate
       from:
         - controller

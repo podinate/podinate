@@ -13,74 +13,11 @@ import (
 	"github.com/johncave/podinate/controller/project"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
-
-// func callKubes() {
-// 	fmt.Println("Get Kubernetes pods")
-
-// 	clientset, err := getKubesClient()
-// 	log.Println("Getting pods...")
-
-// 	pods, err := clientset.CoreV1().
-// 		Pods("kube-system").
-// 		List(context.Background(), metav1.ListOptions{})
-// 	if err != nil {
-// 		fmt.Printf("error getting pods: %v\n", err)
-// 		os.Exit(1)
-// 	}
-// 	for _, pod := range pods.Items {
-// 		fmt.Printf("Pod name: %s\n", pod.Name)
-// 	}
-
-// 	nsList, err := clientset.CoreV1().
-// 		Namespaces().
-// 		List(context.Background(), metav1.ListOptions{})
-// 	//checkErr(err)
-// 	fmt.Println(err)
-
-// 	for _, n := range nsList.Items {
-// 		fmt.Printf("Namespace: %s\n", n.Name)
-// 	}
-
-// }
-
-func (p *Pod) ensureNamespace() (*corev1.Namespace, error) {
-	fmt.Println("Create Kubernetes namespace")
-
-	clientset, err := getKubesClient()
-	if err != nil {
-		log.Printf("error getting kubernetes client: %v\n", err)
-		return nil, err
-	}
-
-	nsSpec := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: p.getNamespaceName(),
-		},
-	}
-	ns, err := clientset.CoreV1().
-		Namespaces().
-		Create(context.Background(), nsSpec, metav1.CreateOptions{})
-	if errors.IsAlreadyExists(err) {
-		// Get the ns instead
-		ns, err := clientset.CoreV1().Namespaces().Get(context.Background(), p.getNamespaceName(), metav1.GetOptions{})
-		if err != nil {
-			fmt.Printf("error getting existing kubernetes namespace: %v\n", err)
-			return ns, err
-		}
-		return ns, nil
-	}
-	if err != nil {
-		fmt.Printf("error creating kubernetes namespace: %v\n", err)
-		return nil, err
-	}
-	return ns, nil
-}
 
 func (p *Pod) getNamespaceName() string {
 	return p.Project.GetNamespaceName()
@@ -214,11 +151,12 @@ func getStatefulSetSpec(theProject *project.Project, requested api.Pod) (*appsv1
 		})
 	}
 
+	// Non-shared volumes added to StatefulSet Spec as a pvc template
 	for _, volume := range requested.Volumes {
 		// Add volume mounts
 		out.Spec.Template.Spec.Containers[0].VolumeMounts = append(out.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 			Name:      volume.Name,
-			MountPath: volume.MountPath,
+			MountPath: volume.Path,
 		})
 
 		// Add volume claim templates
@@ -253,16 +191,44 @@ func getStatefulSetSpec(theProject *project.Project, requested api.Pod) (*appsv1
 			storageClass, err := getStorageClass(volume.Class)
 			if err != nil {
 				lh.Log.Errorw("error getting storage class", "error", err.Error())
-				return nil, apierror.NewWithError(http.StatusBadRequest, "error checking storage class exists", err)
+				return nil, apierror.NewWithError(http.StatusBadRequest, "storage class does not exist", err)
 			}
 			newPVC.Spec.StorageClassName = &storageClass.Name
 		}
 
 		out.Spec.VolumeClaimTemplates = append(out.Spec.VolumeClaimTemplates, newPVC)
 
+	} // End non-shared volumes
+
+	// Add shared volumes to spec
+	for _, sv := range requested.SharedVolumes {
+
+		// Check if persistentvolumeclaim exists
+		_, err := config.Client.CoreV1().PersistentVolumeClaims(theProject.GetNamespaceName()).Get(context.Background(), sv.VolumeId, metav1.GetOptions{})
+		if err != nil {
+			lh.Log.Errorw("error checking existence of persistent volume claim", "error", err.Error())
+			return nil, apierror.NewWithError(http.StatusBadRequest, "Shared Volume does not exist", err)
+		}
+
+		out.Spec.Template.Spec.Containers[0].VolumeMounts = append(out.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      sv.VolumeId,
+			MountPath: sv.Path,
+		})
+
+		vd := corev1.Volume{
+			Name: sv.VolumeId,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: sv.VolumeId,
+				},
+			},
+		}
+
+		out.Spec.Template.Spec.Volumes = append(out.Spec.Template.Spec.Volumes, vd)
+
 	}
 
-	lh.Log.Infow("StatefulSet spec generated", "statefulset", out)
+	lh.Log.Infow("StatefulSet spec generated", "statefulvolumeset", out)
 
 	return out, nil
 }

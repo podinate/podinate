@@ -30,7 +30,7 @@ func RequestorCan(ctx context.Context, account *account.Account, resource Resour
 		}
 	}
 
-	lh.Warn(ctx, "deny action", "requestor", requestor.GetResourceID(), "account", account.GetUUID(), "account_id", account.ID, "resource", resource.GetResourceID(), "action", action)
+	lh.Warn(ctx, "deny action", "requestor", requestor.GetResourceID(), "account", account, "resource", resource.GetResourceID(), "action", action)
 	return false
 }
 

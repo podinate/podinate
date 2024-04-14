@@ -20,13 +20,11 @@ tags:
 - description: "Operations related to pods - Pods are a group of containers with the\
     \ same lifecycle, and are the basic unit of deployment on Podinate"
   name: Pod
+- description: Operations related to shared volumes - shared volumes are storage volumes
+    that can be shared by multiple pods to store data
+  name: SharedVolume
 - description: "Operations related to users - users are the people who use Podinate,\
-    \ and can have different permissions to different accounts. \n\nTo complete a\
-    \ user login, you should call `/user/login/initiate` to get a login URL and token,\
-    \ then redirect the user to that URL. \nOnce they have completed the login flow\
-    \ on the provider, they will be redirected to `/user/login/callback/{provider}`.\
-    \ \nYou should then call `/user/login/complete` with that token to get the user's\
-    \ API key.\n"
+    \ and can have different permissions to different accounts. \n"
   name: User
 paths:
   /account:
@@ -903,6 +901,302 @@ paths:
       tags:
       - Pod
       x-speakeasy-entity-operation: Pod#exec
+  /project/{project_id}/shared_volumes:
+    get:
+      description: Returns a list of shared volumes for a given project. Shared volumes
+        are storage volumes that can be shared by multiple pods to store data.
+      parameters:
+      - description: The page number to return (starts at 0)
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          type: integer
+        style: form
+      - description: The amount of items to return per page
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 20
+          type: integer
+        style: form
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_project__project_id__shared_volumes_get_200_response'
+          description: A JSON array of shared volumes
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Get a list of shared volumes for a given project
+      tags:
+      - SharedVolume
+    post:
+      description: Creating a new shared volume
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SharedVolume'
+        description: A JSON object containing the information needed to create a new
+          shared volume
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedVolume'
+          description: The shared volume was created successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Create a new shared volume
+      tags:
+      - SharedVolume
+  /project/{project_id}/shared_volumes/{volume_id}:
+    delete:
+      description: Delete a shared volume
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: volume_id
+        required: true
+        schema:
+          description: The shared volume to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "202":
+          description: "We received your request to delete the shared volume, it will\
+            \ be processed in the background."
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Delete a shared volume
+      tags:
+      - SharedVolume
+    get:
+      description: Get a shared volume by ID
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: volume_id
+        required: true
+        schema:
+          description: The shared volume to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedVolume'
+          description: An array of shared volumes
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Get a shared volume by ID
+      tags:
+      - SharedVolume
+    put:
+      description: Update a shared volume
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: volume_id
+        required: true
+        schema:
+          description: The shared volume to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SharedVolume'
+        description: A JSON object containing the information needed to update a shared
+          volume
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedVolume'
+          description: The shared volume was updated successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+      summary: Update a shared volume's spec
+      tags:
+      - SharedVolume
   /user/login:
     post:
       description: Login to Podinate
@@ -1336,13 +1630,21 @@ components:
             type: string
           type: array
         volumes:
-          description: The storage volumes attached to this pod
+          description: The storage volumes attached to this pod only.
           example:
           - name: blog-images
             size: 10
-            mount_path: /var/www/html/images
+            path: /var/www/html/images
           items:
             $ref: '#/components/schemas/Volume'
+          type: array
+        shared_volumes:
+          description: The shared storage volumes attached to this pod.
+          example:
+          - volume_id: blog-files
+            path: /var/www/html
+          items:
+            $ref: '#/components/schemas/Pod_shared_volumes_inner'
           type: array
         environment:
           description: The environment variables to pass to the pod
@@ -1382,7 +1684,6 @@ components:
       - id
       - image
       - name
-      - tag
       type: object
       x-speakeasy-entity: Pod
     EnvironmentVariable:
@@ -1473,7 +1774,7 @@ components:
           description: The size of the volume in GB
           example: 10
           type: integer
-        mount_path:
+        path:
           description: The path to mount the volume at
           example: /var/www/html
           type: string
@@ -1481,9 +1782,50 @@ components:
           description: "The class of the volume, for example \"standard\" or \"premium\""
           example: standard
           type: string
+        resource_id:
+          description: The global Resource ID of the volume
+          example: account:podinate/project:hello-world/volume:my-blog
+          type: string
+          x-speakeasy-param-readonly: true
       required:
-      - mount_path
       - name
+      - path
+      - size
+      type: object
+    SharedVolume:
+      description: A shared volume is a storage volume that can be shared by multiple
+        pods to store data.
+      example:
+        size: 10
+        name: Blog Files
+        resource_id: account:podinate/project:hello-world/shared_volume:blog-files
+        id: blog-files
+        class: standard
+      properties:
+        id:
+          description: The short name (slug/url) of the shared volume
+          example: blog-files
+          type: string
+        name:
+          description: The name of the shared volume
+          example: Blog Files
+          type: string
+        size:
+          description: The size of the shared volume in GB
+          example: 10
+          type: integer
+        class:
+          description: "The class of the shared volume, for example \"standard\" or\
+            \ \"premium\""
+          example: standard
+          type: string
+        resource_id:
+          description: The global Resource ID of the shared volume
+          example: account:podinate/project:hello-world/shared_volume:blog-files
+          type: string
+          x-speakeasy-param-readonly: true
+      required:
+      - id
       - size
       type: object
     Error:
@@ -1573,6 +1915,44 @@ components:
       required:
       - command
       type: object
+    _project__project_id__shared_volumes_get_200_response:
+      example:
+        total: 1
+        limit: 20
+        page: 0
+        items:
+        - size: 10
+          name: Blog Files
+          resource_id: account:podinate/project:hello-world/shared_volume:blog-files
+          id: blog-files
+          class: standard
+        - size: 10
+          name: Blog Files
+          resource_id: account:podinate/project:hello-world/shared_volume:blog-files
+          id: blog-files
+          class: standard
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/SharedVolume'
+          type: array
+        total:
+          description: The total number of shared volumes
+          example: 1
+          type: integer
+        page:
+          description: The current page number
+          example: 0
+          type: integer
+        limit:
+          description: The number of items per page
+          example: 20
+          type: integer
+      required:
+      - limit
+      - page
+      - total
+      type: object
     _user_login_post_request:
       properties:
         username:
@@ -1619,6 +1999,20 @@ components:
             have completed the oauth flow
           example: abc1234
           type: string
+      type: object
+    Pod_shared_volumes_inner:
+      properties:
+        volume_id:
+          description: The short name (slug/url) of the shared volume
+          example: blog-files
+          type: string
+        path:
+          description: The path to mount the shared volume at
+          example: /var/www/html
+          type: string
+      required:
+      - path
+      - volume_id
       type: object
   securitySchemes:
     APIKeyAuth:

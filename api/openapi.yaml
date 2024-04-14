@@ -17,13 +17,11 @@ tags:
   description: Operations related to your projects - projects are a distcint group of resources related to a single application or service
 - name: Pod
   description: Operations related to pods - Pods are a group of containers with the same lifecycle, and are the basic unit of deployment on Podinate
+- name: SharedVolume
+  description: Operations related to shared volumes - shared volumes are storage volumes that can be shared by multiple pods to store data
 - name: User
   description: |
     Operations related to users - users are the people who use Podinate, and can have different permissions to different accounts. 
-
-    To complete a user login, you should call `/user/login/initiate` to get a login URL and token, then redirect the user to that URL. 
-    Once they have completed the login flow on the provider, they will be redirected to `/user/login/callback/{provider}`. 
-    You should then call `/user/login/complete` with that token to get the user's API key.
 paths:
   /account:
     get:
@@ -641,7 +639,228 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: The command could not be executed due to a permissions error
 
+  /project/{project_id}/shared_volumes:
+    get:
+      summary: Get a list of shared volumes for a given project
+      description: "Returns a list of shared volumes for a given project. Shared volumes are storage volumes that can be shared by multiple pods to store data."
+      tags:
+      - SharedVolume
+      parameters:
+      # Pagination parameters
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 0
+        description: The page number to return (starts at 0)
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 20
+        description: The amount of items to return per page
+          # example: 10
+
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - $ref: '#/components/parameters/account'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SharedVolume'
+                  total:
+                    type: integer
+                    description: The total number of shared volumes
+                    example: 1
+                  page:
+                    type: integer
+                    description: The current page number
+                    example: 0
+                  limit:
+                    type: integer
+                    description: The number of items per page
+                    example: 20
+                required:
+                - total
+                - page
+                - limit
+          description: A JSON array of shared volumes
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+        # Add conflict
+    post:
+      summary: Create a new shared volume
+      description: Creating a new shared volume
+      tags:
+      - SharedVolume
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - $ref: '#/components/parameters/account'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SharedVolume'
+        description: A JSON object containing the information needed to create a new
+          shared volume
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedVolume'
+          description: The shared volume was created successfully
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
   
+  /project/{project_id}/shared_volumes/{volume_id}:
+    get:
+      summary: Get a shared volume by ID
+      description: Get a shared volume by ID
+      tags:
+      - SharedVolume
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: volume_id
+        required: true
+        schema:
+          description: The shared volume to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - $ref: '#/components/parameters/account'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedVolume'
+          description: An array of shared volumes
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+    put:
+      summary: Update a shared volume's spec
+      description: Update a shared volume
+      tags:
+      - SharedVolume
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: volume_id
+        required: true
+        schema:
+          description: The shared volume to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - $ref: '#/components/parameters/account'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SharedVolume'
+        description: A JSON object containing the information needed to update a shared volume
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedVolume'
+          description: The shared volume was updated successfully
+        "400":
+          $ref: "#/components/responses/400Error"
+    delete:
+      summary: Delete a shared volume
+      description: Delete a shared volume
+      tags:
+      - SharedVolume
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: volume_id
+        required: true
+        schema:
+          description: The shared volume to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - $ref: '#/components/parameters/account'
+      responses:
+        "202":
+          description: We received your request to delete the shared volume, it will be processed in the background. 
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+
   /user/login:
     post:
       summary: Login to Podinate
@@ -1046,20 +1265,35 @@ components:
           type: array
           items:
             type: string
-            
-        # cluster:
-        #   description: The cluster to run this pod on
-        #   example: "nz-1"
-        #   type: string
         volumes:
-          description: The storage volumes attached to this pod
+          description: The storage volumes attached to this pod only. 
           example:
             - name: blog-images
               size: 10
-              mount_path: /var/www/html/images
+              path: /var/www/html/images
           type: array
           items:
             $ref: '#/components/schemas/Volume'
+        shared_volumes:
+          description: The shared storage volumes attached to this pod. 
+          example:
+            - volume_id: blog-files
+              path: /var/www/html
+          type: array
+          items:
+            type: object
+            properties:
+              volume_id:
+                description: The short name (slug/url) of the shared volume
+                example: blog-files
+                type: string
+              path: 
+                description: The path to mount the shared volume at
+                example: /var/www/html
+                type: string
+            required:
+              - volume_id
+              - path
         environment:
           description: The environment variables to pass to the pod
           example:
@@ -1099,7 +1333,6 @@ components:
         - id 
         - name
         - image
-        - tag
 
     EnvironmentVariable:
       description: An environment variable is a key-value pair that is passed to the container when it is run. 
@@ -1187,7 +1420,7 @@ components:
           description: The size of the volume in GB
           example: 10
           type: integer
-        mount_path:
+        path:
           description: The path to mount the volume at
           example: /var/www/html
           type: string
@@ -1195,15 +1428,43 @@ components:
           description: The class of the volume, for example "standard" or "premium"
           example: standard
           type: string
-        # resource_id:
-        #   description: The global Resource ID of the volume
-        #   example: account:podinate/project:hello-world/volume:my-blog
-        #   type: string
-        #   x-speakeasy-param-readonly: true
+        resource_id:
+          description: The global Resource ID of the volume
+          example: account:podinate/project:hello-world/volume:my-blog
+          type: string
+          x-speakeasy-param-readonly: true
       required:
         - name
         - size
-        - mount_path
+        - path
+      type: object
+    SharedVolume:
+      description: A shared volume is a storage volume that can be shared by multiple pods to store data. 
+      properties:
+        id:
+          description: The short name (slug/url) of the shared volume
+          example: blog-files
+          type: string
+        name:
+          description: The name of the shared volume
+          example: "Blog Files"
+          type: string
+        size:
+          description: The size of the shared volume in GB
+          example: 10
+          type: integer
+        class:
+          description: The class of the shared volume, for example "standard" or "premium"
+          example: standard
+          type: string
+        resource_id:
+          description: The global Resource ID of the shared volume
+          example: account:podinate/project:hello-world/shared_volume:blog-files
+          type: string
+          x-speakeasy-param-readonly: true
+      required:
+        - id
+        - size
       type: object
 
         

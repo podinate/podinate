@@ -66,6 +66,33 @@ Setting up a ZFS pool for Podinate is a pretty quick process. If you want to use
     ```bash
     zfs create vault/podinate 
     ```
+1. (Encrypted) Unlock Encrypted Dataset on Boot:
+    ZFS won't load the encryption key into our Podinate Dataset by default for some reason, so we have to make it. 
+    ```bash
+    nano /etc/systemd/system/zfs-load-keys.service
+    ```
+    Copy in the following contents: 
+    ```systemd
+    [Unit]
+    Description=Load all ZFS encryption keys
+    DefaultDependencies=no
+    Before=zfs-mount.service
+    After=zfs-import.target
+    Requires=zfs-import.target
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/usr/sbin/zfs load-key -a
+
+    [Install]
+    WantedBy=zfs-mount.service
+    ```
+    And enable the service by running: 
+    ```bash
+    systemctl enable zfs-load-keys
+    ```
+    All dataset keys will be loaded automatically on boot. 
 
 ## Conecting Pool to Podinate 
 Once we have a Dataset to use for Podinate, the next step is to set up the ZFS volume provisioner in our Kubernetes cluster.

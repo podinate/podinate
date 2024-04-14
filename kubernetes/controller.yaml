@@ -113,23 +113,17 @@ metadata:
   name: podinate-controller-deployment-manager
   namespace: podinate
 rules:
+- apiGroups: [""]
+  resources: ["services", "namespaces", "pods", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["apps"]
   resources: ["statefulsets"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["apps"]
   resources: ["statefulsets/status"]
   verbs: ["get", "update", "patch"]
-- apiGroups: [""]
-  resources: ["services"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["networking.k8s.io"]
   resources: ["ingresses"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-- apiGroups: [""]
-  resources: ["namespaces"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-- apiGroups: [""]
-  resources: ["pods"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
@@ -140,6 +134,7 @@ rules:
 - apiGroups: [""]
   resources: ["pods/exec"]
   verbs: ["create"]
+
 ---
 # ClusterRoleBinding to bind the ClusterRole to the ServiceAccount
 apiVersion: rbac.authorization.k8s.io/v1

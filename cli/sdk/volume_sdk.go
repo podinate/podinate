@@ -5,10 +5,10 @@ import (
 )
 
 type Volume struct {
-	Name      string `json:"name"`
-	MountPath string `json:"mount_path"`
-	Size      int    `json:"size"`
-	Class     string `json:"class"`
+	Name  string `json:"name"`
+	Path  string `json:"path"`
+	Size  int    `json:"size"`
+	Class string `json:"class"`
 }
 
 type VolumeSlice []Volume
@@ -25,9 +25,9 @@ func volumesFromAPI(apiVolumes []api_client.Volume) VolumeSlice {
 // volumeFromAPI converts an API Volume to a pod Volume
 func volumeFromAPI(apiVolume api_client.Volume) Volume {
 	out := Volume{
-		Name:      apiVolume.Name,
-		MountPath: apiVolume.MountPath,
-		Size:      int(apiVolume.Size),
+		Name: apiVolume.Name,
+		Path: apiVolume.Path,
+		Size: int(apiVolume.Size),
 	}
 
 	if apiVolume.Class != nil {
@@ -49,9 +49,9 @@ func volumesToAPI(volumes VolumeSlice) []api_client.Volume {
 // volumeToAPI converts a pod Volume to an API Volume
 func volumeToAPI(volume Volume) api_client.Volume {
 	out := api_client.Volume{
-		Name:      volume.Name,
-		MountPath: volume.MountPath,
-		Size:      int32(volume.Size),
+		Name: volume.Name,
+		Path: volume.Path,
+		Size: int32(volume.Size),
 	}
 
 	if volume.Class != "" {

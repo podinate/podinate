@@ -72,7 +72,7 @@ func (s *PodAPIShim) ProjectProjectIdPodPodIdLogsGet(w http.ResponseWriter, r *h
 	}
 
 	// Get the account and project
-	theAccount, theProject, apiErr := getAccountAndProject(accountID, projectID)
+	theProject, apiErr := getProject(r.Context(), accountID, projectID)
 	if err != nil {
 		apiErr.EncodeJSONResponse(w)
 		return
@@ -84,7 +84,7 @@ func (s *PodAPIShim) ProjectProjectIdPodPodIdLogsGet(w http.ResponseWriter, r *h
 		return
 	}
 
-	if !iam.RequestorCan(r.Context(), theAccount, p, pod.ActionViewLogs) {
+	if !iam.RequestorCan(r.Context(), &theProject.Account, p, pod.ActionViewLogs) {
 		apiErr := apierror.New(http.StatusForbidden, "You do not have permission to view the logs for this pod")
 		apiErr.EncodeJSONResponse(w)
 		return
@@ -158,7 +158,7 @@ func (s *PodAPIShim) ProjectProjectIdPodPodIdExecPost(w http.ResponseWriter, r *
 	ctx := r.Context()
 
 	// Our Logic - like in handlers
-	theAccount, theProject, err := getAccountAndProject(account, projectId)
+	theProject, err := getProject(r.Context(), account, projectId)
 	if err != nil {
 		err.EncodeJSONResponse(w)
 		return
@@ -170,7 +170,7 @@ func (s *PodAPIShim) ProjectProjectIdPodPodIdExecPost(w http.ResponseWriter, r *
 		return
 	}
 
-	if !iam.RequestorCan(ctx, theAccount, thePod, pod.ActionExec) {
+	if !iam.RequestorCan(ctx, &theProject.Account, thePod, pod.ActionExec) {
 		apierror.New(http.StatusForbidden, "You do not have permission to execute commands in this pod").EncodeJSONResponse(w)
 		return
 	}

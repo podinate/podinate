@@ -186,6 +186,7 @@ table "pod_volumes" {
   column "uuid" {
     null = false
     type = uuid
+    default = sql("gen_random_uuid()")
   }
   column "pod_uuid" {
     null = false
@@ -213,6 +214,46 @@ table "pod_volumes" {
     on_delete   = CASCADE
   }
 }
+
+table "shared_volumes" {
+  schema = schema.public
+  column "uuid" {
+    null = false
+    type = uuid
+    default = sql("gen_random_uuid()")
+  }
+  column "project_uuid" {
+    null = false
+    type = uuid
+  }
+  column "id" {
+    null = false
+    type = text
+  }
+  column "name" {
+    null = true
+    type = text
+  }
+  column "size" {
+    null = false
+    type = smallint
+  }
+  column "class" {
+    null = true
+    type = text
+  }
+  primary_key {
+    columns = [column.uuid]
+  }
+  foreign_key "project_uuid_fk" {
+    columns     = [column.project_uuid]
+    ref_columns = [table.project.column.uuid]
+    on_update   = CASCADE
+    on_delete   = CASCADE
+  }
+
+} 
+
 table "policy" {
   schema = schema.public
   column "uuid" {

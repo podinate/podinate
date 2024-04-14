@@ -15,17 +15,18 @@ type Pod struct {
 	// The short name (slug/url) of the pod
 	ID string `json:"id"`
 	// The name of the pod
-	Name        string           `json:"name"`
-	Image       string           `json:"image"`
-	Tag         string           `json:"tag"`
-	Command     []string         `json:"command"`
-	Arguments   []string         `json:"arguments"`
-	Status      string           `json:"status"`
-	CreatedAt   string           `json:"created_at"`
-	ResourceID  string           `json:"resource_id"`
-	Volumes     VolumeSlice      `json:"volumes"`
-	Services    ServiceSlice     `json:"services"`
-	Environment EnvironmentSlice `json:"environment"`
+	Name          string                      `json:"name"`
+	Image         string                      `json:"image"`
+	Tag           *string                     `json:"tag"`
+	Command       []string                    `json:"command"`
+	Arguments     []string                    `json:"arguments"`
+	Status        string                      `json:"status"`
+	CreatedAt     string                      `json:"created_at"`
+	ResourceID    string                      `json:"resource_id"`
+	Volumes       VolumeSlice                 `json:"volumes"`
+	Services      ServiceSlice                `json:"services"`
+	Environment   EnvironmentSlice            `json:"environment"`
+	SharedVolumes SharedVolumeAttachmentSlice `json:"shared_volumes"`
 }
 
 // GetPodByID returns a pod by ID from the given project
@@ -71,38 +72,18 @@ func (p *Project) CreatePod(in Pod) (*Pod, error) {
 }
 
 // Update updates a pod in the given project
-func (p *Pod) Update(in *Pod) (*Pod, error) {
+func (p *Pod) Update(in *Pod) error {
 
 	req := in.ToAPI()
 
 	resp, r, err := C.PodApi.ProjectProjectIdPodPodIdPut(context.Background(), p.Project.ID, p.ID).Account(viper.GetString("account")).Pod(req).Execute()
 	if err := handleAPIError(r, err); err != nil {
-		return nil, err
+		return err
 	}
 
-	return getPodFromApi(p.Project, resp), nil
+	p = getPodFromApi(p.Project, resp)
+	return nil
 
-}
-
-func getPodFromApi(p *Project, in *api_client.Pod) *Pod {
-	//fmt.Println("in.Id", in.Id, "in", in, "created", in.CreatedAt)
-	//fmt.Println("%+V\n", in)
-	out := &Pod{
-		ID:          in.Id,
-		Name:        in.Name,
-		Image:       in.Image,
-		Tag:         in.Tag,
-		Command:     in.Command,
-		Arguments:   in.Arguments,
-		Status:      *in.Status,
-		ResourceID:  *in.ResourceId,
-		Project:     p,
-		Volumes:     volumesFromAPI(in.Volumes),
-		Services:    servicesFromAPI(in.Services),
-		Environment: environmentVariablesFromAPI(in.Environment),
-	}
-
-	return out
 }
 
 // getLogs returns the logs for a pod
@@ -135,21 +116,44 @@ func (p *Pod) Exec(command []string) (string, error) {
 
 // Delete deletes the pod
 func (p *Pod) Delete() error {
-	_, err := C.PodApi.ProjectProjectIdPodPodIdDelete(context.Background(), p.Project.ID, p.ID).Account(viper.GetString("account")).Execute()
-	return err
+	r, err := C.PodApi.ProjectProjectIdPodPodIdDelete(context.Background(), p.Project.ID, p.ID).Account(viper.GetString("account")).Execute()
+	return handleAPIError(r, err)
+}
+
+func getPodFromApi(p *Project, in *api_client.Pod) *Pod {
+	//fmt.Println("in.Id", in.Id, "in", in, "created", in.CreatedAt)
+	//fmt.Println("%+V\n", in)
+	out := &Pod{
+		ID:            in.Id,
+		Name:          in.Name,
+		Image:         in.Image,
+		Tag:           in.Tag,
+		Command:       in.Command,
+		Arguments:     in.Arguments,
+		Status:        *in.Status,
+		ResourceID:    *in.ResourceId,
+		Project:       p,
+		Volumes:       volumesFromAPI(in.Volumes),
+		Services:      servicesFromAPI(in.Services),
+		Environment:   environmentVariablesFromAPI(in.Environment),
+		SharedVolumes: sharedVolumeAttachmentsFromAPI(in.SharedVolumes),
+	}
+
+	return out
 }
 
 // ToAPI returns a Pod from the API client representation
 func (p *Pod) ToAPI() api_client.Pod {
 	return api_client.Pod{
-		Id:          p.ID,
-		Name:        p.Name,
-		Image:       p.Image,
-		Tag:         p.Tag,
-		Command:     p.Command,
-		Arguments:   p.Arguments,
-		Environment: environmentVariablesToAPI(p.Environment),
-		Volumes:     volumesToAPI(p.Volumes),
-		Services:    servicesToAPI(p.Services),
+		Id:            p.ID,
+		Name:          p.Name,
+		Image:         p.Image,
+		Tag:           p.Tag,
+		Command:       p.Command,
+		Arguments:     p.Arguments,
+		Environment:   environmentVariablesToAPI(p.Environment),
+		Volumes:       volumesToAPI(p.Volumes),
+		Services:      servicesToAPI(p.Services),
+		SharedVolumes: sharedVolumeAttachmentsToAPI(p.SharedVolumes),
 	}
 }

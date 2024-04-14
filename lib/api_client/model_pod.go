@@ -26,13 +26,15 @@ type Pod struct {
 	// The container image to run for this pod
 	Image string `json:"image"`
 	// The image tag to run for this pod
-	Tag string `json:"tag"`
+	Tag *string `json:"tag,omitempty"`
 	// The command to run when the pod starts. This overrides the ENTRYPOINT defined in the Dockerfile of the container.
 	Command []string `json:"command,omitempty"`
 	// The arguments to pass to the command when the pod starts. If you specify arguments but not command, the arguments will be passed to the ENTRYPOINT command defined in the Dockerfile of the container.
 	Arguments []string `json:"arguments,omitempty"`
-	// The storage volumes attached to this pod
+	// The storage volumes attached to this pod only.
 	Volumes []Volume `json:"volumes,omitempty"`
+	// The shared storage volumes attached to this pod.
+	SharedVolumes []PodSharedVolumesInner `json:"shared_volumes,omitempty"`
 	// The environment variables to pass to the pod
 	Environment []EnvironmentVariable `json:"environment,omitempty"`
 	// The services to expose for this pod
@@ -49,12 +51,11 @@ type Pod struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPod(id string, name string, image string, tag string) *Pod {
+func NewPod(id string, name string, image string) *Pod {
 	this := Pod{}
 	this.Id = id
 	this.Name = name
 	this.Image = image
-	this.Tag = tag
 	return &this
 }
 
@@ -138,28 +139,36 @@ func (o *Pod) SetImage(v string) {
 	o.Image = v
 }
 
-// GetTag returns the Tag field value
+// GetTag returns the Tag field value if set, zero value otherwise.
 func (o *Pod) GetTag() string {
-	if o == nil {
+	if o == nil || IsNil(o.Tag) {
 		var ret string
 		return ret
 	}
-
-	return o.Tag
+	return *o.Tag
 }
 
-// GetTagOk returns a tuple with the Tag field value
+// GetTagOk returns a tuple with the Tag field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *Pod) GetTagOk() (*string, bool) {
-	if o == nil {
+	if o == nil || IsNil(o.Tag) {
 		return nil, false
 	}
-	return &o.Tag, true
+	return o.Tag, true
 }
 
-// SetTag sets field value
+// HasTag returns a boolean if a field has been set.
+func (o *Pod) HasTag() bool {
+	if o != nil && !IsNil(o.Tag) {
+		return true
+	}
+
+	return false
+}
+
+// SetTag gets a reference to the given string and assigns it to the Tag field.
 func (o *Pod) SetTag(v string) {
-	o.Tag = v
+	o.Tag = &v
 }
 
 // GetCommand returns the Command field value if set, zero value otherwise.
@@ -256,6 +265,38 @@ func (o *Pod) HasVolumes() bool {
 // SetVolumes gets a reference to the given []Volume and assigns it to the Volumes field.
 func (o *Pod) SetVolumes(v []Volume) {
 	o.Volumes = v
+}
+
+// GetSharedVolumes returns the SharedVolumes field value if set, zero value otherwise.
+func (o *Pod) GetSharedVolumes() []PodSharedVolumesInner {
+	if o == nil || IsNil(o.SharedVolumes) {
+		var ret []PodSharedVolumesInner
+		return ret
+	}
+	return o.SharedVolumes
+}
+
+// GetSharedVolumesOk returns a tuple with the SharedVolumes field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Pod) GetSharedVolumesOk() ([]PodSharedVolumesInner, bool) {
+	if o == nil || IsNil(o.SharedVolumes) {
+		return nil, false
+	}
+	return o.SharedVolumes, true
+}
+
+// HasSharedVolumes returns a boolean if a field has been set.
+func (o *Pod) HasSharedVolumes() bool {
+	if o != nil && !IsNil(o.SharedVolumes) {
+		return true
+	}
+
+	return false
+}
+
+// SetSharedVolumes gets a reference to the given []PodSharedVolumesInner and assigns it to the SharedVolumes field.
+func (o *Pod) SetSharedVolumes(v []PodSharedVolumesInner) {
+	o.SharedVolumes = v
 }
 
 // GetEnvironment returns the Environment field value if set, zero value otherwise.
@@ -431,7 +472,9 @@ func (o Pod) ToMap() (map[string]interface{}, error) {
 	toSerialize["id"] = o.Id
 	toSerialize["name"] = o.Name
 	toSerialize["image"] = o.Image
-	toSerialize["tag"] = o.Tag
+	if !IsNil(o.Tag) {
+		toSerialize["tag"] = o.Tag
+	}
 	if !IsNil(o.Command) {
 		toSerialize["command"] = o.Command
 	}
@@ -440,6 +483,9 @@ func (o Pod) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.Volumes) {
 		toSerialize["volumes"] = o.Volumes
+	}
+	if !IsNil(o.SharedVolumes) {
+		toSerialize["shared_volumes"] = o.SharedVolumes
 	}
 	if !IsNil(o.Environment) {
 		toSerialize["environment"] = o.Environment

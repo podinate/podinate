@@ -2,6 +2,7 @@ package lh
 
 import (
 	"context"
+	"log"
 
 	"github.com/google/uuid"
 )
@@ -20,12 +21,16 @@ func (c RequestID) String() string {
 }
 
 func GetRequestID(ctx context.Context) RequestID {
-	r, err := ctx.Value(ContextKey("request-id")).(RequestID)
-	if !err {
-		Log.Errorw("Error getting request ID from context", "error", err)
+
+	id := ctx.Value(ContextKey("request-id"))
+
+	switch id.(type) {
+	case RequestID:
+		return id.(RequestID)
+	default:
+		log.Printf("Error getting request ID from context, type was %T\n", id)
 		return ""
 	}
-	return r
 }
 
 func NewRequestID() RequestID {
@@ -34,5 +39,7 @@ func NewRequestID() RequestID {
 
 func TestContext() context.Context {
 	ctx := context.Background()
-	return context.WithValue(ctx, ContextKey("request-id"), NewRequestID())
+	rid := NewRequestID()
+	log.Printf("Using request ID: %s\n", rid)
+	return context.WithValue(ctx, ContextKey("request-id"), rid)
 }

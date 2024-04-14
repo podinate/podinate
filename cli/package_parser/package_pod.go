@@ -25,10 +25,14 @@ type Pod struct {
 		DomainName *string `cty:"domain_name"`
 	} `cty:"service"`
 	Volume map[string]struct {
-		Size      int     `cty:"size"`
-		MountPath string  `cty:"mount_path"`
-		Class     *string `cty:"class"`
+		Size  int     `cty:"size"`
+		Path  string  `cty:"path"`
+		Class *string `cty:"class"`
 	} `cty:"volume"`
+	SharedVolume *[]struct {
+		VolumeID string `cty:"volume_id"`
+		Path     string `cty:"path"`
+	} `cty:"shared_volume"`
 }
 
 // GetHCLSpect returns the HCL spec of the pod type
@@ -117,8 +121,8 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 					Type:     cty.Number,
 					Required: true,
 				},
-				"mount_path": &hcldec.AttrSpec{
-					Name:     "mount_path",
+				"path": &hcldec.AttrSpec{
+					Name:     "path",
 					Type:     cty.String,
 					Required: true,
 				},
@@ -126,6 +130,22 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 					Name:     "class",
 					Type:     cty.String,
 					Required: false,
+				},
+			},
+		},
+		"shared_volume": &hcldec.BlockListSpec{
+			TypeName: "shared_volume",
+			MinItems: 0,
+			Nested: &hcldec.ObjectSpec{
+				"volume_id": &hcldec.AttrSpec{
+					Name:     "volume_id",
+					Type:     cty.String,
+					Required: true,
+				},
+				"path": &hcldec.AttrSpec{
+					Name:     "path",
+					Type:     cty.String,
+					Required: true,
 				},
 			},
 		},
@@ -163,9 +183,9 @@ func (p *Pod) ToSDK() (*sdk.Pod, error) {
 	var volumes sdk.VolumeSlice
 	for k, v := range p.Volume {
 		new := sdk.Volume{
-			Name:      k,
-			Size:      v.Size,
-			MountPath: v.MountPath,
+			Name: k,
+			Size: v.Size,
+			Path: v.Path,
 		}
 		if v.Class != nil {
 			new.Class = *v.Class
@@ -173,21 +193,31 @@ func (p *Pod) ToSDK() (*sdk.Pod, error) {
 		volumes = append(volumes, new)
 	}
 
+	var sharedVolumes sdk.SharedVolumeAttachmentSlice
+	if p.SharedVolume != nil {
+		for _, v := range *p.SharedVolume {
+			new := sdk.SharedVolumeAttachment{
+				ID:   v.VolumeID,
+				Path: v.Path,
+			}
+			sharedVolumes = append(sharedVolumes, new)
+		}
+	}
+
 	out := &sdk.Pod{
-		Project:   theProject,
-		ID:        p.ID,
-		Name:      p.Name,
-		Image:     p.Image,
-		Command:   p.Command,
-		Arguments: p.Arguments,
-		Services:  services,
-		Volumes:   volumes,
+		Project:       theProject,
+		ID:            p.ID,
+		Name:          p.Name,
+		Image:         p.Image,
+		Command:       p.Command,
+		Arguments:     p.Arguments,
+		Services:      services,
+		Volumes:       volumes,
+		SharedVolumes: sharedVolumes,
 	}
 
 	if p.Tag != nil {
-		out.Tag = *p.Tag
-	} else {
-		out.Tag = "latest"
+		out.Tag = p.Tag
 	}
 
 	for k, v := range p.Environment {

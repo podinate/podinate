@@ -418,7 +418,7 @@ func main() {
     projectId := "hello-world" // string | 
     podId := "hello-world" // string | 
     account := "my-account" // string | The account to use for the request
-    pod := *openapiclient.NewPod("hello-world", "Hello World", "wordpress", "6.0") // Pod | A JSON object containing the information needed to update a pod
+    pod := *openapiclient.NewPod("hello-world", "Hello World", "wordpress") // Pod | A JSON object containing the information needed to update a pod
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
@@ -494,7 +494,7 @@ import (
 func main() {
     projectId := "hello-world" // string | 
     account := "my-account" // string | The account to use for the request
-    pod := *openapiclient.NewPod("hello-world", "Hello World", "wordpress", "6.0") // Pod | A JSON object containing the information needed to create a new pod
+    pod := *openapiclient.NewPod("hello-world", "Hello World", "wordpress") // Pod | A JSON object containing the information needed to create a new pod
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)

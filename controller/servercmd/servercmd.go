@@ -37,7 +37,7 @@ var rootCmd = &cobra.Command{
 	To initialise the configuration, run "podinate init", this will create and print out the credentials for the inital user.
 	If the configuration is already initialised, this command will fail.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		log.Printf("Server initialising...")
+		log.Printf("Server listening on port 3000...")
 		theRouter := router.GetRouter()
 		return http.ListenAndServe(":3000", theRouter)
 	},

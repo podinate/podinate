@@ -22,7 +22,7 @@ type Pod struct {
 	Image string `json:"image"`
 
 	// The image tag to run for this pod
-	Tag string `json:"tag"`
+	Tag string `json:"tag,omitempty"`
 
 	// The command to run when the pod starts. This overrides the ENTRYPOINT defined in the Dockerfile of the container.
 	Command []string `json:"command,omitempty"`
@@ -30,8 +30,11 @@ type Pod struct {
 	// The arguments to pass to the command when the pod starts. If you specify arguments but not command, the arguments will be passed to the ENTRYPOINT command defined in the Dockerfile of the container.
 	Arguments []string `json:"arguments,omitempty"`
 
-	// The storage volumes attached to this pod
+	// The storage volumes attached to this pod only.
 	Volumes []Volume `json:"volumes,omitempty"`
+
+	// The shared storage volumes attached to this pod.
+	SharedVolumes []PodSharedVolumesInner `json:"shared_volumes,omitempty"`
 
 	// The environment variables to pass to the pod
 	Environment []EnvironmentVariable `json:"environment,omitempty"`
@@ -55,7 +58,6 @@ func AssertPodRequired(obj Pod) error {
 		"id":    obj.Id,
 		"name":  obj.Name,
 		"image": obj.Image,
-		"tag":   obj.Tag,
 	}
 	for name, el := range elements {
 		if isZero := IsZeroValue(el); isZero {
@@ -65,6 +67,11 @@ func AssertPodRequired(obj Pod) error {
 
 	for _, el := range obj.Volumes {
 		if err := AssertVolumeRequired(el); err != nil {
+			return err
+		}
+	}
+	for _, el := range obj.SharedVolumes {
+		if err := AssertPodSharedVolumesInnerRequired(el); err != nil {
 			return err
 		}
 	}

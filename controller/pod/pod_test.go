@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 
 	// Create a test account
 	var err *apierror.ApiError
-	testProject, err = project.CreateTest()
+	_, testProject, _, err = project.CreateTest()
 	if err != nil {
 		lh.Log.Errorw("Error creating test project", "error", err)
 		os.Exit(2)

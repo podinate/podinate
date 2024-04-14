@@ -51,7 +51,7 @@ func ValidateNewRequested(a api.Account) *apierror.ApiError {
 }
 
 // CreateTest creates a new account in the database for testing purposes
-func CreateTest() (*Account, *apierror.ApiError) {
+func CreateTest() (*Account, *user.User, *apierror.ApiError) {
 	rand.Seed(time.Now().UnixNano())
 
 	// Generate random strings for test account ID and name
@@ -59,10 +59,10 @@ func CreateTest() (*Account, *apierror.ApiError) {
 	name := generateRandomString(10)
 
 	req := api.Account{Id: id, Name: name}
-	owner, err := user.GetByUsername("administrator")
+	owner, _, err := user.Create(nil, nil, nil, nil)
 	if err != nil {
 		lh.Log.Errorw("Error getting test account owner", "error", err)
-		return nil, apierror.NewWithError(http.StatusInternalServerError, "Error getting test account owner ", err)
+		return nil, nil, apierror.NewWithError(http.StatusInternalServerError, "Error getting test account owner ", err)
 	}
 	lh.Log.Debugw("Creating test account", "account", req, "owner", owner)
 	a, err := Create(req, owner)
@@ -70,9 +70,9 @@ func CreateTest() (*Account, *apierror.ApiError) {
 	// I don't know why but this is inverted on my machine for some reason
 	if err != nil {
 		lh.Log.Errorw("Error creating test account", "error", err)
-		return nil, apierror.New(http.StatusInternalServerError, "Error creating test account "+err.Error())
+		return nil, nil, apierror.New(http.StatusInternalServerError, "Error creating test account "+err.Error())
 	}
-	return &a, nil
+	return &a, owner, nil
 }
 
 func generateRandomString(length int) string {
@@ -163,4 +163,15 @@ func (a *Account) GetUUID() string {
 // GetRID returns the RID of the account
 func (a Account) GetResourceID() string {
 	return "account:" + a.ID
+}
+
+// GetLabels returns the labels of the account
+func (a *Account) GetLabels() map[string]string {
+	return map[string]string{"podinate.com/account": a.ID}
+}
+
+// GetAnnotations returns the annotations of the account
+func (a *Account) GetAnnotations() map[string]string {
+	// This is blank for now, but could be very useful in the future
+	return map[string]string{}
 }

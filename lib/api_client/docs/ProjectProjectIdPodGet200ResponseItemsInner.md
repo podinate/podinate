@@ -7,10 +7,11 @@ Name | Type | Description | Notes
 **Id** | **string** | The short name (slug/url) of the pod | 
 **Name** | **string** | The name of the pod | 
 **Image** | **string** | The container image to run for this pod | 
-**Tag** | **string** | The image tag to run for this pod | 
+**Tag** | Pointer to **string** | The image tag to run for this pod | [optional] 
 **Command** | Pointer to **[]string** | The command to run when the pod starts. This overrides the ENTRYPOINT defined in the Dockerfile of the container. | [optional] 
 **Arguments** | Pointer to **[]string** | The arguments to pass to the command when the pod starts. If you specify arguments but not command, the arguments will be passed to the ENTRYPOINT command defined in the Dockerfile of the container. | [optional] 
-**Volumes** | Pointer to [**[]Volume**](Volume.md) | The storage volumes attached to this pod | [optional] 
+**Volumes** | Pointer to [**[]Volume**](Volume.md) | The storage volumes attached to this pod only. | [optional] 
+**SharedVolumes** | Pointer to [**[]PodSharedVolumesInner**](PodSharedVolumesInner.md) | The shared storage volumes attached to this pod. | [optional] 
 **Environment** | Pointer to [**[]EnvironmentVariable**](EnvironmentVariable.md) | The environment variables to pass to the pod | [optional] 
 **Services** | Pointer to [**[]Service**](Service.md) | The services to expose for this pod | [optional] 
 **Status** | Pointer to **string** | The current status of the pod | [optional] 
@@ -21,7 +22,7 @@ Name | Type | Description | Notes
 
 ### NewProjectProjectIdPodGet200ResponseItemsInner
 
-`func NewProjectProjectIdPodGet200ResponseItemsInner(id string, name string, image string, tag string, ) *ProjectProjectIdPodGet200ResponseItemsInner`
+`func NewProjectProjectIdPodGet200ResponseItemsInner(id string, name string, image string, ) *ProjectProjectIdPodGet200ResponseItemsInner`
 
 NewProjectProjectIdPodGet200ResponseItemsInner instantiates a new ProjectProjectIdPodGet200ResponseItemsInner object
 This constructor will assign default values to properties that have it defined,
@@ -115,6 +116,11 @@ and a boolean to check if the value has been set.
 
 SetTag sets Tag field to given value.
 
+### HasTag
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasTag() bool`
+
+HasTag returns a boolean if a field has been set.
 
 ### GetCommand
 
@@ -190,6 +196,31 @@ SetVolumes sets Volumes field to given value.
 `func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasVolumes() bool`
 
 HasVolumes returns a boolean if a field has been set.
+
+### GetSharedVolumes
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetSharedVolumes() []PodSharedVolumesInner`
+
+GetSharedVolumes returns the SharedVolumes field if non-nil, zero value otherwise.
+
+### GetSharedVolumesOk
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) GetSharedVolumesOk() (*[]PodSharedVolumesInner, bool)`
+
+GetSharedVolumesOk returns a tuple with the SharedVolumes field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetSharedVolumes
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) SetSharedVolumes(v []PodSharedVolumesInner)`
+
+SetSharedVolumes sets SharedVolumes field to given value.
+
+### HasSharedVolumes
+
+`func (o *ProjectProjectIdPodGet200ResponseItemsInner) HasSharedVolumes() bool`
+
+HasSharedVolumes returns a boolean if a field has been set.
 
 ### GetEnvironment
 

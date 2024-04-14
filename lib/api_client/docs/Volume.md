@@ -6,14 +6,15 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **Name** | **string** | The name of the volume | 
 **Size** | **int32** | The size of the volume in GB | 
-**MountPath** | **string** | The path to mount the volume at | 
+**Path** | **string** | The path to mount the volume at | 
 **Class** | Pointer to **string** | The class of the volume, for example \&quot;standard\&quot; or \&quot;premium\&quot; | [optional] 
+**ResourceId** | Pointer to **string** | The global Resource ID of the volume | [optional] 
 
 ## Methods
 
 ### NewVolume
 
-`func NewVolume(name string, size int32, mountPath string, ) *Volume`
+`func NewVolume(name string, size int32, path string, ) *Volume`
 
 NewVolume instantiates a new Volume object
 This constructor will assign default values to properties that have it defined,
@@ -68,24 +69,24 @@ and a boolean to check if the value has been set.
 SetSize sets Size field to given value.
 
 
-### GetMountPath
+### GetPath
 
-`func (o *Volume) GetMountPath() string`
+`func (o *Volume) GetPath() string`
 
-GetMountPath returns the MountPath field if non-nil, zero value otherwise.
+GetPath returns the Path field if non-nil, zero value otherwise.
 
-### GetMountPathOk
+### GetPathOk
 
-`func (o *Volume) GetMountPathOk() (*string, bool)`
+`func (o *Volume) GetPathOk() (*string, bool)`
 
-GetMountPathOk returns a tuple with the MountPath field if it's non-nil, zero value otherwise
+GetPathOk returns a tuple with the Path field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
-### SetMountPath
+### SetPath
 
-`func (o *Volume) SetMountPath(v string)`
+`func (o *Volume) SetPath(v string)`
 
-SetMountPath sets MountPath field to given value.
+SetPath sets Path field to given value.
 
 
 ### GetClass
@@ -112,6 +113,31 @@ SetClass sets Class field to given value.
 `func (o *Volume) HasClass() bool`
 
 HasClass returns a boolean if a field has been set.
+
+### GetResourceId
+
+`func (o *Volume) GetResourceId() string`
+
+GetResourceId returns the ResourceId field if non-nil, zero value otherwise.
+
+### GetResourceIdOk
+
+`func (o *Volume) GetResourceIdOk() (*string, bool)`
+
+GetResourceIdOk returns a tuple with the ResourceId field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetResourceId
+
+`func (o *Volume) SetResourceId(v string)`
+
+SetResourceId sets ResourceId field to given value.
+
+### HasResourceId
+
+`func (o *Volume) HasResourceId() bool`
+
+HasResourceId returns a boolean if a field has been set.
 
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

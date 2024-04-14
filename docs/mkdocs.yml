@@ -22,7 +22,8 @@ nav:
     - Package Structure: packages/package-structure.md
     - Publishing: packages/publishing.md
     - Packages Reference:
-      - application-reference/index.md
+      - packages/available-packages/index.md
+      - Cloudflare Tunnel: packages/available-packages/cloudflare-tunnel.md
       - WordPress: packages/available-packages/WordPress.md
       - MariaDB: packages/available-packages/MariaDB.md
   - Reference:

@@ -28,13 +28,23 @@ func GetRouter() *mux.Router {
 	PodAPIService := NewPodAPIService()
 	PodApiController := api.NewPodApiController(PodAPIService)
 
+	SharedVolumeAPIService := NewSharedVolumeAPIService()
+	SharedVolumeApiController := api.NewSharedVolumeApiController(SharedVolumeAPIService)
+
 	UserAPIService := NewUserAPIService()
 	UserApiController := api.NewUserApiController(UserAPIService)
 
 	UserShimController := NewUserShimController(NewUserAPIService())
 	PodShimController := NewPodShimController(NewPodAPIService())
 
-	r := api.NewRouter(ProjectApiController, AccountApiController, PodShimController, PodApiController, UserShimController, UserApiController)
+	r := api.NewRouter(
+		ProjectApiController,
+		AccountApiController,
+		PodShimController,
+		PodApiController,
+		UserShimController,
+		UserApiController,
+		SharedVolumeApiController)
 	r.Use(requestIDMiddleware)
 	r.Use(authMiddleware)
 	r.Use(loggingMiddleware)
@@ -141,18 +151,18 @@ func MakeRequest(method, url string, body interface{}, headers map[string]string
 	return writer
 }
 
-func getAccountAndProject(accountID string, projectID string) (*account.Account, *project.Project, *apierror.ApiError) {
+func getProject(ctx context.Context, accountID string, projectID string) (*project.Project, *apierror.ApiError) {
 	// Get the account by ID
 	theAccount, apiErr := account.GetByID(accountID)
 	if apiErr != nil {
-		return nil, nil, apiErr
+		return nil, apiErr
 	}
 
 	// Get the project this pod lives in by ID
 	theProject, apiErr := project.GetByID(theAccount, projectID)
 	if apiErr != nil {
-		return nil, nil, apiErr
+		return nil, apiErr
 	}
 
-	return &theAccount, &theProject, nil
+	return &theProject, nil
 }
