@@ -33,6 +33,7 @@ nav:
       - Mini PC / NUC: reference/hardware/mini-pc.md
       - Homelab: reference/hardware/homelab.md
     - Software:
+      - Cert Manager: reference/software/cert-manager.md
       - Dropbear: reference/software/dropbear.md
       - Incus: reference/software/incus.md
     - Storage: 
