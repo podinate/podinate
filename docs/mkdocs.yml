@@ -11,12 +11,12 @@ nav:
     - Installation: getting-started/installation.md
     - Run Your App: getting-started/your-app.md
     - Add The Team: getting-started/collaborate.md
-  - Podinate Configuration Language:
-    - pcl/index.md
-    - Overview: pcl/overview.md
-    - Projects: pcl/project.md
-    - Pods: pcl/pod.md
-    - SharedVolumes: pcl/shared-volume.md
+  - Podinate:
+    - podinate/index.md
+    - Configuration Language: podinate/pcl.md
+    - Projects: podinate/project.md
+    - Pods: podinate/pods.md
+    - SharedVolumes: podinate/shared-volumes.md
   - Packages:
     - Overview: packages/packages-overview.md
     - Package Structure: packages/package-structure.md

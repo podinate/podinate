@@ -37,39 +37,47 @@ sudo snap install helm
 
 
 echo "3. Installing Kubernetes..."
+FRESH_INSTALL=false
 if kubectl get nodes ; then
-    if dialog --stdout --title "Existing Cluster Detected" --clear --yesno "An existing Kubernetes cluster connection was detected. Do you want to install Podinate on the existing cluster?\n\nWe only recommend installing Podinate on a dedicated Kubernetes cluster!" 20 80 ; then
-        clear
-        echo "Installing Podinate on existing cluster."
-    else
-        clear
-        echo "Installation cancelled."
-        exit 1
-    fi
+    if ! (kubectl -n podinate get deployment podinate-controller) ; then 
+      FRESH_INSTALL=true
+      if dialog --stdout --title "Existing Cluster Detected" --clear --yesno "An existing Kubernetes cluster connection was detected. Do you want to install Podinate on the existing cluster?\n\nWe only recommend installing Podinate on a dedicated Kubernetes cluster!" 20 80 ; then
+          clear
+          FRESH_INSTALL=true
+          echo "Installing Podinate on existing cluster."
+      else
+          clear
+          echo "Installation cancelled."
+          exit 1
+      fi
+    fi 
 else
     echo "Kubernetes is not installed. Installing K3s."
     curl -sfL https://get.k3s.io | sh -
     #sleep 10
+    FRESH_INSTALL=true
 fi
 
-if details=$(dialog --stdout \
---title "About You" \
---clear --form "Please enter your email address. This will be used for any Let's Encrypt reminders and to create your account on your Podinate cluster." \
- 20 80 \
- 0 "Email:" 1 1 "$EMAIL" \
-  1 10 50 0 \
- ); then
-    echo "Email entered."
-else
-    echo "No email entered. Exiting."
-    exit 1
+if $FRESH_INSTALL ; then
+  if details=$(dialog --stdout \
+  --title "About You" \
+  --clear --form "Please enter your email address. This will be used for any Let's Encrypt reminders and to create your account on your Podinate cluster." \
+  20 80 \
+  0 "Email:" 1 1 "$EMAIL" \
+    1 10 50 0 \
+  ); then
+      echo "Email entered."
+      clear
+      EMAIL=$(echo $details | awk '{print $1}')
+      echo "Email: $EMAIL"
+  else
+      echo "No email entered. Exiting."
+      exit 1
+  fi
 fi
 
 # Clear to prevent blue screen from prompt continuing to show
-clear
 
-EMAIL=$(echo $details | awk '{print $1}')
-echo "Email: $EMAIL"
 
 echo "4. Setting up certbot..."
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.0/cert-manager.yaml
@@ -81,6 +89,8 @@ do
     echo "5. Kubernetes cluster still not ready, please wait..."
     sleep 5
 done
+
+if $FRESH_INSTALL ; then
 
 cat <<EOF | kubectl apply -f -
 apiVersion: cert-manager.io/v1
@@ -98,6 +108,7 @@ spec:
                 ingress:
                     class: traefik
 EOF
+fi
 
 # Creating the Podinate namespace...
 echo "Creating Podinate namespace..."
@@ -108,8 +119,9 @@ if ! (kubectl create namespace podinate --dry-run=client -o yaml | kubectl apply
 fi
 
 echo "6. Installing Postgres..."
-kubectl apply -f https://raw.githubusercontent.com/podinate/podinate/main/kubernetes/masterdb-postgres.yaml
 
+if ! (kubectl -n podinate get secret masterdb-secret) ; then
+    echo "6. Creating Postgres secret..."
 # Make the passwords random
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -122,6 +134,12 @@ stringData:
   superUserPassword: $(openssl rand -base64 32 | tr -cd '[:alpha:]')
   replicationUserPassword: $(openssl rand -base64 32 | tr -cd '[:alpha:]')
 EOF
+fi
+
+echo "6. Creating Postgres Statefulset..."
+kubectl apply -f https://raw.githubusercontent.com/podinate/podinate/main/kubernetes/masterdb-postgres.yaml
+
+
 
 # Restart the Postgres Statefulset to apply the new password
 kubectl -n podinate rollout restart statefulset postgres
@@ -220,17 +238,17 @@ echo "8. Initializing Podinate (nearly done!)..."
 IP=$(ip -4 -o addr show scope global | grep enp | awk '{gsub(/\/.*/,"",$4); print $4}')
 
 # Runs Podinate init to create the initial user and copies the profile out
-NEW_INSTALL=false 
+if $FRESH_INSTALL ; then 
 if kubectl -n podinate exec -it $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}') -- controller init --email $EMAIL --ip $IP; then
-    NEW_INSTALL=true
     kubectl -n podinate cp $(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}'):/profile.yaml credentials.yaml
+fi
 fi
 
 echo "9. Installing Podinate CLI..."
 curl -sfL https://github.com/podinate/podinate/releases/latest/download/podinate_Linux_x86_64.tar.gz | tar -xz -C /usr/local/bin
 chmod +x /usr/local/bin/podinate
 
-if $NEW_INSTALL ; then
+if $FRESH_INSTALL ; then
     cat credentials.yaml | podinate login
 fi
 

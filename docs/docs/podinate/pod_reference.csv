@@ -1,0 +1,7 @@
+Item,Required,Default,Explanation
+name,`false`,`-`,The name of the pod only for reference and not required.
+project_id,`true`,`-`,The Project this Pod is inside of. 
+image,`true`,`-`,The image to run where the image is a valid container image file that Kubernetes can understand. 
+tag,`false`,"latest",The tag of the image you want to run.
+command,`false`,The RUNPOINT of the container image,The command to run inside the container on startup. If not specified the container image will run the command that it is configured to.
+arguments,`false`,`-`,Arguments to pass to the command if command is not specified the arguments will be passed to the container image's configured command. This is how many container images are designed to be used.
