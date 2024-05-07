@@ -8,6 +8,38 @@ pod "web-server" {
     image = "nginx"
 }
 ```
+
+## Environment Variables
+Environment variables can be set in the Pod by adding an `environment` block.
+```hcl title="environment_variable.pcl"
+pod "web-server" {
+    image = "nginx"
+    environment "SERVER_NAME" {
+        value = "example.com"
+    }
+}
+```
+
+## Services
+Pods that run services should have a `service` block to take advantage of Kubernetes service discovery and optional ingress. 
+```hcl title="service.pcl"
+pod "web-server" {
+    image = "nginx"
+    environment "SERVER_NAME" {
+        value = "example.com"
+    }
+
+    service "www" {
+        port = 80
+        protocol = "http"
+
+        // Adding protocol = http and a domain_name will set up ingress on this service
+        domain_name = "example.com"
+    }
+}
+```
+
+
 ## Volumes
 A volume is a separate persistent storage space, dedicated to the Pod. 
 
@@ -21,7 +53,7 @@ pod "web-server" {
 }
 ```
 
-## Shred Volumes
+## Shared Volumes
 A Shared Volume is also a persistent storage space, but it can be shared among many pods. An app can use it to store persistent data that may need to be used by multiple Pods. 
 ```hcl title="shared_volume.pcl"
 shared_volume "files" { // Create shared volume
@@ -54,7 +86,7 @@ pod "ubuntu" {
 
 {{ read_csv('./pod_reference.csv') }}
 
-### Volumes
+### Volume Spec
 Pods can have one or more `volume` blocks giving them their own distinct storage block. 
 
 ```hcl
@@ -62,7 +94,16 @@ pod "volume-pod" {
     project_id = "ubuntu"
     image = "ubuntu"
     volume "storage" {
+        // The path in the Pod to mount the volume
+        // Required
+        path = "/var/www/html" 
+
+        // Size limit of the Volume in GB 
+        size = 20 
         
+        // The Kubernetes storage class to use for the device
+        // To see available storage classes run "podinate kubectl get storageclasses"
+        class = "ssd"
     }
 }
 ```

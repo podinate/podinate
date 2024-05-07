@@ -245,8 +245,8 @@ fi
 fi
 
 echo "9. Installing Podinate CLI..."
-curl -sfL https://github.com/podinate/podinate/releases/latest/download/podinate_Linux_x86_64.tar.gz | tar -xz -C /usr/local/bin
-chmod +x /usr/local/bin/podinate
+curl -sfL https://github.com/podinate/podinate/releases/latest/download/podinate_Linux_x86_64.tar.gz | sudo tar -xz -C /usr/local/bin
+sudo chmod +x /usr/local/bin/podinate
 
 if $FRESH_INSTALL ; then
     cat credentials.yaml | podinate login

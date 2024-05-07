@@ -4,5 +4,26 @@
 ## Install
 The following PCL will give a basic Jellyfin setup: 
 ```hcl title="jellyfin.pcl"
+project "media" {
+    name = "Media"
+    account_id = "default"
+}
 
+pod "jellyfin" {
+    project_id = "media"
+    
+    name = "Jellyfin"
+    image = "jellyfin/jellyfin"
+    
+    volume "config" {
+        size = 50
+        mount_path = "/config"
+        class = "nvme"
+    }
+
+    volume "cache" {
+        size = 100
+        mount_path = "/cache"
+    }
+}
 ```
