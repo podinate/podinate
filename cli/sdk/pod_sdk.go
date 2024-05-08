@@ -8,6 +8,7 @@ import (
 
 	"github.com/johncave/podinate/lib/api_client"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 type Pod struct {
@@ -15,18 +16,18 @@ type Pod struct {
 	// The short name (slug/url) of the pod
 	ID string `json:"id"`
 	// The name of the pod
-	Name          string                      `json:"name"`
-	Image         string                      `json:"image"`
-	Tag           *string                     `json:"tag"`
-	Command       []string                    `json:"command"`
-	Arguments     []string                    `json:"arguments"`
-	Status        string                      `json:"status"`
-	CreatedAt     string                      `json:"created_at"`
-	ResourceID    string                      `json:"resource_id"`
-	Volumes       VolumeSlice                 `json:"volumes"`
-	Services      ServiceSlice                `json:"services"`
-	Environment   EnvironmentSlice            `json:"environment"`
-	SharedVolumes SharedVolumeAttachmentSlice `json:"shared_volumes"`
+	Name          string                      `yaml:"name"`
+	Image         string                      `yaml:"image"`
+	Tag           *string                     `yaml:"tag"`
+	Command       []string                    `yaml:"command"`
+	Arguments     []string                    `yaml:"arguments"`
+	Status        string                      `yaml:"status"`
+	CreatedAt     string                      `yaml:"created_at"`
+	ResourceID    string                      `yaml:"resource_id"`
+	Volumes       VolumeSlice                 `yaml:"volumes"`
+	Services      ServiceSlice                `yaml:"services"`
+	Environment   EnvironmentSlice            `yaml:"environment"`
+	SharedVolumes SharedVolumeAttachmentSlice `yaml:"shared_volumes"`
 }
 
 // GetPodByID returns a pod by ID from the given project
@@ -83,6 +84,16 @@ func (p *Pod) Update(in *Pod) error {
 
 	p = getPodFromApi(p.Project, resp)
 	return nil
+
+}
+
+func (p *Pod) Describe() (string, error) {
+	out, err := yaml.Marshal(p)
+	if err != nil {
+		return "", err
+	}
+
+	return string(out), nil
 
 }
 
