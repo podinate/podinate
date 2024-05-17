@@ -12,6 +12,7 @@ package openapi
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -142,21 +143,29 @@ func (c *PodApiController) ProjectProjectIdPodPodIdDelete(w http.ResponseWriter,
 // ProjectProjectIdPodPodIdExecPost - Execute a command in a pod
 func (c *PodApiController) ProjectProjectIdPodPodIdExecPost(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
+	query := r.URL.Query()
 	projectIdParam := params["project_id"]
 	podIdParam := params["pod_id"]
 	accountParam := r.Header.Get("account")
-	projectProjectIdPodPodIdExecPostRequestParam := ProjectProjectIdPodPodIdExecPostRequest{}
+	commandParam := strings.Split(query.Get("command"), ",")
+	interactiveParam, err := parseBoolParameter(query.Get("interactive"), false)
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	ttyParam, err := parseBoolParameter(query.Get("tty"), false)
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	bodyParam := &os.File{}
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
-	if err := d.Decode(&projectProjectIdPodPodIdExecPostRequestParam); err != nil {
+	if err := d.Decode(&bodyParam); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	if err := AssertProjectProjectIdPodPodIdExecPostRequestRequired(projectProjectIdPodPodIdExecPostRequestParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	result, err := c.service.ProjectProjectIdPodPodIdExecPost(r.Context(), projectIdParam, podIdParam, accountParam, projectProjectIdPodPodIdExecPostRequestParam)
+	result, err := c.service.ProjectProjectIdPodPodIdExecPost(r.Context(), projectIdParam, podIdParam, accountParam, commandParam, interactiveParam, ttyParam, bodyParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

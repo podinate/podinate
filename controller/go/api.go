@@ -12,6 +12,7 @@ package openapi
 import (
 	"context"
 	"net/http"
+	"os"
 )
 
 // AccountApiRouter defines the required methods for binding the api requests to a responses for the AccountApi
@@ -89,7 +90,7 @@ type AccountApiServicer interface {
 type PodApiServicer interface {
 	ProjectProjectIdPodGet(context.Context, string, string, int32, int32) (ImplResponse, error)
 	ProjectProjectIdPodPodIdDelete(context.Context, string, string, string) (ImplResponse, error)
-	ProjectProjectIdPodPodIdExecPost(context.Context, string, string, string, ProjectProjectIdPodPodIdExecPostRequest) (ImplResponse, error)
+	ProjectProjectIdPodPodIdExecPost(context.Context, string, string, string, []string, bool, bool, *os.File) (ImplResponse, error)
 	ProjectProjectIdPodPodIdGet(context.Context, string, string, string) (ImplResponse, error)
 	ProjectProjectIdPodPodIdLogsGet(context.Context, string, string, string, int32, bool) (ImplResponse, error)
 	ProjectProjectIdPodPodIdPut(context.Context, string, string, string, Pod) (ImplResponse, error)

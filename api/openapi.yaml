@@ -603,21 +603,31 @@ paths:
           type: string
         style: simple
         x-speakeasy-match: id
+      - explode: false
+        in: query
+        name: command
+        schema:
+          type: array
+          items:
+            type: string
+          example: ["ls", "/"]
+      - in: query
+        name: interactive
+        schema:
+          type: boolean
+          default: false
+      - in: query
+        name: tty
+        schema:
+          type: boolean
+          default: false
       - $ref: '#/components/parameters/account'
       requestBody:
         content:
-          application/json:
+          application/octet-stream:
             schema:
-              type: object
-              properties:
-                command:
-                  type: array
-                  items:
-                    type: string
-                  description: The command to execute
-                  example: ["ls", "/"]
-              required:
-                - command
+              type: string
+              format: binary
       responses:
         "200":
           content:

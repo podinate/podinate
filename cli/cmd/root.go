@@ -113,7 +113,7 @@ var rootCmd = &cobra.Command{
 // Execute is the entry point for the cli
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 }

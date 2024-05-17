@@ -476,7 +476,7 @@ table "project_pods" {
     columns     = [column.project_uuid]
     ref_columns = [table.project.column.uuid]
     on_update   = CASCADE
-    on_delete   = SET_NULL
+    on_delete   = CASCADE
   }
 }
 table "settings" {

@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"fmt"
+	"io"
+	"os"
 
 	"github.com/johncave/podinate/cli/sdk"
 	"github.com/spf13/cobra"
@@ -9,6 +10,8 @@ import (
 )
 
 func init() {
+	execCmd.Flags().BoolP("interactive", "i", false, "Interactive mode - attaches your terminal to the pod")
+	execCmd.Flags().BoolP("tty", "t", false, "Allocate a pseudo-TTY - needed if you want to get a flag")
 	rootCmd.AddCommand(execCmd)
 }
 
@@ -16,6 +19,7 @@ var execCmd = &cobra.Command{
 	Use:     "exec",
 	Aliases: []string{"execute"},
 	Short:   "Execute a command in a pod",
+
 	Long: `Execute a command in a pod
 	For example to execute a command in a pod:
 	podinate exec <pod_id> --project <project_id>ls -l`,
@@ -32,11 +36,20 @@ var execCmd = &cobra.Command{
 			return err
 		}
 		command := args[1:]
-		result, err := thePod.Exec(command)
+		interactive, err := cmd.Flags().GetBool("interactive")
 		if err != nil {
 			return err
 		}
-		fmt.Print(result)
-		return nil
+		tty, err := cmd.Flags().GetBool("tty")
+		if err != nil {
+			return err
+		}
+
+		result, err := thePod.Exec(command, interactive, tty)
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(os.Stdout, result)
+		return err
 	},
 }

@@ -13,6 +13,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"os"
 )
 
 // PodApiService is a service that implements the logic for the PodApiServicer
@@ -67,7 +68,7 @@ func (s *PodApiService) ProjectProjectIdPodPodIdDelete(ctx context.Context, proj
 }
 
 // ProjectProjectIdPodPodIdExecPost - Execute a command in a pod
-func (s *PodApiService) ProjectProjectIdPodPodIdExecPost(ctx context.Context, projectId string, podId string, account string, projectProjectIdPodPodIdExecPostRequest ProjectProjectIdPodPodIdExecPostRequest) (ImplResponse, error) {
+func (s *PodApiService) ProjectProjectIdPodPodIdExecPost(ctx context.Context, projectId string, podId string, account string, command []string, interactive bool, tty bool, body *os.File) (ImplResponse, error) {
 	// TODO - update ProjectProjectIdPodPodIdExecPost with the required logic for this service method.
 	// Add api_pod_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 

@@ -2,19 +2,23 @@ package sdk
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/johncave/podinate/lib/api_client"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 type SharedVolume struct {
-	ID      string
-	Name    *string
-	Project *Project
-	Size    int
-	Class   *string
+	ID      string   `yaml:"id"`
+	Name    *string  `yaml:"name"`
+	Project *Project `yaml:"project"`
+	Size    int      `yaml:"size"`
+	Class   *string  `yaml:"class"`
 }
+
+type SharedVolumeSlice []SharedVolume
 
 type SharedVolumeAttachment struct {
 	ID   string
@@ -33,16 +37,17 @@ func (p *Project) GetSharedVolumeByID(id string) (*SharedVolume, *SDKError) {
 }
 
 // GetSharedVolumes returns all shared volumes from the given project
-func (p *Project) GetSharedVolumes() ([]*SharedVolume, *SDKError) {
+func (p *Project) GetSharedVolumes() (SharedVolumeSlice, *SDKError) {
 	resp, r, err := C.SharedVolumeApi.ProjectProjectIdSharedVolumesGet(context.Background(), p.ID).Account(viper.GetString("account")).Execute()
 	if err := handleAPIError(r, err); err != nil {
 		return nil, err
 	}
 
-	var volumes []*SharedVolume
+	var volumes []SharedVolume
 
 	for _, v := range resp.Items {
-		volumes = append(volumes, getSharedVolumeFromApi(p, &v))
+		volumes = append(volumes, *getSharedVolumeFromApi(p, &v))
+		//fmt.Println(v.Id)
 	}
 
 	return volumes, nil
@@ -125,5 +130,40 @@ func sharedVolumeAttachmentToAPI(attachment SharedVolumeAttachment) api_client.P
 	return api_client.PodSharedVolumesInner{
 		VolumeId: attachment.ID,
 		Path:     attachment.Path,
+	}
+}
+
+////////////
+// List Functionality
+////////////
+
+// GetList returns a list of shared volumes from the given project
+func (v SharedVolumeSlice) GetList() ([]string, []ListItem) {
+	columns := []string{"ID", "Name", "Size", "Class"}
+	var items []ListItem
+	for _, volume := range v {
+		items = append(items, volume)
+		//fmt.Println("Getlist", volume.ID)
+	}
+
+	//fmt.Printf("Items: %+v", items)
+	return columns, items
+}
+
+func (v SharedVolume) Describe() (string, error) {
+	out, err := yaml.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+
+	return string(out), nil
+}
+
+func (v SharedVolume) Row() map[string]string {
+	return map[string]string{
+		"ID":    v.ID,
+		"Name":  *v.Name,
+		"Size":  strconv.Itoa(v.Size),
+		"Class": *v.Class,
 	}
 }

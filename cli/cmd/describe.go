@@ -41,7 +41,11 @@ var describePodCmd = &cobra.Command{
 		}
 
 		// Print the pod
-		fmt.Println(pod.Describe())
+		out, sdkerr := pod.Describe()
+		if sdkerr != nil {
+			return sdkerr
+		}
+		fmt.Print(out)
 		return nil
 	},
 }
@@ -50,6 +54,16 @@ var describePackageCmd = &cobra.Command{
 	Use:   "package",
 	Short: "Describe a package on Podinate",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		project, sdkerr := sdk.GetProjectByID(args[0])
+		if sdkerr != nil {
+			return sdkerr
+		}
+
+		out, sdkerr := project.Describe()
+		if sdkerr != nil {
+			return sdkerr
+		}
+		fmt.Print(out)
 		return nil
 	},
 }

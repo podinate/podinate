@@ -849,6 +849,34 @@ paths:
           type: string
         style: simple
         x-speakeasy-match: id
+      - explode: false
+        in: query
+        name: command
+        required: false
+        schema:
+          example:
+          - ls
+          - /
+          items:
+            type: string
+          type: array
+        style: form
+      - explode: true
+        in: query
+        name: interactive
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      - explode: true
+        in: query
+        name: tty
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
       - description: The account to use for the request
         example: my-account
         explode: false
@@ -860,9 +888,10 @@ paths:
         style: simple
       requestBody:
         content:
-          application/json:
+          application/octet-stream:
             schema:
-              $ref: '#/components/schemas/_project__project_id__pod__pod_id__exec_post_request'
+              format: binary
+              type: string
       responses:
         "200":
           content:
@@ -1901,19 +1930,6 @@ components:
       - limit
       - page
       - total
-      type: object
-    _project__project_id__pod__pod_id__exec_post_request:
-      properties:
-        command:
-          description: The command to execute
-          example:
-          - ls
-          - /
-          items:
-            type: string
-          type: array
-      required:
-      - command
       type: object
     _project__project_id__shared_volumes_get_200_response:
       example:

@@ -15,6 +15,7 @@ import (
 func init() {
 	getCmd.AddCommand(getPodsCmd)
 	getCmd.AddCommand(getProjectsCmd)
+	getCmd.AddCommand(getSharedVolumeCmd)
 	rootCmd.AddCommand(getCmd)
 	getCmd.PersistentFlags().StringP("format", "f", "table", "output format, pick from table, json, yaml")
 }
@@ -24,9 +25,7 @@ var getCmd = &cobra.Command{
 	Aliases: []string{"ls", "l", "list", "view"},
 	Short:   "List things on Podinate",
 	Long:    `Lists things on Podinate`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cobra.CheckErr(cmd.Help())
-	},
+	Run:     getPodsCmd.Run,
 }
 
 var getPodsCmd = &cobra.Command{
@@ -132,6 +131,56 @@ var getProjectsCmd = &cobra.Command{
 			os.Exit(1)
 		}
 	},
+}
+
+var getSharedVolumeCmd = &cobra.Command{
+	Use:     "sharedvolumes",
+	Aliases: []string{"sharedvolume", "sv", "svs"},
+	Short:   "List shared volumes on Podinate",
+	Long:    `Lists all shared volumes on Podinate`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		project, sdkerr := sdk.GetProjectByID(viper.GetString("project"))
+		if sdkerr != nil {
+			return sdkerr
+		}
+
+		volumes, err := project.GetSharedVolumes()
+		if err != nil {
+			return err
+		}
+
+		ShowList(volumes)
+
+		return nil
+	},
+}
+
+// ShowList takes a list of items and displays them
+func ShowList(list sdk.List) {
+	column_names, items := list.GetList()
+
+	columns := []bubbletable.Column{}
+	for _, name := range column_names {
+		columns = append(columns, bubbletable.Column{Title: name, Width: 25})
+	}
+
+	var rows []bubbletable.Row
+	for _, item := range items {
+		var row bubbletable.Row
+		item := item.Row()
+		//fmt.Printf("Item: %+v\n", item)
+		for _, name := range column_names {
+			row = append(row, item[name])
+		}
+		rows = append(rows, row)
+	}
+
+	m := table.New(columns, rows)
+
+	if _, err := tea.NewProgram(m).Run(); err != nil {
+		fmt.Println("Error running program:", err)
+		os.Exit(1)
+	}
 }
 
 type Showable interface {

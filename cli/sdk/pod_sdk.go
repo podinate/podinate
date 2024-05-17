@@ -2,8 +2,10 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/johncave/podinate/lib/api_client"
@@ -116,13 +118,47 @@ func (p *Pod) GetLogsBuffer(lines int, follow bool) (io.ReadCloser, error) {
 }
 
 // Exec executes a command in the pod
-func (p *Pod) Exec(command []string) (string, error) {
-	req := *api_client.NewProjectProjectIdPodPodIdExecPostRequest(command)
-	resp, _, err := C.PodApi.ProjectProjectIdPodPodIdExecPost(context.Background(), p.Project.ID, p.ID).
-		Account(viper.GetString("account")).
-		ProjectProjectIdPodPodIdExecPostRequest(req).Execute()
+func (p *Pod) Exec(command []string, interactive bool, tty bool) (io.Reader, error) {
+	// req := *api_client.NewProjectProjectIdPodPodIdExecPostRequest(command)
+	// _, r, err := C.PodApi.ProjectProjectIdPodPodIdExecPost(context.Background(), p.Project.ID, p.ID).
+	// 	Account(viper.GetString("account")).
+	// 	Interactive(interactive).
+	// 	Tty(tty).
+	// 	Command(command).Execute()
 	//fmt.Println("resp", resp, "err", err)
-	return resp, err
+
+	// Have to do the above by hand to be able to send the stdin over http
+	u := url.URL{
+		Scheme: C.GetConfig().Scheme,
+		Host:   C.GetConfig().Host,
+		Path:   "/v0/project/" + p.Project.ID + "/pod/" + p.ID + "/exec",
+	}
+	q := u.Query()
+	q.Set("interactive", strconv.FormatBool(interactive))
+	q.Set("tty", strconv.FormatBool(tty))
+	for _, cmd := range command {
+		q.Add("command", cmd)
+	}
+	u.RawQuery = q.Encode()
+	//fmt.Println("u", u.String())
+	// stdin := os.Stdin
+	// if !interactive {
+	// 	stdin = nil
+	// }
+	req, err := http.NewRequest("POST", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", viper.GetString("api_key"))
+	req.Header.Set("Account", viper.GetString("account"))
+
+	r, err := C.GetConfig().HTTPClient.Do(req)
+	if err != nil {
+		fmt.Println("err", err)
+		return nil, err
+	}
+
+	return r.Body, err
 }
 
 // Delete deletes the pod

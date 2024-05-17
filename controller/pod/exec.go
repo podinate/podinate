@@ -1,10 +1,9 @@
 package pod
 
 import (
-	"bytes"
 	"context"
+	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	apierror "github.com/johncave/podinate/controller/apierror"
@@ -17,7 +16,7 @@ import (
 )
 
 // Exec executes a command in the pod
-func (p *Pod) Exec(ctx context.Context, command []string) (string, *apierror.ApiError) {
+func (p *Pod) Exec(ctx context.Context, command []string, interactive bool, tty bool, stdin io.Reader, stdout http.ResponseWriter) *apierror.ApiError {
 
 	lh.Debug(ctx, "In exec func", "pod", p, "command", strings.Join(command, " "))
 
@@ -30,34 +29,36 @@ func (p *Pod) Exec(ctx context.Context, command []string) (string, *apierror.Api
 	req := config.Client.CoreV1().RESTClient().Post().Resource("pods").Name(p.ID + "-0").Namespace(p.Project.GetNamespaceName()).SubResource("exec")
 	req.VersionedParams(&v1.PodExecOptions{
 		Command: command,
-		Stdin:   true,
+		Stdin:   interactive,
 		Stdout:  true,
 		Stderr:  true,
-		TTY:     false,
+		TTY:     tty,
 	}, scheme.ParameterCodec)
 
 	rconfig, err := restclient.InClusterConfig()
 	if err != nil {
-		return "", apierror.NewWithError(http.StatusInternalServerError, "error getting in-cluster config", err)
+		return apierror.NewWithError(http.StatusInternalServerError, "error getting in-cluster config", err)
 	}
 	exec, err := remotecommand.NewSPDYExecutor(rconfig, "POST", req.URL())
 	if err != nil {
-		return "", apierror.NewWithError(http.StatusInternalServerError, "error creating executor to run command", err)
+		return apierror.NewWithError(http.StatusInternalServerError, "error creating executor to run command", err)
 	}
 
-	stdout := new(bytes.Buffer)
-	lh.Info(ctx, "Execute command on pod", "pod", p, "command", strings.Join(command, " "))
+	//stdout := new(bytes.Buffer)
+	lh.Info(ctx, "Executing command on pod", "pod", p, "command", strings.Join(command, " "))
 	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
-		Stdin:  os.Stdin,
+		Stdin:  stdin,
 		Stdout: stdout,
-		Stderr: stdout,
+		Stderr: nil,
+		Tty:    tty,
 	})
+
 	if err != nil {
 		// At this point the user messed up, not us ¯\_(ツ)_/¯
-		return err.Error(), nil
+		return nil
 	}
 
-	lh.Debug(ctx, "Executed command", "stdout", stdout.String())
+	//lh.Debug(ctx, "Executed command", "stdout", stdout.String())
 
-	return stdout.String(), nil
+	return nil
 }

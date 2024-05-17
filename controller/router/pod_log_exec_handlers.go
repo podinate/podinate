@@ -2,9 +2,9 @@ package router
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 
 	"strconv"
 
@@ -100,21 +100,6 @@ func (s *PodAPIShim) ProjectProjectIdPodPodIdLogsGet(w http.ResponseWriter, r *h
 
 	lh.Debug(r.Context(), "Writing logs to response", "lines", lines)
 
-	// go func(w http.ResponseWriter) {
-	// 	for {
-	// 		if w == nil {
-	// 			return
-	// 		}
-	// 		if f, ok := w.(http.Flusher); ok {
-	// 			lh.Debug(r.Context(), "Flushing logs to response")
-	// 			f.Flush()
-	// 		}
-	// 		time.Sleep(1 * time.Second)
-	// 	}
-	// }(w)
-
-	// io.Copy(w, in)
-
 	// Lord, forgive me for this code
 	totalRead := int64(0)
 	for {
@@ -140,33 +125,33 @@ func (s *PodAPIShim) ProjectProjectIdPodPodIdLogsGet(w http.ResponseWriter, r *h
 func (s *PodAPIShim) ProjectProjectIdPodPodIdExecPost(w http.ResponseWriter, r *http.Request) {
 	// Parameter grabbing logic from the original function
 	params := mux.Vars(r)
+	query := r.URL.Query()
 	projectId := params["project_id"]
 	podId := params["pod_id"]
 	account := r.Header.Get("account")
-	projectProjectIdPodPodIdExecPostRequestParam := api.ProjectProjectIdPodPodIdExecPostRequest{}
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
-	if err := d.Decode(&projectProjectIdPodPodIdExecPostRequestParam); err != nil {
-		apierror.NewWithError(http.StatusBadRequest, "error decoding request body", err).EncodeJSONResponse(w)
-		return
+	command := query["command"]
+	//projectProjectIdPodPodIdExecPostRequestParam := api.ProjectProjectIdPodPodIdExecPostRequest{}
 
+	interactiveParam, err := strconv.ParseBool(query.Get("interactive"))
+	if err != nil {
+		interactiveParam = false
 	}
-	if err := api.AssertProjectProjectIdPodPodIdExecPostRequestRequired(projectProjectIdPodPodIdExecPostRequestParam); err != nil {
-		apierror.NewWithError(http.StatusBadRequest, "error validating request body", err).EncodeJSONResponse(w)
-		return
+	ttyParam, err := strconv.ParseBool(query.Get("tty"))
+	if err != nil {
+		ttyParam = false
 	}
 	ctx := r.Context()
 
 	// Our Logic - like in handlers
-	theProject, err := getProject(r.Context(), account, projectId)
-	if err != nil {
-		err.EncodeJSONResponse(w)
+	theProject, apierr := getProject(r.Context(), account, projectId)
+	if apierr != nil {
+		apierr.EncodeJSONResponse(w)
 		return
 	}
 
-	thePod, err := pod.GetByID(ctx, theProject, podId)
-	if err != nil {
-		err.EncodeJSONResponse(w)
+	thePod, apierr := pod.GetByID(ctx, theProject, podId)
+	if apierr != nil {
+		apierr.EncodeJSONResponse(w)
 		return
 	}
 
@@ -175,25 +160,46 @@ func (s *PodAPIShim) ProjectProjectIdPodPodIdExecPost(w http.ResponseWriter, r *
 		return
 	}
 
-	result, err := thePod.Exec(ctx, projectProjectIdPodPodIdExecPostRequestParam.Command)
-	if err != nil {
-		lh.Error(ctx, "Error executing command", "error", err, "command", projectProjectIdPodPodIdExecPostRequestParam.Command, "result", result)
-		w.Write([]byte(err.Error()))
+	lh.Debug(ctx, "Calling Exec on Pod", "command", command, "interactive", interactiveParam, "tty", ttyParam, "url", r.URL, "querycmd", query["command"])
+	apierr = thePod.Exec(ctx, command, interactiveParam, ttyParam, r.Body, w)
+	if apierr != nil {
+		lh.Error(ctx, "Error executing command", "error", apierr, "command", command)
+		w.Write([]byte(apierr.Error()))
 		return
 	}
 
-	lh.Debug(ctx, "Executed command without error", "result", result)
-	w.Write([]byte(result))
+	//defer stdout.Close()
+
+	lh.Debug(r.Context(), "Exec started successfully")
+
+	// Lord, forgive me for this code
+	// totalRead := int64(0)
+	// for {
+	// 	// Copy one byte at a time to the response writer
+	// 	n, err := io.CopyN(w, stdout, 1)
+	// 	fmt.Println("Sent one byte")
+	// 	totalRead += n
+	// 	if err != nil {
+	// 		if err == io.EOF {
+	// 			break
+	// 		}
+	// 		return
+	// 	}
+	// 	// Immediately yeet the buffer 🙏
+	// 	if f, ok := w.(http.Flusher); ok {
+	// 		f.Flush()
+	// 	}
+	// }
+
 }
 
 /*
 These functions are just so that we satisfy the interface from the library.
 We overrode them in the previous functions so that we had direct control of the reponse.
 */
-func (s *PodAPIService) ProjectProjectIdPodPodIdExecPost(ctx context.Context, projectId string, podId string, account string, projectProjectIdPodPodIdExecPostRequest api.ProjectProjectIdPodPodIdExecPostRequest) (api.ImplResponse, error) {
-
-	return api.Response(http.StatusInternalServerError, "This function should never have been called. Pls help."), nil
+func (s *PodAPIService) ProjectProjectIdPodPodIdExecPost(ctx context.Context, projectId string, podId string, account string, command []string, interactive bool, tty bool, body *os.File) (api.ImplResponse, error) {
+	return api.Response(http.StatusNotImplemented, "This function should never have been called. Pls help."), nil
 }
 func (s *PodAPIService) ProjectProjectIdPodPodIdLogsGet(ctx context.Context, projectID string, podId string, accountID string, lines int32, follow bool) (api.ImplResponse, error) {
-	return api.Response(http.StatusInternalServerError, "This function should never have been called. Pls help."), nil
+	return api.Response(http.StatusNotImplemented, "This function should never have been called. Pls help."), nil
 }

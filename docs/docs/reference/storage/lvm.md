@@ -87,6 +87,12 @@ The [OpenEBS LVM Provisioner](https://github.com/openebs/lvm-localpv) can use an
     # If using an unencrypted disk
     sudo vgcreate podinate /dev/sda
     ```
+1. Enable Thin Provisioning
+    Thin provisioning allows the cluster to allocate more space than is available. As long as disk usage doesn't exceed the size of the physical disk there won't be an issue. 
+    ```bash
+    echo dm_thin_pool | sudo tee -a /etc/modules
+    sudo modprobe dm_thin_pool
+    ```
 
 1. **Install OpenEBS LVM Provisioner**
     
@@ -104,6 +110,8 @@ The [OpenEBS LVM Provisioner](https://github.com/openebs/lvm-localpv) can use an
     openebs-lvm-localpv-node-mcch4                    2/2     Running   0          11m
     ```
     Create a storageclass to use the provisioner: 
+    !!! warn 
+        You cannot edit a Kubernetes StorageClass after creating it. Check the [LVM OpenEBS Docs](https://github.com/openebs/lvm-localpv/tree/develop/design/lvm/storageclass-parameters) for available parameters. If you need to change something after volumes already exist, consider creating a new StorageClass and using it alongside the existing class
     ```yaml
     cat sc.yaml 
 
@@ -114,6 +122,8 @@ The [OpenEBS LVM Provisioner](https://github.com/openebs/lvm-localpv) can use an
     parameters:
       storage: "lvm"
       volgroup: "podinate"
+      shared: "yes"
+      thinprovision: "yes"
     provisioner: local.csi.openebs.io
     ```
 

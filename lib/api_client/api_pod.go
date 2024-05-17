@@ -16,6 +16,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -357,12 +358,15 @@ func (a *PodApiService) ProjectProjectIdPodPodIdDeleteExecute(r ApiProjectProjec
 }
 
 type ApiProjectProjectIdPodPodIdExecPostRequest struct {
-	ctx                                     context.Context
-	ApiService                              *PodApiService
-	projectId                               string
-	podId                                   string
-	account                                 *string
-	projectProjectIdPodPodIdExecPostRequest *ProjectProjectIdPodPodIdExecPostRequest
+	ctx         context.Context
+	ApiService  *PodApiService
+	projectId   string
+	podId       string
+	account     *string
+	command     *[]string
+	interactive *bool
+	tty         *bool
+	body        *os.File
 }
 
 // The account to use for the request
@@ -371,8 +375,23 @@ func (r ApiProjectProjectIdPodPodIdExecPostRequest) Account(account string) ApiP
 	return r
 }
 
-func (r ApiProjectProjectIdPodPodIdExecPostRequest) ProjectProjectIdPodPodIdExecPostRequest(projectProjectIdPodPodIdExecPostRequest ProjectProjectIdPodPodIdExecPostRequest) ApiProjectProjectIdPodPodIdExecPostRequest {
-	r.projectProjectIdPodPodIdExecPostRequest = &projectProjectIdPodPodIdExecPostRequest
+func (r ApiProjectProjectIdPodPodIdExecPostRequest) Command(command []string) ApiProjectProjectIdPodPodIdExecPostRequest {
+	r.command = &command
+	return r
+}
+
+func (r ApiProjectProjectIdPodPodIdExecPostRequest) Interactive(interactive bool) ApiProjectProjectIdPodPodIdExecPostRequest {
+	r.interactive = &interactive
+	return r
+}
+
+func (r ApiProjectProjectIdPodPodIdExecPostRequest) Tty(tty bool) ApiProjectProjectIdPodPodIdExecPostRequest {
+	r.tty = &tty
+	return r
+}
+
+func (r ApiProjectProjectIdPodPodIdExecPostRequest) Body(body *os.File) ApiProjectProjectIdPodPodIdExecPostRequest {
+	r.body = body
 	return r
 }
 
@@ -426,8 +445,17 @@ func (a *PodApiService) ProjectProjectIdPodPodIdExecPostExecute(r ApiProjectProj
 		return localVarReturnValue, nil, reportError("account is required and must be specified")
 	}
 
+	if r.command != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "command", r.command, "csv")
+	}
+	if r.interactive != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "interactive", r.interactive, "")
+	}
+	if r.tty != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "tty", r.tty, "")
+	}
 	// to determine the Content-Type header
-	localVarHTTPContentTypes := []string{"application/json"}
+	localVarHTTPContentTypes := []string{"application/octet-stream"}
 
 	// set Content-Type header
 	localVarHTTPContentType := selectHeaderContentType(localVarHTTPContentTypes)
@@ -445,7 +473,7 @@ func (a *PodApiService) ProjectProjectIdPodPodIdExecPostExecute(r ApiProjectProj
 	}
 	parameterAddToHeaderOrQuery(localVarHeaderParams, "account", r.account, "")
 	// body params
-	localVarPostBody = r.projectProjectIdPodPodIdExecPostRequest
+	localVarPostBody = r.body
 	if r.ctx != nil {
 		// API Key Authentication
 		if auth, ok := r.ctx.Value(ContextAPIKeys).(map[string]APIKey); ok {

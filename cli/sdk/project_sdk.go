@@ -6,6 +6,7 @@ import (
 
 	"github.com/johncave/podinate/lib/api_client"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 type Project struct {
@@ -97,6 +98,16 @@ func (p *Project) Update(in *Project) (*Project, error) {
 		ResourceID: *resp.ResourceId,
 	}, nil
 
+}
+
+// Describe returns a string representation of the project
+func (p *Project) Describe() (string, error) {
+	out, err := yaml.Marshal(p)
+	if err != nil {
+		return "", err
+	}
+
+	return string(out), nil
 }
 
 func (p *Project) Delete() error {

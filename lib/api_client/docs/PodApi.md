@@ -165,7 +165,7 @@ Name | Type | Description  | Notes
 
 ## ProjectProjectIdPodPodIdExecPost
 
-> string ProjectProjectIdPodPodIdExecPost(ctx, projectId, podId).Account(account).ProjectProjectIdPodPodIdExecPostRequest(projectProjectIdPodPodIdExecPostRequest).Execute()
+> string ProjectProjectIdPodPodIdExecPost(ctx, projectId, podId).Account(account).Command(command).Interactive(interactive).Tty(tty).Body(body).Execute()
 
 Execute a command in a pod
 
@@ -187,11 +187,14 @@ func main() {
     projectId := "hello-world" // string | 
     podId := "hello-world" // string | 
     account := "my-account" // string | The account to use for the request
-    projectProjectIdPodPodIdExecPostRequest := *openapiclient.NewProjectProjectIdPodPodIdExecPostRequest([]string{"Command_example"}) // ProjectProjectIdPodPodIdExecPostRequest |  (optional)
+    command := []string{"Inner_example"} // []string |  (optional)
+    interactive := true // bool |  (optional) (default to false)
+    tty := true // bool |  (optional) (default to false)
+    body := os.NewFile(1234, "some_file") // *os.File |  (optional)
 
     configuration := openapiclient.NewConfiguration()
     apiClient := openapiclient.NewAPIClient(configuration)
-    resp, r, err := apiClient.PodApi.ProjectProjectIdPodPodIdExecPost(context.Background(), projectId, podId).Account(account).ProjectProjectIdPodPodIdExecPostRequest(projectProjectIdPodPodIdExecPostRequest).Execute()
+    resp, r, err := apiClient.PodApi.ProjectProjectIdPodPodIdExecPost(context.Background(), projectId, podId).Account(account).Command(command).Interactive(interactive).Tty(tty).Body(body).Execute()
     if err != nil {
         fmt.Fprintf(os.Stderr, "Error when calling `PodApi.ProjectProjectIdPodPodIdExecPost``: %v\n", err)
         fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -220,7 +223,10 @@ Name | Type | Description  | Notes
 
 
  **account** | **string** | The account to use for the request | 
- **projectProjectIdPodPodIdExecPostRequest** | [**ProjectProjectIdPodPodIdExecPostRequest**](ProjectProjectIdPodPodIdExecPostRequest.md) |  | 
+ **command** | **[]string** |  | 
+ **interactive** | **bool** |  | [default to false]
+ **tty** | **bool** |  | [default to false]
+ **body** | ***os.File** |  | 
 
 ### Return type
 
@@ -232,7 +238,7 @@ Name | Type | Description  | Notes
 
 ### HTTP request headers
 
-- **Content-Type**: application/json
+- **Content-Type**: application/octet-stream
 - **Accept**: text/plain, application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
