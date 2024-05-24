@@ -47,6 +47,46 @@ func (s *PodApiService) ProjectProjectIdPodGet(ctx context.Context, projectId st
 	return Response(http.StatusNotImplemented, nil), errors.New("ProjectProjectIdPodGet method not implemented")
 }
 
+// ProjectProjectIdPodPodIdCopyGet - Copy a file out of the Pod
+func (s *PodApiService) ProjectProjectIdPodPodIdCopyGet(ctx context.Context, projectId string, podId string, account string, path string) (ImplResponse, error) {
+	// TODO - update ProjectProjectIdPodPodIdCopyGet with the required logic for this service method.
+	// Add api_pod_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, *os.File{}) or use other options such as http.Ok ...
+	//return Response(200, *os.File{}), nil
+
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(404, Error{}) or use other options such as http.Ok ...
+	//return Response(404, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("ProjectProjectIdPodPodIdCopyGet method not implemented")
+}
+
+// ProjectProjectIdPodPodIdCopyPut - Copy a file into a Pod
+func (s *PodApiService) ProjectProjectIdPodPodIdCopyPut(ctx context.Context, projectId string, podId string, account string, path string, body *os.File) (ImplResponse, error) {
+	// TODO - update ProjectProjectIdPodPodIdCopyPut with the required logic for this service method.
+	// Add api_pod_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(204, {}) or use other options such as http.Ok ...
+	//return Response(204, nil),nil
+
+	//TODO: Uncomment the next line to return response Response(400, Error{}) or use other options such as http.Ok ...
+	//return Response(400, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(404, Error{}) or use other options such as http.Ok ...
+	//return Response(404, Error{}), nil
+
+	//TODO: Uncomment the next line to return response Response(500, Error{}) or use other options such as http.Ok ...
+	//return Response(500, Error{}), nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("ProjectProjectIdPodPodIdCopyPut method not implemented")
+}
+
 // ProjectProjectIdPodPodIdDelete - Delete a pod
 func (s *PodApiService) ProjectProjectIdPodPodIdDelete(ctx context.Context, projectId string, podId string, account string) (ImplResponse, error) {
 	// TODO - update ProjectProjectIdPodPodIdDelete with the required logic for this service method.

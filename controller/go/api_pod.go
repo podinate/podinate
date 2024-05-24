@@ -58,6 +58,18 @@ func (c *PodApiController) Routes() Routes {
 			c.ProjectProjectIdPodGet,
 		},
 		{
+			"ProjectProjectIdPodPodIdCopyGet",
+			strings.ToUpper("Get"),
+			"/v0/project/{project_id}/pod/{pod_id}/copy",
+			c.ProjectProjectIdPodPodIdCopyGet,
+		},
+		{
+			"ProjectProjectIdPodPodIdCopyPut",
+			strings.ToUpper("Put"),
+			"/v0/project/{project_id}/pod/{pod_id}/copy",
+			c.ProjectProjectIdPodPodIdCopyPut,
+		},
+		{
 			"ProjectProjectIdPodPodIdDelete",
 			strings.ToUpper("Delete"),
 			"/v0/project/{project_id}/pod/{pod_id}",
@@ -113,6 +125,51 @@ func (c *PodApiController) ProjectProjectIdPodGet(w http.ResponseWriter, r *http
 		return
 	}
 	result, err := c.service.ProjectProjectIdPodGet(r.Context(), projectIdParam, accountParam, pageParam, limitParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// ProjectProjectIdPodPodIdCopyGet - Copy a file out of the Pod
+func (c *PodApiController) ProjectProjectIdPodPodIdCopyGet(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	query := r.URL.Query()
+	projectIdParam := params["project_id"]
+	podIdParam := params["pod_id"]
+	accountParam := r.Header.Get("account")
+	pathParam := query.Get("path")
+	result, err := c.service.ProjectProjectIdPodPodIdCopyGet(r.Context(), projectIdParam, podIdParam, accountParam, pathParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// ProjectProjectIdPodPodIdCopyPut - Copy a file into a Pod
+func (c *PodApiController) ProjectProjectIdPodPodIdCopyPut(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	query := r.URL.Query()
+	projectIdParam := params["project_id"]
+	podIdParam := params["pod_id"]
+	accountParam := r.Header.Get("account")
+	pathParam := query.Get("path")
+	bodyParam := &os.File{}
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&bodyParam); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	result, err := c.service.ProjectProjectIdPodPodIdCopyPut(r.Context(), projectIdParam, podIdParam, accountParam, pathParam, bodyParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

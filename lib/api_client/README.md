@@ -82,6 +82,8 @@ Class | Method | HTTP request | Description
 *AccountApi* | [**AccountPost**](docs/AccountApi.md#accountpost) | **Post** /account | Create a new account
 *AccountApi* | [**AccountPut**](docs/AccountApi.md#accountput) | **Put** /account | Update an existing account
 *PodApi* | [**ProjectProjectIdPodGet**](docs/PodApi.md#projectprojectidpodget) | **Get** /project/{project_id}/pod | Get a list of pods for a given project
+*PodApi* | [**ProjectProjectIdPodPodIdCopyGet**](docs/PodApi.md#projectprojectidpodpodidcopyget) | **Get** /project/{project_id}/pod/{pod_id}/copy | Copy a file out of the Pod
+*PodApi* | [**ProjectProjectIdPodPodIdCopyPut**](docs/PodApi.md#projectprojectidpodpodidcopyput) | **Put** /project/{project_id}/pod/{pod_id}/copy | Copy a file into a Pod
 *PodApi* | [**ProjectProjectIdPodPodIdDelete**](docs/PodApi.md#projectprojectidpodpodiddelete) | **Delete** /project/{project_id}/pod/{pod_id} | Delete a pod
 *PodApi* | [**ProjectProjectIdPodPodIdExecPost**](docs/PodApi.md#projectprojectidpodpodidexecpost) | **Post** /project/{project_id}/pod/{pod_id}/exec | Execute a command in a pod
 *PodApi* | [**ProjectProjectIdPodPodIdGet**](docs/PodApi.md#projectprojectidpodpodidget) | **Get** /project/{project_id}/pod/{pod_id} | Get a pod by ID

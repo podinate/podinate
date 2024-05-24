@@ -5,6 +5,8 @@ All URIs are relative to *https://api.podinate.com/v0*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**ProjectProjectIdPodGet**](PodApi.md#ProjectProjectIdPodGet) | **Get** /project/{project_id}/pod | Get a list of pods for a given project
+[**ProjectProjectIdPodPodIdCopyGet**](PodApi.md#ProjectProjectIdPodPodIdCopyGet) | **Get** /project/{project_id}/pod/{pod_id}/copy | Copy a file out of the Pod
+[**ProjectProjectIdPodPodIdCopyPut**](PodApi.md#ProjectProjectIdPodPodIdCopyPut) | **Put** /project/{project_id}/pod/{pod_id}/copy | Copy a file into a Pod
 [**ProjectProjectIdPodPodIdDelete**](PodApi.md#ProjectProjectIdPodPodIdDelete) | **Delete** /project/{project_id}/pod/{pod_id} | Delete a pod
 [**ProjectProjectIdPodPodIdExecPost**](PodApi.md#ProjectProjectIdPodPodIdExecPost) | **Post** /project/{project_id}/pod/{pod_id}/exec | Execute a command in a pod
 [**ProjectProjectIdPodPodIdGet**](PodApi.md#ProjectProjectIdPodPodIdGet) | **Get** /project/{project_id}/pod/{pod_id} | Get a pod by ID
@@ -83,6 +85,160 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
 - **Content-Type**: Not defined
+- **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## ProjectProjectIdPodPodIdCopyGet
+
+> *os.File ProjectProjectIdPodPodIdCopyGet(ctx, projectId, podId).Account(account).Path(path).Execute()
+
+Copy a file out of the Pod
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "github.com/Podinate/podinate/lib/api_client"
+)
+
+func main() {
+    projectId := "hello-world" // string | 
+    podId := "hello-world" // string | 
+    account := "my-account" // string | The account to use for the request
+    path := "/var/log/nginx/error.log" // string |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    resp, r, err := apiClient.PodApi.ProjectProjectIdPodPodIdCopyGet(context.Background(), projectId, podId).Account(account).Path(path).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PodApi.ProjectProjectIdPodPodIdCopyGet``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `ProjectProjectIdPodPodIdCopyGet`: *os.File
+    fmt.Fprintf(os.Stdout, "Response from `PodApi.ProjectProjectIdPodPodIdCopyGet`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**projectId** | **string** |  | 
+**podId** | **string** |  | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiProjectProjectIdPodPodIdCopyGetRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+ **account** | **string** | The account to use for the request | 
+ **path** | **string** |  | 
+
+### Return type
+
+[***os.File**](*os.File.md)
+
+### Authorization
+
+[APIKeyAuth](../README.md#APIKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/octet-stream, application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## ProjectProjectIdPodPodIdCopyPut
+
+> ProjectProjectIdPodPodIdCopyPut(ctx, projectId, podId).Account(account).Path(path).Body(body).Execute()
+
+Copy a file into a Pod
+
+
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    openapiclient "github.com/Podinate/podinate/lib/api_client"
+)
+
+func main() {
+    projectId := "hello-world" // string | 
+    podId := "hello-world" // string | 
+    account := "my-account" // string | The account to use for the request
+    path := "/var/log/nginx/error.log" // string |  (optional)
+    body := os.NewFile(1234, "some_file") // *os.File |  (optional)
+
+    configuration := openapiclient.NewConfiguration()
+    apiClient := openapiclient.NewAPIClient(configuration)
+    r, err := apiClient.PodApi.ProjectProjectIdPodPodIdCopyPut(context.Background(), projectId, podId).Account(account).Path(path).Body(body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `PodApi.ProjectProjectIdPodPodIdCopyPut``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
+
+### Path Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
+**projectId** | **string** |  | 
+**podId** | **string** |  | 
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiProjectProjectIdPodPodIdCopyPutRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+
+
+ **account** | **string** | The account to use for the request | 
+ **path** | **string** |  | 
+ **body** | ***os.File** |  | 
+
+### Return type
+
+ (empty response body)
+
+### Authorization
+
+[APIKeyAuth](../README.md#APIKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/octet-stream
 - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)

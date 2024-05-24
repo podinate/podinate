@@ -930,6 +930,148 @@ paths:
       tags:
       - Pod
       x-speakeasy-entity-operation: Pod#exec
+  /project/{project_id}/pod/{pod_id}/copy:
+    get:
+      description: Copy a file out of the Pod
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: pod_id
+        required: true
+        schema:
+          description: The pod to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - explode: false
+        in: query
+        name: path
+        required: false
+        schema:
+          example: /var/log/nginx/error.log
+          type: string
+        style: form
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+          description: The file contents
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Copy a file out of the Pod
+      tags:
+      - Pod
+      x-speakeasy-entity-operation: Pod#copy
+    put:
+      description: Copy a file into a Pod - expects a binary file to be uploaded
+      parameters:
+      - explode: false
+        in: path
+        name: project_id
+        required: true
+        schema:
+          description: The project to look at
+          example: hello-world
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: pod_id
+        required: true
+        schema:
+          description: The pod to look at
+          example: hello-world
+          type: string
+        style: simple
+        x-speakeasy-match: id
+      - explode: false
+        in: query
+        name: path
+        required: false
+        schema:
+          example: /var/log/nginx/error.log
+          type: string
+        style: form
+      - description: The account to use for the request
+        example: my-account
+        explode: false
+        in: header
+        name: account
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              format: binary
+              type: string
+      responses:
+        "204":
+          description: The file was copied successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Request issued incorrectly, for example missing parameters\
+            \ or wrong endpoint"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource was not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An internal server error
+      summary: Copy a file into a Pod
+      tags:
+      - Pod
+      x-speakeasy-entity-operation: Pod#copy
   /project/{project_id}/shared_volumes:
     get:
       description: Returns a list of shared volumes for a given project. Shared volumes

@@ -30,6 +30,8 @@ type AccountApiRouter interface {
 // pass the data to a PodApiServicer to perform the required actions, then write the service results to the http response.
 type PodApiRouter interface {
 	ProjectProjectIdPodGet(http.ResponseWriter, *http.Request)
+	ProjectProjectIdPodPodIdCopyGet(http.ResponseWriter, *http.Request)
+	ProjectProjectIdPodPodIdCopyPut(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPodIdDelete(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPodIdExecPost(http.ResponseWriter, *http.Request)
 	ProjectProjectIdPodPodIdGet(http.ResponseWriter, *http.Request)
@@ -89,6 +91,8 @@ type AccountApiServicer interface {
 // and updated with the logic required for the API.
 type PodApiServicer interface {
 	ProjectProjectIdPodGet(context.Context, string, string, int32, int32) (ImplResponse, error)
+	ProjectProjectIdPodPodIdCopyGet(context.Context, string, string, string, string) (ImplResponse, error)
+	ProjectProjectIdPodPodIdCopyPut(context.Context, string, string, string, string, *os.File) (ImplResponse, error)
 	ProjectProjectIdPodPodIdDelete(context.Context, string, string, string) (ImplResponse, error)
 	ProjectProjectIdPodPodIdExecPost(context.Context, string, string, string, []string, bool, bool, *os.File) (ImplResponse, error)
 	ProjectProjectIdPodPodIdGet(context.Context, string, string, string) (ImplResponse, error)
