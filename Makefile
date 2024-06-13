@@ -1,10 +1,11 @@
 # Make a dev cluster
 dev-cluster:
 	echo "Creating k3d cluster podinate-dev"
-	k3d cluster create podinate-dev
+	-k3d cluster create podinate-dev
 	kubectl config use-context k3d-podinate-dev
 	echo "Creating database"
 	kubectl create namespace podinate
+	kubectl apply -f kubernetes/postgres-secret.yaml
 	kubectl apply -f kubernetes/masterdb-postgres.yaml
 	kubectl -n podinate rollout status --watch --timeout=180s statefulset/postgres
 	sleep 10

@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/cnrancher/autok3s/cmd"
+	"github.com/johncave/podinate/cli/cmd/cluster"
 	"github.com/johncave/podinate/cli/sdk"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -25,7 +27,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 
-	rootCmd.PersistentFlags().StringP("project", "p", "", "project to use")
+	rootCmd.PersistentFlags().String("project", "", "project to use")
 	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
 
 	rootCmd.PersistentFlags().String("profile", "default", "Profile and credentials to use")
@@ -33,6 +35,11 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("account", "a", "default", "account to use")
 	viper.BindPFlag("account", rootCmd.PersistentFlags().Lookup("account"))
+
+	// Add commnands related to autok3s
+	kubectl := cmd.KubectlCommand()
+	kubectl.Aliases = []string{"kubectl", "k"}
+	rootCmd.AddCommand(kubectl, cluster.NewCommand())
 
 	cobra.OnInitialize(initConfig)
 
