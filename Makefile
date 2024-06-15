@@ -14,7 +14,7 @@ dev-cluster:
 	kubectl apply -f kubernetes/controller.yaml -f kubernetes/controller-dev.yaml
 	kubectl -n podinate rollout status --watch --timeout=180s deployment/podinate-controller
 	./controller/scripts/initial-code-upload.sh
-	kubectl -n podinate exec -it deployment/podinate-controller -- bash -c "cd /go/src/github.com/johncave/podinate/controller && go run ./ init --email someone@example.com --ip 127.0.0.1"
+	kubectl -n podinate exec -it deployment/podinate-controller -- bash -c "cd /go/src/github.com/podinate/podinate/controller && go run ./ init --email someone@example.com --ip 127.0.0.1"
 	mkdir -p testapp
 	kubectl -n podinate cp $$(kubectl -n podinate get pod -l app=podinate-controller -o jsonpath='{.items[0].metadata.name}'):/profile.yaml testapp/credentials.yaml
 

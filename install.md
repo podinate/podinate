@@ -1,7 +1,7 @@
 # Install 
-This document serves as documentation of the installation procedure. It serves as notes for when we are writing the installer script later but allows for a manual install if you're brave.
+Install through package manager:
 
-This document follows the installation steps for a Prod setup. 
+
 
 
 ## System requirements: 

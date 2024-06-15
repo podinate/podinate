@@ -26,19 +26,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push Controller Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./controller/Dockerfile
-          push: true
-          tags: ghcr.io/podinate/controller:latest
-          labels: |
-            org.opencontainers.image.title=Podinate controller
-            org.opencontainers.image.description=The alternative, friendly manager for your Kubernetes clusters. This is the controller to install on your Kubernetes cluster.
-            org.opencontainers.image.authors=John Cave
-            org.opencontainers.image.url=www.podinate.com
-
       - name: Build and Push CLI Image
         uses: docker/build-push-action@v2
         with:

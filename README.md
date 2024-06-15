@@ -1,5 +1,5 @@
 # podinate
-Podinate is an alternative controller and API for Kubernetes. It wraps Kubernetes APIs with its own much simplified API, providing only the services you need to get most apps running quickly and easily.
+Podinate is a simple package manager and PaaS for Kubernetes. It helps manage resources using a simple HCL-like syntax.
 
 ## Features
 - **Simple Deployment** - if you're just trying to deploy a basic app you've written, Podinate can get it running in just a few minutes.
