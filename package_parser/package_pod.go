@@ -2,8 +2,6 @@ package package_parser
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"reflect"
 
 	hcldec "github.com/hashicorp/hcl2/hcldec"
@@ -18,8 +16,8 @@ import (
 )
 
 type Pod struct {
-	ID          string
-	Name        string   `cty:"name"`
+	ID string
+	// Name        string   `cty:"name"`
 	Image       string   `cty:"image"`
 	Tag         *string  `cty:"tag"`
 	Command     []string `cty:"command"`
@@ -52,11 +50,11 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 	TypeName:   "pod",
 	LabelNames: []string{"id"},
 	Nested: &hcldec.ObjectSpec{
-		"name": &hcldec.AttrSpec{
-			Name:     "name",
-			Type:     cty.String,
-			Required: true,
-		},
+		// "name": &hcldec.AttrSpec{
+		// 	Name:     "name",
+		// 	Type:     cty.String,
+		// 	Required: true,
+		// },
 		"image": &hcldec.AttrSpec{
 			Name:     "image",
 			Type:     cty.String,
@@ -160,7 +158,7 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 }
 
 // GetResources returns the resources needed for the Pod
-func (p *Pod) GetResources(ctx context.Context, pkg *Package) ([]runtime.Object, error) {
+func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []runtime.Object, error) {
 	var out []runtime.Object
 
 	var imageID = p.Image
@@ -211,49 +209,50 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) ([]runtime.Object,
 	}).Debug("StatefulSet")
 
 	// Check if the StatefulSet already exists
-	client, err := kube_client.Client()
+	kube, err := kube_client.Client()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	existing, err := client.AppsV1().StatefulSets(pkg.Namespace).Get(ctx, p.ID, metav1.GetOptions{})
+	ss, err = kube.AppsV1().StatefulSets(pkg.Namespace).Update(ctx, ss, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	existing, err := kube.AppsV1().StatefulSets(pkg.Namespace).Get(ctx, p.ID, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		// Resource doesn't exist, so create it
 		out = append(out, ss)
 	} else if err != nil {
-		return nil, err
+		return nil, nil, err
 	} else {
 		logrus.WithContext(ctx).WithFields(logrus.Fields{
 			"statefulset": ss,
-		}).Info("StatefulSet exists, deep comparing")
+		}).Debug("StatefulSet exists, deep comparing")
 		// Deep compare the object to see if it needs updating
-		if reflect.DeepEqual(existing.Spec, ss.Spec) {
+		if reflect.DeepEqual(ss.Spec, existing.Spec) {
 			logrus.WithContext(ctx).WithFields(logrus.Fields{
 				"statefulset": ss.Spec,
 				"existing":    existing.Spec,
-			}).Info("StatefulSet is up to date")
-			return nil, nil
+			}).Debug("StatefulSet is up to date")
+			return func(s ChangeType) *ChangeType { return &s }(ChangeTypeNoop), nil, nil
 		} else {
 			logrus.WithContext(ctx).WithFields(logrus.Fields{
 				"statefulset": ss.Spec,
 				"existing":    existing.Spec,
-			}).Info("StatefulSet needs updating")
-
-			j, _ := json.Marshal(ss.Spec)
-			fmt.Println(string(j))
-			j, _ = json.Marshal(existing.Spec)
-			fmt.Println(string(j))
+			}).Debug("StatefulSet needs updating")
 
 			// Resource exists, but needs updating
 			out = append(out, ss)
+			return func(s ChangeType) *ChangeType { return &s }(ChangeTypeUpdate), out, nil
 		}
 	}
 
-	out = append(out, ss)
+	//out = append(out, ss)
 
 	// TODO: Add services and volumes
 
-	return out, nil
+	return nil, out, nil
 }
 
 // Tosdk returns the API client representation of the pod

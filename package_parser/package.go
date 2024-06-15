@@ -115,17 +115,20 @@ func (pkg *Package) Apply(ctx context.Context) error {
 
 	plan.Display()
 
-	fmt.Print("Are you sure you want to apply these changes? (Y/n)")
-	var response string
-	fmt.Scanln(&response)
-	if strings.ToLower(response) == "y" || response == "" {
-		// Apply the plan
-		err = plan.Apply(ctx)
-		if err != nil {
-			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"error": err,
-			}).Fatal("Failed to apply changes")
-			return err
+	if !plan.Applied {
+
+		fmt.Print("Are you sure you want to apply these changes? (Y/n)")
+		var response string
+		fmt.Scanln(&response)
+		if strings.ToLower(response) == "y" || response == "" {
+			// Apply the plan
+			err = plan.Apply(ctx)
+			if err != nil {
+				logrus.WithContext(ctx).WithFields(logrus.Fields{
+					"error": err,
+				}).Fatal("Failed to apply changes")
+				return err
+			}
 		}
 	}
 

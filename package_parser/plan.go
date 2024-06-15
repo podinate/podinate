@@ -3,12 +3,14 @@
 package package_parser
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 
 	"github.com/podinate/podinate/kube_client"
 	"github.com/sirupsen/logrus"
+	"github.com/sters/yaml-diff/yamldiff"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -74,7 +76,7 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 
 	plan := Plan{
 		Valid:   false,
-		Applied: false,
+		Applied: true,
 	}
 
 	// Create a plan for the Namespace
@@ -95,6 +97,13 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 
 	// We got this far, the plan must be valid
 	plan.Valid = true
+
+	for _, change := range plan.Changes {
+		if change.ChangeType != ChangeTypeNoop {
+			plan.Applied = false
+			break
+		}
+	}
 
 	return &plan, nil
 }
@@ -124,6 +133,14 @@ func (plan *Plan) Display() {
 			created++
 		case ChangeTypeUpdate:
 			fmt.Printf("%s %s will be updated\n", change.ResourceType, change.ResourceID)
+			for _, c := range *change.Changes {
+				err := yamlDiffResources(c.CurrentResource, c.DesiredResource)
+				if err != nil {
+					logrus.WithFields(logrus.Fields{
+						"error": err,
+					}).Error("Error diffing resources")
+				}
+			}
 			updated++
 		case ChangeTypeDelete:
 			fmt.Printf("%s %s will be deleted\n", change.ResourceType, change.ResourceID)
@@ -135,6 +152,59 @@ func (plan *Plan) Display() {
 	}
 
 	fmt.Printf("Summary: %d created, %d updated, %d deleted, %d unchanged\n", created, updated, deleted, noop)
+
+	if created == 0 && updated == 0 && deleted == 0 {
+		fmt.Println("\nStack up to date. Nothing to do.")
+
+	}
+}
+
+func yamlDiffResources(oldobj runtime.Object, newobj runtime.Object) error {
+	y := printers.YAMLPrinter{}
+	b := new(bytes.Buffer)
+
+	err := y.PrintObj(oldobj, b)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Error printing old object")
+		return err
+	}
+	oldstr := b.String()
+	b.Truncate(0)
+
+	yamldiff.Load(oldstr)
+
+	err = y.PrintObj(newobj, b)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Error printing new object")
+		return err
+	}
+	newstr := b.String()
+
+	oldYaml, err := yamldiff.Load(oldstr)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Error loading old YAML")
+		return err
+	}
+
+	newYaml, err := yamldiff.Load(newstr)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Error loading new YAML")
+		return err
+	}
+
+	for _, diff := range yamldiff.Do(oldYaml, newYaml) {
+		fmt.Println(diff.Dump())
+	}
+
+	return nil
 }
 
 // Apply applies the plan to the Kubernetes cluster
@@ -276,7 +346,7 @@ func planPodChanges(ctx context.Context, client *kubernetes.Clientset, pkg *Pack
 			ChangeType:   ChangeTypeCreate,
 		}
 		// Get the resources for the pod
-		resources, err := pod.GetResources(ctx, pkg)
+		_, resources, err := pod.GetResources(ctx, pkg)
 		if err != nil {
 			return nil, err
 		}
@@ -294,21 +364,23 @@ func planPodChanges(ctx context.Context, client *kubernetes.Clientset, pkg *Pack
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error": err,
-			"pod":   pod.Name,
+			"pod":   pod.ID,
 		}).Error("Error getting pod")
 		return nil, err
 	}
 
 	// Resource exists, so update it
+
+	// Get the resources for the pod
+	ct, resources, err := pod.GetResources(ctx, pkg)
+	if err != nil {
+		return nil, err
+	}
+
 	var change = &Change{
 		ResourceType: ResourceTypePod,
 		ResourceID:   pod.ID,
-		ChangeType:   ChangeTypeUpdate,
-	}
-	// Get the resources for the pod
-	resources, err := pod.GetResources(ctx, pkg)
-	if err != nil {
-		return nil, err
+		ChangeType:   *ct,
 	}
 
 	change.Changes = new([]ResourceChange)
