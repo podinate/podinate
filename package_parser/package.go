@@ -75,6 +75,10 @@ func Parse(path string) (*Package, error) {
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("Error parsing pod %s, issue: %s", i, err))
 		}
+
+		if pod.Namespace == nil {
+			pod.Namespace = &thePackage.Namespace
+		}
 		thePackage.Pods = append(thePackage.Pods, pod)
 	}
 
@@ -113,7 +117,13 @@ func (pkg *Package) Apply(ctx context.Context) error {
 	// If the user confirms, apply the plan
 	// If the user cancels, exit
 
-	plan.Display()
+	err = plan.Display()
+	if err != nil {
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Failed to display plan")
+		return err
+	}
 
 	if !plan.Applied {
 

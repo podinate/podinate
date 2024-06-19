@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/podinate/podinate/kube_client"
+	"github.com/podinate/podinate/tui"
 	"github.com/sirupsen/logrus"
 	"github.com/sters/yaml-diff/yamldiff"
 	corev1 "k8s.io/api/core/v1"
@@ -109,9 +110,7 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 }
 
 // Display shows the plan to the user
-func (plan *Plan) Display() {
-	//logrus.Infof("Plan: %+v", plan)
-
+func (plan *Plan) Display() error {
 	var created, updated, deleted, noop int
 
 	y := printers.YAMLPrinter{}
@@ -122,11 +121,16 @@ func (plan *Plan) Display() {
 			fmt.Printf("%s %s will be created:\n", change.ResourceType, change.ResourceID)
 			for _, c := range *change.Changes {
 				//fmt.Printf("%s\n\n", c.DesiredResource)
-				err := y.PrintObj(c.DesiredResource, os.Stdout)
+				err := stripManagedFields(c.DesiredResource)
+				if err != nil {
+					return err
+				}
+				err = y.PrintObj(c.DesiredResource, os.Stdout)
 				if err != nil {
 					logrus.WithFields(logrus.Fields{
 						"error": err,
 					}).Error("Error printing object")
+					return err
 				}
 				fmt.Println()
 			}
@@ -134,11 +138,22 @@ func (plan *Plan) Display() {
 		case ChangeTypeUpdate:
 			fmt.Printf("%s %s will be updated\n", change.ResourceType, change.ResourceID)
 			for _, c := range *change.Changes {
-				err := yamlDiffResources(c.CurrentResource, c.DesiredResource)
-				if err != nil {
-					logrus.WithFields(logrus.Fields{
-						"error": err,
-					}).Error("Error diffing resources")
+				if c.ChangeType == ChangeTypeUpdate {
+					err := yamlDiffResources(c.CurrentResource, c.DesiredResource)
+					if err != nil {
+						logrus.WithFields(logrus.Fields{
+							"error": err,
+						}).Error("Error diffing resources")
+						return err
+					}
+				} else if c.ChangeType == ChangeTypeCreate {
+					err := y.PrintObj(c.DesiredResource, os.Stdout)
+					if err != nil {
+						logrus.WithFields(logrus.Fields{
+							"error": err,
+						}).Error("Error printing object")
+						return err
+					}
 				}
 			}
 			updated++
@@ -157,16 +172,27 @@ func (plan *Plan) Display() {
 		fmt.Println("\nStack up to date. Nothing to do.")
 
 	}
+
+	return nil
 }
 
-func yamlDiffResources(oldobj runtime.Object, newobj runtime.Object) error {
+func yamlDiffResources(oldResource runtime.Object, newResource runtime.Object) error {
 	y := printers.YAMLPrinter{}
 	b := new(bytes.Buffer)
 
-	err := y.PrintObj(oldobj, b)
+	// Strip the ManagedFields from the old resource
+	// as they're not suitable for comparison
+	err := stripManagedFields(oldResource)
+	if err != nil {
+		return err
+	}
+
+	err = y.PrintObj(oldResource, b)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"error": err,
+			"error":        err,
+			"old_resource": oldResource,
+			"new_resource": newResource,
 		}).Error("Error printing old object")
 		return err
 	}
@@ -175,10 +201,18 @@ func yamlDiffResources(oldobj runtime.Object, newobj runtime.Object) error {
 
 	yamldiff.Load(oldstr)
 
-	err = y.PrintObj(newobj, b)
+	// Strip managed fields to make comparison easier
+	err = stripManagedFields(newResource)
+	if err != nil {
+		return err
+	}
+
+	err = y.PrintObj(newResource, b)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"error": err,
+			"error":        err,
+			"old_resource": oldResource,
+			"new_resource": newResource,
 		}).Error("Error printing new object")
 		return err
 	}
@@ -269,14 +303,14 @@ func (plan *Plan) Apply(ctx context.Context) error {
 					"resource":    c.DesiredResource,
 				}).Info("Updated resource")
 			}
-
-			fmt.Println("Update not implemented")
 		case ChangeTypeDelete:
 			fmt.Print("Delete not implemented\n")
 		case ChangeTypeNoop:
 			// Do nothing
 		}
 	}
+
+	fmt.Println("All changes applied", tui.StyleSuccess.Render("successfully"))
 
 	return nil
 }
@@ -330,52 +364,50 @@ func planPodChanges(ctx context.Context, client *kubernetes.Clientset, pkg *Pack
 	// Connect to the cluster and check if the pod's statefulset exists
 	// If it doesn't, return a ChangeTypeCreate
 	// If it does, return a ChangeTypeUpdate
-	ss, err := client.AppsV1().StatefulSets(pkg.Namespace).Get(ctx, pod.ID, metav1.GetOptions{})
-	if errors.IsNotFound(err) {
-		// Resource doesn't exist, so create it
+	// ss, err := client.AppsV1().StatefulSets(pkg.Namespace).Get(ctx, pod.ID, metav1.GetOptions{})
+	// if errors.IsNotFound(err) {
+	// 	// Resource doesn't exist, so create it
 
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"error":     err,
-			"pod":       pod.ID,
-			"namespace": pkg.Namespace,
-		}).Debug("Pod (StatefulSet) doesn't exist, creating it")
+	// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
+	// 		"error":     err,
+	// 		"pod":       pod.ID,
+	// 		"namespace": pkg.Namespace,
+	// 	}).Debug("Pod (StatefulSet) doesn't exist, creating it")
 
-		var change = &Change{
-			ResourceType: ResourceTypePod,
-			ResourceID:   pod.ID,
-			ChangeType:   ChangeTypeCreate,
-		}
-		// Get the resources for the pod
-		_, resources, err := pod.GetResources(ctx, pkg)
-		if err != nil {
-			return nil, err
-		}
-		change.Changes = new([]ResourceChange)
-		for _, resource := range resources {
-			*change.Changes = append(*change.Changes, ResourceChange{
-				ChangeType:      ChangeTypeCreate,
-				CurrentResource: nil,
-				DesiredResource: resource,
-			})
-		}
+	// 	var change = &Change{
+	// 		ResourceType: ResourceTypePod,
+	// 		ResourceID:   pod.ID,
+	// 		ChangeType:   ChangeTypeCreate,
+	// 	}
+	// 	// Get the resources for the pod
+	// 	_, resourceChanges, err := pod.GetResources(ctx, pkg)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	change.Changes = new([]ResourceChange)
+	// 	*change.Changes = append(*change.Changes, resourceChanges...)
 
-		return change, nil
-	}
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-			"pod":   pod.ID,
-		}).Error("Error getting pod")
-		return nil, err
-	}
+	// 	return change, nil
+	// }
+	// if err != nil {
+	// 	logrus.WithFields(logrus.Fields{
+	// 		"error": err,
+	// 		"pod":   pod.ID,
+	// 	}).Error("Error getting pod")
+	// 	return nil, err
+	// }
 
 	// Resource exists, so update it
 
 	// Get the resources for the pod
-	ct, resources, err := pod.GetResources(ctx, pkg)
+	ct, resourceChanges, err := pod.GetResources(ctx, pkg)
 	if err != nil {
 		return nil, err
 	}
+
+	logrus.WithContext(ctx).WithFields(logrus.Fields{
+		"pod": pod.ID,
+	}).Debug("Appending changes")
 
 	var change = &Change{
 		ResourceType: ResourceTypePod,
@@ -384,13 +416,7 @@ func planPodChanges(ctx context.Context, client *kubernetes.Clientset, pkg *Pack
 	}
 
 	change.Changes = new([]ResourceChange)
-	for _, resource := range resources {
-		*change.Changes = append(*change.Changes, ResourceChange{
-			ChangeType:      ChangeTypeUpdate,
-			CurrentResource: ss,
-			DesiredResource: resource,
-		})
-	}
+	*change.Changes = append(*change.Changes, resourceChanges...)
 
 	return change, nil
 

@@ -54,11 +54,10 @@ func createObject(kubeClientset kubernetes.Interface, restConfig rest.Config, ob
 
 	if update {
 		// Get the name out of the runtime.Object
-		innerObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+		u, err := resourceToUnstructured(obj)
 		if err != nil {
 			return nil, err
 		}
-		u := unstructured.Unstructured{Object: innerObj}
 
 		return restHelper.Replace(namespace, u.GetName(), update, obj)
 	}
@@ -76,4 +75,24 @@ func newRestClient(restConfig rest.Config, gv schema.GroupVersion) (rest.Interfa
 	}
 
 	return rest.RESTClientFor(&restConfig)
+}
+
+// resourceToUnstructured converts a runtime.Object to an unstructured.Unstructured
+func resourceToUnstructured(obj runtime.Object) (*unstructured.Unstructured, error) {
+	innerObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+		return nil, err
+	}
+	return &unstructured.Unstructured{Object: innerObj}, nil
+}
+
+// stripManagedFields removes the "managedFields" field from the object
+func stripManagedFields(resource runtime.Object) error {
+	// Strip ManagedFields from the old resource
+	o, err := resourceToUnstructured(resource)
+	if err != nil {
+		return err
+	}
+	o.SetManagedFields(nil)
+	return runtime.DefaultUnstructuredConverter.FromUnstructured(o.Object, resource)
 }

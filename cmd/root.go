@@ -7,6 +7,7 @@ import (
 
 	"github.com/cnrancher/autok3s/cmd"
 	"github.com/podinate/podinate/cmd/cluster"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -34,6 +35,8 @@ func init() {
 	rootCmd.PersistentFlags().StringP("account", "a", "default", "account to use")
 	viper.BindPFlag("account", rootCmd.PersistentFlags().Lookup("account"))
 
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Enable debug logging - LOTS of logs")
+
 	// Add commnands related to autok3s
 	kubectl := cmd.KubectlCommand()
 	kubectl.Aliases = []string{"kubectl", "k"}
@@ -41,12 +44,17 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 
-	//viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
-	// viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
-	// viper.BindPFlag("projectbase", rootCmd.PersistentFlags().Lookup("projectbase"))
-	// viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
-	// viper.SetDefault("author", "NAME HERE <EMAIL ADDRESS>")
-	// viper.SetDefault("license", "apache")
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// Bind the debug flag
+		viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
+		fmt.Println("Debug logging enabled", viper.GetBool("debug"))
+		if viper.GetBool("debug") {
+			logrus.SetLevel(logrus.TraceLevel)
+			fmt.Println("Debug logging enabled")
+			logrus.Debug("Debug logging enabled")
+		}
+		return nil
+	}
 }
 
 func initConfig() {
@@ -59,42 +67,6 @@ func initConfig() {
 	}
 
 	viper.ReadInConfig()
-	// If error, that's fine, there may not be a config file
-
-	// if err := viper.ReadInConfig(); err != nil {
-	// 	fmt.Println("Can't read config:", err)
-	// 	os.Exit(1)
-	// }
-
-	// Find home directory.
-	// home, err := homedir.Dir()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	os.Exit(1)
-	// }
-
-	//
-	// viper.AddConfigPath(home + "/.config/podinate/")
-	// viper.SetConfigName("credentials")
-	// if err := viper.MergeInConfig(); err != nil {
-	// 	if err != nil {
-	// 		switch err.(type) {
-	// 		case viper.ConfigFileNotFoundError:
-	// 			sdk.StartLogin()
-	// 		default:
-	// 			fmt.Println("Can't read credentials file:", err)
-	// 		}
-	// 	}
-	// }
-
-	// I have no idea why this works.
-	// If I print the string it's the word "login"
-	// but inverting this condition has the opposite effect
-	// Wtf is happening here?
-	//log.Printf("called as %+v %T", loginCmd.CalledAs(), loginCmd.CalledAs())
-	// if loginCmd.CalledAs() == "" {
-	// 	sdk.SetupUser()
-	// }
 
 	if viper.GetBool("verbose") {
 		log.Println("Verbose output enabled")
@@ -111,12 +83,14 @@ var rootCmd = &cobra.Command{
 	SilenceUsage: true,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Do Stuff Here
+
 		cobra.CheckErr(cmd.Help())
 	},
 }
 
 // Execute is the entry point for the cli
 func Execute() {
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
