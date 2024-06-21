@@ -3,8 +3,11 @@ package package_parser
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
+
+	stderrors "errors"
 
 	hcldec "github.com/hashicorp/hcl2/hcldec"
 	"github.com/podinate/podinate/kube_client"
@@ -12,10 +15,12 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -23,6 +28,8 @@ const (
 	KubernetesAPIVersionStatefulSet = "apps/v1"
 	KubernetesKindService           = "Service"
 	KubernetesAPIVersionService     = "v1"
+	KubernetesKindIngress           = "Ingress"
+	KubernetesAPIVersionIngress     = "networking.k8s.io/v1"
 )
 
 type Pod struct {
@@ -41,7 +48,7 @@ type Pod struct {
 		Port       int     `cty:"port"`
 		TargetPort *int    `cty:"target_port"`
 		Protocol   *string `cty:"protocol"`
-		DomainName *string `cty:"url"`
+		URL        *string `cty:"url"`
 	} `cty:"service"`
 
 	// Removed for now, because these are separate Kube resources
@@ -185,7 +192,7 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 // This function deals with the StatefulSet, then calls other functions to add services, shared volumes, etc.
 func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []ResourceChange, error) {
 	var out []ResourceChange
-	changeType := ChangeTypeNoop
+	podChangeType := ChangeTypeNoop
 
 	var imageID = p.Image
 	if p.Tag != nil {
@@ -292,23 +299,21 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 	}
 
 	// Add service changes
-	ct, svcChanges, err := p.GetServiceResourceChanges(ctx)
+	serviceChangeType, svcChanges, err := p.GetServiceResourceChanges(ctx)
 	if err != nil {
 		logrus.WithContext(ctx).WithFields(logrus.Fields{
 			"error":           err,
 			"service_changes": svcChanges,
-			"changeType":      changeType,
-			"service_ct":      ct,
+			"service_ct":      serviceChangeType,
 		}).Error("Error getting service changes")
 		return nil, nil, err
 	}
 	logrus.WithContext(ctx).WithFields(logrus.Fields{
 		"service_changes": svcChanges,
-		"changeType":      changeType,
-		"service_ct":      ct,
+		"service_ct":      serviceChangeType,
 	}).Trace("Service changes")
 
-	changeType = *ct
+	//changeType = *ct
 	out = append(out, svcChanges...)
 
 	// Check if the StatefulSet already exists
@@ -335,7 +340,7 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 		}).Error("Tried to get statefulset, got not found error")
 
 		// Resource doesn't exist, so create it
-		changeType = ChangeTypeCreate
+		podChangeType = ChangeTypeCreate
 
 		// Dry Run creation to fill out default fields
 		// Disabled for now, fails if the Namespace isn't already created
@@ -387,8 +392,16 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 				CurrentResource: existing,
 				DesiredResource: ss,
 			})
-			changeType = ChangeTypeUpdate
+			podChangeType = ChangeTypeUpdate
 		}
+	}
+
+	// Decide the overall change type
+	changeType := ChangeTypeNoop
+	if podChangeType == ChangeTypeCreate || podChangeType == ChangeTypeUpdate {
+		changeType = podChangeType
+	} else if (*serviceChangeType == ChangeTypeCreate || *serviceChangeType == ChangeTypeUpdate) && podChangeType == ChangeTypeNoop {
+		changeType = ChangeTypeUpdate
 	}
 
 	return &changeType, out, nil
@@ -445,6 +458,7 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 		if errors.IsNotFound(err) {
 			// Resource doesn't exist, so create it
 
+			// TODO: Try changing this Update to Create
 			svc, err := kube.CoreV1().Services(*p.Namespace).Update(ctx, svcSpec, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
 			if errors.IsNotFound(err) {
 				svc = svcSpec
@@ -498,6 +512,23 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 				}).Debug("Service is up to date")
 			}
 		}
+
+		// Check if the service needs an Ingress
+		ct, ingressChanges, err := p.GetServiceIngressChanges(ctx, name)
+		if err != nil {
+			logrus.WithContext(ctx).WithFields(logrus.Fields{
+				"error": err,
+			}).Error("Error getting Ingress changes")
+			return nil, nil, err
+		}
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"ingress_changes": ingressChanges,
+			"changeType":      changeType,
+			"ingress_ct":      ct,
+		}).Trace("Ingress changes")
+
+		changeType = *ct
+		out = append(out, ingressChanges...)
 	}
 
 	logrus.WithContext(ctx).WithFields(logrus.Fields{
@@ -506,4 +537,166 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 	}).Debug("GetServiceResourceChanges")
 
 	return &changeType, out, nil
+}
+
+func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string) (*ChangeType, []ResourceChange, error) {
+	var out []ResourceChange
+	changeType := ChangeTypeNoop
+
+	// Check if the service has a URL and protocol set
+	if pod.Services[serviceName].Protocol == nil || // If the protocol is nil, it's TCP
+		pod.Services[serviceName].URL == nil || // If the URL is nil, no ingress is needed
+		(strings.ToLower(*pod.Services[serviceName].Protocol) != "http" && strings.ToLower(*pod.Services[serviceName].Protocol) != "https") { // If the protocol is not HTTP or HTTPS, no ingress is needed
+		// No ingress needed
+		return nil, nil, nil
+	}
+
+	u, err := url.ParseRequestURI(*pod.Services[serviceName].URL)
+	if err != nil {
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"error": err,
+			"url":   *pod.Services[serviceName].URL,
+		}).Error("Error parsing URL")
+		return nil, nil, err
+	}
+
+	// Allow user to specify "http://example.com" for "http://example.com/"
+	path := u.Path
+	if path == "" {
+		path = "/"
+	}
+
+	// Get the Kube connection and try to Get an existing ingress
+	client, err := kube_client.Client()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// For some reason the kube client will not automatically apply the default ingressclass
+	// to objects that are updated, so we doing that manually
+	ic, err := getDefaultIngressClass(ctx, client)
+	if err != nil {
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Error getting default IngressClass")
+		return nil, nil, err
+	}
+
+	ingressSpec := &networkingv1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceName,
+			Namespace: *pod.Namespace,
+			Labels: map[string]string{
+				"podinate.com/pod": pod.ID,
+			},
+		},
+		Spec: networkingv1.IngressSpec{
+			IngressClassName: ic,
+			Rules: []networkingv1.IngressRule{
+				{
+					Host: u.Hostname(),
+					IngressRuleValue: networkingv1.IngressRuleValue{
+						HTTP: &networkingv1.HTTPIngressRuleValue{
+							Paths: []networkingv1.HTTPIngressPath{
+								{
+									PathType: func(val networkingv1.PathType) *networkingv1.PathType { return &val }(networkingv1.PathTypePrefix),
+									Path:     path,
+									Backend: networkingv1.IngressBackend{
+										Service: &networkingv1.IngressServiceBackend{
+											Name: serviceName,
+											Port: networkingv1.ServiceBackendPort{
+												Number: int32(pod.Services[serviceName].Port),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	ingressSpec.Kind = KubernetesKindIngress
+	ingressSpec.APIVersion = KubernetesAPIVersionIngress
+
+	existing, err := client.NetworkingV1().Ingresses(*pod.Namespace).Get(ctx, serviceName, metav1.GetOptions{})
+	existing.Kind = KubernetesKindIngress
+	existing.APIVersion = KubernetesAPIVersionIngress
+
+	if errors.IsNotFound(err) {
+		// Resource doesn't exist, so create it
+
+		created, err := client.NetworkingV1().Ingresses(*pod.Namespace).Create(ctx, ingressSpec, metav1.CreateOptions{DryRun: []string{metav1.DryRunAll}})
+		if errors.IsNotFound(err) {
+			// We get this error when the Namespace isn't found, in that case it's okay because we can just apply the spec as is
+			created = ingressSpec
+		} else if err != nil {
+			return nil, nil, err
+		}
+		created.Kind = KubernetesKindIngress
+		created.APIVersion = KubernetesAPIVersionIngress
+
+		changeType = ChangeTypeCreate
+		out = append(out, ResourceChange{
+			ChangeType:      ChangeTypeCreate,
+			CurrentResource: nil,
+			DesiredResource: created,
+		})
+	} else if err != nil {
+		// Something else went wrong getting the ingress, we can't proceed
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"error":   err,
+			"pod_id":  pod.ID,
+			"service": serviceName,
+		}).Error("Error getting Ingress")
+		return nil, nil, err
+	} else {
+		// Resource exists, but needs updating
+		updated, err := client.NetworkingV1().Ingresses(*pod.Namespace).Update(ctx, ingressSpec, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
+		if err != nil {
+			return nil, nil, err
+		}
+		updated.Kind = KubernetesKindIngress
+		updated.APIVersion = KubernetesAPIVersionIngress
+
+		if !reflect.DeepEqual(updated.Spec, existing.Spec) {
+			logrus.WithContext(ctx).WithFields(logrus.Fields{
+				"existing": existing,
+				"ingress":  updated,
+			}).Debug("Ingress needs updating")
+			out = append(out, ResourceChange{
+				ChangeType:      ChangeTypeUpdate,
+				CurrentResource: existing,
+				DesiredResource: updated,
+			})
+			changeType = ChangeTypeUpdate
+		}
+	}
+
+	return &changeType, out, nil
+
+}
+
+// getDefaultIngressClass gets the default IngressClass from the cluster
+func getDefaultIngressClass(ctx context.Context, client *kubernetes.Clientset) (*string, error) {
+	// Get the IngressClass from the cluster
+
+	ingressClasses, err := client.NetworkingV1().IngressClasses().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	logrus.WithContext(ctx).WithFields(logrus.Fields{
+		"ingressClasses": ingressClasses,
+	}).Debug("Got IngressClasses")
+
+	// Find the default IngressClass
+	for _, ic := range ingressClasses.Items {
+		if ic.ObjectMeta.Annotations["ingressclass.kubernetes.io/is-default-class"] == "true" {
+			return &ic.Name, nil
+		}
+	}
+
+	return nil, stderrors.New("No default IngressClass found")
 }

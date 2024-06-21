@@ -13,7 +13,15 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+var client *kubernetes.Clientset
+
 func Client() (*kubernetes.Clientset, error) {
+
+	// Use the cached client if available
+	if client != nil {
+		return client, nil
+	}
+
 	kubeconfig, err := RestConfig()
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -22,7 +30,17 @@ func Client() (*kubernetes.Clientset, error) {
 		return nil, err
 	}
 
-	return kubernetes.NewForConfig(kubeconfig)
+	c, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Error creating kube client")
+		return nil, err
+	}
+
+	client = c
+
+	return client, nil
 }
 
 func RestConfig() (*rest.Config, error) {

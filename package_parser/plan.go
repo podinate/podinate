@@ -165,7 +165,13 @@ func (plan *Plan) Display() error {
 					logrus.WithFields(logrus.Fields{
 						"kind": c.DesiredResource.GetObjectKind().GroupVersionKind().Kind,
 					}).Debug("creating object")
-					err := y.PrintObj(c.DesiredResource, os.Stdout)
+
+					err := stripManagedFields(c.DesiredResource)
+					if err != nil {
+						return err
+					}
+
+					err = y.PrintObj(c.DesiredResource, os.Stdout)
 					if err != nil {
 						logrus.WithFields(logrus.Fields{
 							"error": err,
