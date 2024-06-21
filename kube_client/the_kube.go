@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -35,6 +36,13 @@ func RestConfig() (*rest.Config, error) {
 		return nil, err
 	}
 	kubeConfigPath := filepath.Join(home, ".config", "podinate", ".kube", "config")
+
+	if viper.GetString("kubeconfig") != "" {
+		logrus.WithFields(logrus.Fields{
+			"kubeconfig": viper.GetString("kubeconfig"),
+		}).Debug("Using kubeconfig from flag")
+		kubeConfigPath = viper.GetString("kubeconfig")
+	}
 
 	kubeconfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	if err != nil {

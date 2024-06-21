@@ -2,6 +2,7 @@ package package_parser
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -12,7 +13,9 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
@@ -38,15 +41,15 @@ type Pod struct {
 		Port       int     `cty:"port"`
 		TargetPort *int    `cty:"target_port"`
 		Protocol   *string `cty:"protocol"`
-		DomainName *string `cty:"domain_name"`
+		DomainName *string `cty:"url"`
 	} `cty:"service"`
 
 	// Removed for now, because these are separate Kube resources
-	// Volume map[string]struct {
-	// 	Size  int     `cty:"size"`
-	// 	Path  string  `cty:"path"`
-	// 	Class *string `cty:"class"`
-	// } `cty:"volume"`
+	Volume map[string]struct {
+		Size      int     `cty:"size"`
+		MountPath string  `cty:"mount_path"`
+		Class     *string `cty:"class"`
+	} `cty:"volume"`
 	// SharedVolume *[]struct {
 	// 	VolumeID string `cty:"volume_id"`
 	// 	Path     string `cty:"path"`
@@ -108,49 +111,57 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 			TypeName:   "service",
 			LabelNames: []string{"name"},
 			Nested: &hcldec.ObjectSpec{
+				// The listening port of the service
 				"port": &hcldec.AttrSpec{
 					Name:     "port",
 					Type:     cty.Number,
 					Required: true,
 				},
+				// The service on the container that the port is forwarded to
 				"target_port": &hcldec.AttrSpec{
 					Name:     "target_port",
 					Type:     cty.Number,
 					Required: false,
 				},
+				// Protocol of the service. Defaults to TCP
+				// Can be set to UDP
+				// If set to "http" and url is specified, an Ingress will be created
 				"protocol": &hcldec.AttrSpec{
 					Name:     "protocol",
 					Type:     cty.String,
 					Required: false,
 				},
-				"domain_name": &hcldec.AttrSpec{
-					Name:     "domain_name",
+				// The url to make the service available at (make the service externally available)
+				// If protocol is set to "http" or "https", an Ingress will be created
+				// If a domain name followed by a path, the service will be available at that path on the ingress
+				"url": &hcldec.AttrSpec{
+					Name:     "url",
 					Type:     cty.String,
 					Required: false,
 				},
 			},
 		},
-		// "volume": &hcldec.BlockMapSpec{
-		// 	TypeName:   "volume",
-		// 	LabelNames: []string{"name"},
-		// 	Nested: &hcldec.ObjectSpec{
-		// 		"size": &hcldec.AttrSpec{
-		// 			Name:     "size",
-		// 			Type:     cty.Number,
-		// 			Required: true,
-		// 		},
-		// 		"path": &hcldec.AttrSpec{
-		// 			Name:     "path",
-		// 			Type:     cty.String,
-		// 			Required: true,
-		// 		},
-		// 		"class": &hcldec.AttrSpec{
-		// 			Name:     "class",
-		// 			Type:     cty.String,
-		// 			Required: false,
-		// 		},
-		// 	},
-		// },
+		"volume": &hcldec.BlockMapSpec{
+			TypeName:   "volume",
+			LabelNames: []string{"name"},
+			Nested: &hcldec.ObjectSpec{
+				"size": &hcldec.AttrSpec{
+					Name:     "size",
+					Type:     cty.Number,
+					Required: true,
+				},
+				"mount_path": &hcldec.AttrSpec{
+					Name:     "mount_path",
+					Type:     cty.String,
+					Required: true,
+				},
+				"class": &hcldec.AttrSpec{
+					Name:     "class",
+					Type:     cty.String,
+					Required: false,
+				},
+			},
+		},
 		// "shared_volume": &hcldec.BlockListSpec{
 		// 	TypeName: "shared_volume",
 		// 	MinItems: 0,
@@ -227,20 +238,76 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 	}
 
 	// Add service ports to the StatefulSet
+	// This port is just an annotation to help admins know what the container does
 	for k, v := range p.Services {
 		//ssSpec.Spec.ServiceName = k
-		ssSpec.Spec.Template.Spec.Containers[0].Ports = append(ssSpec.Spec.Template.Spec.Containers[0].Ports, corev1.ContainerPort{
+		port := corev1.ContainerPort{
 			Name:          k,
 			ContainerPort: int32(v.Port),
-		})
+		}
 
+		if v.TargetPort != nil {
+			port.ContainerPort = int32(*v.TargetPort)
+		}
+		ssSpec.Spec.Template.Spec.Containers[0].Ports = append(ssSpec.Spec.Template.Spec.Containers[0].Ports, port)
+
+	}
+
+	// Add volumes to the StatefulSet
+	for k, volume := range p.Volume {
+		ssSpec.Spec.Template.Spec.Containers[0].VolumeMounts = append(ssSpec.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      k,
+			MountPath: volume.MountPath,
+		})
+		// Add volume claim templates
+		newPVC := corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: k,
+				Annotations: map[string]string{
+					"volumeType": "local",
+				},
+				Labels: map[string]string{
+					"podinate.com/pod": p.ID,
+				},
+			},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes: []corev1.PersistentVolumeAccessMode{
+					"ReadWriteOnce",
+				},
+				//StorageClassName: func(val string) *string { return &val }("local-path"),
+				Resources: corev1.VolumeResourceRequirements{
+					Requests: corev1.ResourceList{
+						"storage": func(val string) resource.Quantity { return resource.MustParse(val) }(fmt.Sprintf("%dGi", volume.Size)),
+					},
+				},
+			},
+		}
+
+		if volume.Class != nil {
+			// TODO: Check if the SC exists
+			newPVC.Spec.StorageClassName = volume.Class
+		}
+
+		ssSpec.Spec.VolumeClaimTemplates = append(ssSpec.Spec.VolumeClaimTemplates, newPVC)
 	}
 
 	// Add service changes
 	ct, svcChanges, err := p.GetServiceResourceChanges(ctx)
 	if err != nil {
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"error":           err,
+			"service_changes": svcChanges,
+			"changeType":      changeType,
+			"service_ct":      ct,
+		}).Error("Error getting service changes")
 		return nil, nil, err
 	}
+	logrus.WithContext(ctx).WithFields(logrus.Fields{
+		"service_changes": svcChanges,
+		"changeType":      changeType,
+		"service_ct":      ct,
+	}).Trace("Service changes")
+
 	changeType = *ct
 	out = append(out, svcChanges...)
 
@@ -305,7 +372,7 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 				"statefulset": ss.Spec,
 				"existing":    existing.Spec,
 			}).Debug("StatefulSet is up to date")
-			changeType = ChangeTypeNoop
+			//changeType = ChangeTypeNoop
 		} else {
 			logrus.WithContext(ctx).WithFields(logrus.Fields{
 				"statefulset": ss,
@@ -356,6 +423,15 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 		if service.Protocol != nil && strings.ToLower(*service.Protocol) == "udp" {
 			svcSpec.Spec.Ports[0].Protocol = corev1.ProtocolUDP
 		}
+
+		if service.TargetPort != nil {
+			svcSpec.Spec.Ports[0].TargetPort = intstr.FromInt(*service.TargetPort)
+		}
+
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"service": svcSpec,
+		}).Trace("generated service spec")
+
 		// Check if the Service already exists
 		kube, err := kube_client.Client()
 		if err != nil {
@@ -364,11 +440,15 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 
 		//s, err := kube.CoreV1().Services(*p.Namespace).Update(ctx, svc, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
 		s, err := kube.CoreV1().Services(*p.Namespace).Get(ctx, name, metav1.GetOptions{})
+		s.Kind = KubernetesKindService
+		s.APIVersion = KubernetesAPIVersionService
 		if errors.IsNotFound(err) {
 			// Resource doesn't exist, so create it
 
 			svc, err := kube.CoreV1().Services(*p.Namespace).Update(ctx, svcSpec, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
-			if err != nil {
+			if errors.IsNotFound(err) {
+				svc = svcSpec
+			} else if err != nil {
 				return nil, nil, err
 			}
 			svc.Kind = KubernetesKindService
@@ -411,6 +491,11 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 					DesiredResource: svc,
 				})
 				changeType = ChangeTypeUpdate
+			} else {
+				logrus.WithContext(ctx).WithFields(logrus.Fields{
+					"service":          svc,
+					"existing_service": s,
+				}).Debug("Service is up to date")
 			}
 		}
 	}

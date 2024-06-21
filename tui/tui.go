@@ -45,10 +45,15 @@ func (s simplePage) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 var (
 	StyleSuccess = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Background(lipgloss.Color("#7D56F4")).
-		PaddingTop(2).
-		PaddingLeft(4).
-		Width(22)
+			Bold(true).
+			Foreground(lipgloss.Color("#FAFAFA")).
+			Background(lipgloss.Color("#66ff33")).
+			Padding(0, 1)
+	StyleItalic = lipgloss.NewStyle().
+			Italic(true)
+	StyleUpdated = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#FAFAFA")).
+			Background(lipgloss.Color("#ffcc00")).
+			Padding(0, 1)
 )

@@ -82,6 +82,11 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 
 	// Create a plan for the Namespace
 	namespaceChanges, err := planNamespaceChanges(ctx, client, pkg.Namespace)
+	logrus.WithContext(ctx).WithFields(logrus.Fields{
+		"namespace": pkg.Namespace,
+		"changes":   namespaceChanges,
+		"error":     err,
+	}).Trace("Planned namespace changes")
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +95,11 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 	// Create a plan for each Pod
 	for _, pod := range pkg.Pods {
 		podPlan, err := planPodChanges(ctx, client, pkg, pod)
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"pod":     pod.ID,
+			"changes": podPlan,
+			"error":   err,
+		}).Trace("Planned pod changes")
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +128,7 @@ func (plan *Plan) Display() error {
 	for _, change := range plan.Changes {
 		switch change.ChangeType {
 		case ChangeTypeCreate:
-			fmt.Printf("%s %s will be created:\n", change.ResourceType, change.ResourceID)
+			fmt.Printf("%s "+tui.StyleItalic.Render("%s")+" will be "+tui.StyleSuccess.Render("created")+":\n", change.ResourceType, change.ResourceID)
 			for _, c := range *change.Changes {
 				//fmt.Printf("%s\n\n", c.DesiredResource)
 				err := stripManagedFields(c.DesiredResource)
@@ -136,8 +146,13 @@ func (plan *Plan) Display() error {
 			}
 			created++
 		case ChangeTypeUpdate:
-			fmt.Printf("%s %s will be updated\n", change.ResourceType, change.ResourceID)
-			for _, c := range *change.Changes {
+			fmt.Printf("%s %s will be "+tui.StyleUpdated.Render("updated")+"\n", change.ResourceType, change.ResourceID)
+			for i, c := range *change.Changes {
+
+				if i > 0 {
+					fmt.Println(tui.StyleSuccess.Render("---"))
+				}
+
 				if c.ChangeType == ChangeTypeUpdate {
 					err := yamlDiffResources(c.CurrentResource, c.DesiredResource)
 					if err != nil {
@@ -147,6 +162,9 @@ func (plan *Plan) Display() error {
 						return err
 					}
 				} else if c.ChangeType == ChangeTypeCreate {
+					logrus.WithFields(logrus.Fields{
+						"kind": c.DesiredResource.GetObjectKind().GroupVersionKind().Kind,
+					}).Debug("creating object")
 					err := y.PrintObj(c.DesiredResource, os.Stdout)
 					if err != nil {
 						logrus.WithFields(logrus.Fields{
@@ -169,7 +187,7 @@ func (plan *Plan) Display() error {
 	fmt.Printf("Summary: %d created, %d updated, %d deleted, %d unchanged\n", created, updated, deleted, noop)
 
 	if created == 0 && updated == 0 && deleted == 0 {
-		fmt.Println("\nStack up to date. Nothing to do.")
+		fmt.Println("\n" + tui.StyleSuccess.Render("Everything up to date. Nothing to do."))
 
 	}
 
@@ -310,7 +328,7 @@ func (plan *Plan) Apply(ctx context.Context) error {
 		}
 	}
 
-	fmt.Println("All changes applied", tui.StyleSuccess.Render("successfully"))
+	fmt.Println("\n", tui.StyleSuccess.Render("All changes applied successfully"))
 
 	return nil
 }

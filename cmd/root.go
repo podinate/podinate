@@ -5,8 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/cnrancher/autok3s/cmd"
-	"github.com/podinate/podinate/cmd/cluster"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -21,38 +19,30 @@ var (
 // Config file stuff
 func init() {
 
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.config/podinate/credentials.yaml)")
-	viper.BindPFlag("config_file", rootCmd.PersistentFlags().Lookup("config"))
-	//rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	//viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
-
-	rootCmd.PersistentFlags().String("project", "", "project to use")
-	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
-
-	rootCmd.PersistentFlags().String("profile", "default", "Profile and credentials to use")
-	viper.BindPFlag("profile", rootCmd.PersistentFlags().Lookup("profile"))
-
-	rootCmd.PersistentFlags().StringP("account", "a", "default", "account to use")
-	viper.BindPFlag("account", rootCmd.PersistentFlags().Lookup("account"))
-
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Enable debug logging - LOTS of logs")
+	rootCmd.PersistentFlags().String("kubeconfig", "", "Path to the kubeconfig file to use for CLI requests")
 
 	// Add commnands related to autok3s
-	kubectl := cmd.KubectlCommand()
-	kubectl.Aliases = []string{"kubectl", "k"}
-	rootCmd.AddCommand(kubectl, cluster.NewCommand())
+	// kubectl := cmd.KubectlCommand()
+	// kubectl.Aliases = []string{"kubectl", "k"}
+	// rootCmd.AddCommand(kubectl, cluster.NewCommand())
 
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+
+		// Bind the kubeconfig flag
+		viper.BindPFlag("kubeconfig", rootCmd.PersistentFlags().Lookup("kubeconfig"))
+
 		// Bind the debug flag
 		viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
-		fmt.Println("Debug logging enabled", viper.GetBool("debug"))
+		//fmt.Println("Debug logging enabled", viper.GetBool("debug"))
 		if viper.GetBool("debug") {
 			logrus.SetLevel(logrus.TraceLevel)
-			fmt.Println("Debug logging enabled")
+			//fmt.Println("Debug logging enabled")
 			logrus.Debug("Debug logging enabled")
 		}
+
 		return nil
 	}
 }
