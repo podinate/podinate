@@ -275,10 +275,7 @@ func (plan *Plan) Apply(ctx context.Context) error {
 		return err
 	}
 
-	restConfig, err := kube_client.RestConfig()
-	if err != nil {
-		return err
-	}
+	restConfig := kube_client.RestConfig
 
 	for _, change := range plan.Changes {
 
@@ -316,7 +313,12 @@ func (plan *Plan) Apply(ctx context.Context) error {
 			}).Info("Updating resource")
 
 			for _, c := range *change.Changes {
-				_, err := createObject(client, *restConfig, c.DesiredResource, true)
+
+				update := false
+				if c.ChangeType == ChangeTypeUpdate {
+					update = true
+				}
+				_, err := createObject(client, *restConfig, c.DesiredResource, update)
 				if err != nil {
 					return err
 				}

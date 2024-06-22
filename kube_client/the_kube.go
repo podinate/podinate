@@ -14,6 +14,26 @@ import (
 )
 
 var client *kubernetes.Clientset
+var RestConfig *rest.Config
+
+func init() {
+	rc, err := GetRestConfig()
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Fatal("Error getting kubeconfig")
+	}
+	RestConfig = rc
+
+	// c, err := kubernetes.NewForConfig(RestConfig)
+	// if err != nil {
+	// 	logrus.WithFields(logrus.Fields{
+	// 		"error": err,
+	// 	}).Fatal("Error creating kube client")
+	// }
+	// client = c
+
+}
 
 func Client() (*kubernetes.Clientset, error) {
 
@@ -22,7 +42,7 @@ func Client() (*kubernetes.Clientset, error) {
 		return client, nil
 	}
 
-	kubeconfig, err := RestConfig()
+	kubeconfig, err := GetRestConfig()
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error": err,
@@ -43,7 +63,7 @@ func Client() (*kubernetes.Clientset, error) {
 	return client, nil
 }
 
-func RestConfig() (*rest.Config, error) {
+func GetRestConfig() (*rest.Config, error) {
 	// Connect to the Kubernetes cluster
 	// and return a client
 	home, err := os.UserHomeDir()

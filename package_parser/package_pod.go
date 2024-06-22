@@ -3,12 +3,12 @@ package package_parser
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"reflect"
 	"strings"
 
 	stderrors "errors"
 
+	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	hcldec "github.com/hashicorp/hcl2/hcldec"
 	"github.com/podinate/podinate/kube_client"
 	"github.com/sirupsen/logrus"
@@ -24,12 +24,13 @@ import (
 )
 
 const (
-	KubernetesKindStatefulSet       = "StatefulSet"
-	KubernetesAPIVersionStatefulSet = "apps/v1"
-	KubernetesKindService           = "Service"
-	KubernetesAPIVersionService     = "v1"
-	KubernetesKindIngress           = "Ingress"
-	KubernetesAPIVersionIngress     = "networking.k8s.io/v1"
+	KubernetesKindStatefulSet              = "StatefulSet"
+	KubernetesAPIVersionStatefulSet        = "apps/v1"
+	KubernetesKindService                  = "Service"
+	KubernetesAPIVersionService            = "v1"
+	KubernetesKindIngress                  = "Ingress"
+	KubernetesAPIVersionIngress            = "networking.k8s.io/v1"
+	PodinateDefaultClusterIssuerAnnotation = "podinate.com/default-cluster-issuer"
 )
 
 type Pod struct {
@@ -48,7 +49,13 @@ type Pod struct {
 		Port       int     `cty:"port"`
 		TargetPort *int    `cty:"target_port"`
 		Protocol   *string `cty:"protocol"`
-		URL        *string `cty:"url"`
+		Ingress    *struct {
+			HostName      string  `cty:"hostname"`
+			Path          *string `cty:"path"`
+			IngressClass  *string `cty:"ingress_class"`
+			TLS           *bool   `cty:"tls"`
+			ClusterIssuer *string `cty:"cluster_issuer"`
+		} `cty:"ingress"`
 	} `cty:"service"`
 
 	// Removed for now, because these are separate Kube resources
@@ -119,6 +126,8 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 			LabelNames: []string{"name"},
 			Nested: &hcldec.ObjectSpec{
 				// The listening port of the service
+				// For example an app might listen on port 3000 for http traffic
+				// In that case we set port to 80 and target_port to 3000
 				"port": &hcldec.AttrSpec{
 					Name:     "port",
 					Type:     cty.Number,
@@ -132,19 +141,44 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 				},
 				// Protocol of the service. Defaults to TCP
 				// Can be set to UDP
-				// If set to "http" and url is specified, an Ingress will be created
 				"protocol": &hcldec.AttrSpec{
 					Name:     "protocol",
 					Type:     cty.String,
 					Required: false,
 				},
-				// The url to make the service available at (make the service externally available)
+				// make the service externally available
 				// If protocol is set to "http" or "https", an Ingress will be created
 				// If a domain name followed by a path, the service will be available at that path on the ingress
-				"url": &hcldec.AttrSpec{
-					Name:     "url",
-					Type:     cty.String,
+				"ingress": &hcldec.BlockSpec{
+					TypeName: "ingress",
 					Required: false,
+					Nested: &hcldec.ObjectSpec{
+						"hostname": &hcldec.AttrSpec{
+							Name:     "hostname",
+							Type:     cty.String,
+							Required: true,
+						},
+						"path": &hcldec.AttrSpec{
+							Name:     "path",
+							Type:     cty.String,
+							Required: false,
+						},
+						"ingress_class": &hcldec.AttrSpec{
+							Name:     "ingress_class",
+							Type:     cty.String,
+							Required: false, // If not set, default class is used
+						},
+						"tls": &hcldec.AttrSpec{
+							Name:     "tls",
+							Type:     cty.Bool,
+							Required: false,
+						},
+						"cluster_issuer": &hcldec.AttrSpec{
+							Name:     "cluster_issuer",
+							Type:     cty.String,
+							Required: false,
+						},
+					},
 				},
 			},
 		},
@@ -543,44 +577,60 @@ func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string
 	var out []ResourceChange
 	changeType := ChangeTypeNoop
 
-	// Check if the service has a URL and protocol set
-	if pod.Services[serviceName].Protocol == nil || // If the protocol is nil, it's TCP
-		pod.Services[serviceName].URL == nil || // If the URL is nil, no ingress is needed
-		(strings.ToLower(*pod.Services[serviceName].Protocol) != "http" && strings.ToLower(*pod.Services[serviceName].Protocol) != "https") { // If the protocol is not HTTP or HTTPS, no ingress is needed
+	if pod.Services[serviceName].Ingress == nil {
 		// No ingress needed
 		return nil, nil, nil
 	}
 
-	u, err := url.ParseRequestURI(*pod.Services[serviceName].URL)
-	if err != nil {
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"error": err,
-			"url":   *pod.Services[serviceName].URL,
-		}).Error("Error parsing URL")
-		return nil, nil, err
-	}
-
-	// Allow user to specify "http://example.com" for "http://example.com/"
-	path := u.Path
-	if path == "" {
-		path = "/"
-	}
-
-	// Get the Kube connection and try to Get an existing ingress
 	client, err := kube_client.Client()
 	if err != nil {
 		return nil, nil, err
 	}
 
+	ingressRequest := pod.Services[serviceName].Ingress
+
+	// Validate and add defaults
+	if ingressRequest.Path == nil {
+		ingressRequest.Path = func(val string) *string { return &val }("/")
+	}
+
+	if ingressRequest.IngressClass == nil {
+		ic, err := getDefaultIngressClass(ctx, client)
+		if err != nil {
+			logrus.WithContext(ctx).WithFields(logrus.Fields{
+				"error": err,
+			}).Error("Error getting default IngressClass")
+			return nil, nil, err
+		}
+		ingressRequest.IngressClass = ic
+	}
+
+	// u, err := url.ParseRequestURI(*pod.Services[serviceName].URL)
+	// if err != nil {
+	// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
+	// 		"error": err,
+	// 		"url":   *pod.Services[serviceName].URL,
+	// 	}).Error("Error parsing URL")
+	// 	return nil, nil, err
+	// }
+
+	// Allow user to specify "http://example.com" for "http://example.com/"
+	// path := u.Path
+	// if path == "" {
+	// 	path = "/"
+	// }
+
+	// Get the Kube connection and try to Get an existing ingress
+
 	// For some reason the kube client will not automatically apply the default ingressclass
 	// to objects that are updated, so we doing that manually
-	ic, err := getDefaultIngressClass(ctx, client)
-	if err != nil {
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"error": err,
-		}).Error("Error getting default IngressClass")
-		return nil, nil, err
-	}
+	// ic, err := getDefaultIngressClass(ctx, client)
+	// if err != nil {
+	// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
+	// 		"error": err,
+	// 	}).Error("Error getting default IngressClass")
+	// 	return nil, nil, err
+	// }
 
 	ingressSpec := &networkingv1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
@@ -591,16 +641,16 @@ func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string
 			},
 		},
 		Spec: networkingv1.IngressSpec{
-			IngressClassName: ic,
+			IngressClassName: ingressRequest.IngressClass,
 			Rules: []networkingv1.IngressRule{
 				{
-					Host: u.Hostname(),
+					Host: ingressRequest.HostName,
 					IngressRuleValue: networkingv1.IngressRuleValue{
 						HTTP: &networkingv1.HTTPIngressRuleValue{
 							Paths: []networkingv1.HTTPIngressPath{
 								{
 									PathType: func(val networkingv1.PathType) *networkingv1.PathType { return &val }(networkingv1.PathTypePrefix),
-									Path:     path,
+									Path:     *ingressRequest.Path,
 									Backend: networkingv1.IngressBackend{
 										Service: &networkingv1.IngressServiceBackend{
 											Name: serviceName,
@@ -620,6 +670,49 @@ func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string
 	ingressSpec.Kind = KubernetesKindIngress
 	ingressSpec.APIVersion = KubernetesAPIVersionIngress
 
+	// Check if the url protocol is https, and add tls annotations if so
+	if ingressRequest.TLS != nil && *ingressRequest.TLS {
+		if ingressSpec.Annotations == nil {
+			ingressSpec.Annotations = make(map[string]string)
+		}
+
+		ingressSpec.Annotations["nginx.ingress.kubernetes.io/ssl-redirect"] = "true"
+		ingressSpec.Spec.TLS = []networkingv1.IngressTLS{
+			{
+				Hosts: []string{
+					ingressRequest.HostName,
+				},
+				SecretName: serviceName + "-tls",
+			},
+		}
+
+		if ingressRequest.ClusterIssuer == nil {
+			ci, err := getDefaultClusterIssuer(ctx, client)
+			if err != nil {
+				logrus.WithContext(ctx).WithFields(logrus.Fields{
+					"error": err,
+				}).Error("Could not find a default ClusterIssuer. Either specify a ClusterIssuer in the Pod > Service > Ingress definition or create a default ClusterIssuer in the cluster by adding the annotation '" + PodinateDefaultClusterIssuerAnnotation + ": true' to a ClusterIssuer. See https://cert-manager.io/docs/concepts/issuer/ and https://docs.podinate.com/kubernetes/certificates/ for more information.")
+				return nil, nil, err
+			}
+
+			ingressSpec.Annotations["cert-manager.io/cluster-issuer"] = *ci
+
+		} else {
+			ok, err := checkClusterIssuer(ctx, client, *ingressRequest.ClusterIssuer)
+			if err != nil {
+				return nil, nil, err
+			}
+			if !ok {
+				logrus.WithContext(ctx).WithFields(logrus.Fields{
+					"cluster_issuer": *ingressRequest.ClusterIssuer,
+				}).Error("ClusterIssuer not found. To list all available ClusterIssuers, run 'kubectl get clusterissuers'. If you can't list ClusterIssuers, you may need to install Cert-Manager. See https://cert-manager.io/docs/concepts/issuer/ and https://docs.podinate.com/kubernetes/certificates/ for more information.")
+				return nil, nil, stderrors.New("ClusterIssuer not found")
+			}
+			ingressSpec.Annotations["cert-manager.io/cluster-issuer"] = *ingressRequest.ClusterIssuer
+		}
+
+	}
+
 	existing, err := client.NetworkingV1().Ingresses(*pod.Namespace).Get(ctx, serviceName, metav1.GetOptions{})
 	existing.Kind = KubernetesKindIngress
 	existing.APIVersion = KubernetesAPIVersionIngress
@@ -636,6 +729,7 @@ func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string
 		}
 		created.Kind = KubernetesKindIngress
 		created.APIVersion = KubernetesAPIVersionIngress
+		created.ObjectMeta.UID = ""
 
 		changeType = ChangeTypeCreate
 		out = append(out, ResourceChange{
@@ -699,4 +793,59 @@ func getDefaultIngressClass(ctx context.Context, client *kubernetes.Clientset) (
 	}
 
 	return nil, stderrors.New("No default IngressClass found")
+}
+
+// getDefaultClusterIssuer gets the default ClusterIssuer from the cluster
+func getDefaultClusterIssuer(ctx context.Context, client *kubernetes.Clientset) (*string, error) {
+	// Get the ClusterIssuers from the cluster
+
+	//cm := cmclient.New(client.RESTClient())
+	rc, err := kube_client.GetRestConfig()
+	if err != nil {
+		return nil, err
+	}
+	cm, err := cmclient.NewForConfig(rc)
+	if err != nil {
+		return nil, err
+	}
+
+	clusterIssuers, err := cm.CertmanagerV1().ClusterIssuers().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	logrus.WithContext(ctx).WithFields(logrus.Fields{
+		"clusterIssuers": clusterIssuers,
+	}).Debug("Got ClusterIssuers")
+
+	// Find the default ClusterIssuer
+	for _, ci := range clusterIssuers.Items {
+		if ci.ObjectMeta.Annotations[PodinateDefaultClusterIssuerAnnotation] == "true" {
+			return &ci.Name, nil
+		}
+	}
+
+	return nil, stderrors.New("No default ClusterIssuer found")
+}
+
+// checkClusterIssuer checks if the ClusterIssuer exists in the cluster
+func checkClusterIssuer(ctx context.Context, client *kubernetes.Clientset, ci string) (bool, error) {
+	rc, err := kube_client.GetRestConfig()
+	if err != nil {
+		return false, err
+	}
+	cm, err := cmclient.NewForConfig(rc)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = cm.CertmanagerV1().ClusterIssuers().Get(ctx, ci, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }
