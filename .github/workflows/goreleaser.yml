@@ -19,12 +19,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.21
+          go-version: 1.22
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
           distribution: goreleaser
-          workdir: ./cli/
+          # workdir: ./cli/
           version: latest
           args: release --rm-dist
         env:

@@ -30,9 +30,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./cli/Dockerfile
+          file: Dockerfile
           push: true
-          tags: ghcr.io/podinate/cli:latest
+          tags: ghcr.io/podinate:latest
           labels: |
             org.opencontainers.image.title=Podinate CLI
             org.opencontainers.image.description=The alternative, friendly manager for your Kubernetes clusters. This CLI image can be used to interact with your Podinate cluster.
