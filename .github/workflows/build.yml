@@ -27,12 +27,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push CLI Image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile
           push: true
-          tags: ghcr.io/podinate:latest
+          tags: ghcr.io/podinate/podinate:latest
           labels: |
             org.opencontainers.image.title=Podinate CLI
             org.opencontainers.image.description=The alternative, friendly manager for your Kubernetes clusters. This CLI image can be used to interact with your Podinate cluster.
