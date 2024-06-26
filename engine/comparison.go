@@ -62,14 +62,20 @@ func GetResourceChangeForResource(ctx context.Context, object runtime.Object) (*
 		return nil, err
 	}
 
+	// Transfer labels, annotations etc from the current object to the desired object
+	object, err = transferMetadata(currentObject, object)
+	if err != nil {
+		return nil, err
+	}
+
 	// At this point, the resource exists and we need to determine if it needs to be updated
-	dryRunResult, err := helper.DryRun(true).Replace(unstructuredObject.GetNamespace(), unstructuredObject.GetName(), false, object)
-	if errors.IsInvalid(err) { // The object is invalid, user will need to change something
+	dryRunResult, dryRunErr := helper.DryRun(true).Replace(unstructuredObject.GetNamespace(), unstructuredObject.GetName(), false, object)
+	if errors.IsInvalid(dryRunErr) { // The object is invalid, user will need to change something
 		logrus.WithFields(logrus.Fields{
-			"object":        object,
-			"error":         err,
-			"currentObject": currentObject,
-		}).Error(HelpInvalidObject)
+			"desired_object": object,
+			"error":          dryRunErr,
+			"current_object": currentObject,
+		}).Debug(HelpInvalidObject)
 
 		fmt.Println(tui.StyleError.Render("The following change was rejected by Kubernetes:"))
 
@@ -79,6 +85,9 @@ func GetResourceChangeForResource(ctx context.Context, object runtime.Object) (*
 				"error": err,
 			}).Error("A further error occurred when trying to display the change that was rejected by the Kubernetes API.")
 		}
+
+		fmt.Println(tui.StyleError.Render("Reason:"), dryRunErr)
+
 		return nil, err
 	} else if err != nil { // Any other error, may need to add handlers for more custom errors in future
 		logrus.WithFields(logrus.Fields{
@@ -114,6 +123,47 @@ func GetResourceChangeForResource(ctx context.Context, object runtime.Object) (*
 	return &resourceChange, nil
 }
 
+// transferMetadata transfers labels, annotations etc from the current object to the desired object
+func transferMetadata(currentObject runtime.Object, desiredObject runtime.Object) (runtime.Object, error) {
+
+	uCurrent, err := resourceToUnstructured(currentObject)
+	if err != nil {
+		return nil, err
+	}
+
+	uDesired, err := resourceToUnstructured(desiredObject)
+	if err != nil {
+		return nil, err
+	}
+
+	// Transfer labels, annotations etc from the current object to the desired object
+	currentLabels := uCurrent.GetLabels()
+	if currentLabels == nil {
+		currentLabels = make(map[string]string)
+	}
+	currentAnnotations := uCurrent.GetAnnotations()
+	if currentAnnotations == nil {
+		currentAnnotations = make(map[string]string)
+	}
+
+	newLabels := uDesired.GetLabels()
+	newAnnotations := uDesired.GetAnnotations()
+
+	for k, v := range newLabels {
+		currentLabels[k] = v
+	}
+	for k, v := range newAnnotations {
+		currentAnnotations[k] = v
+	}
+
+	uDesired.SetLabels(currentLabels)
+	uDesired.SetAnnotations(currentAnnotations)
+
+	return uDesired.DeepCopyObject(), nil
+}
+
+// getRestHelperForObject returns a Kubernetes REST helper for a given object
+// This RestHelper will understand the object and be able to make REST requests
 func getRestHelperForObject(object runtime.Object) (*resource.Helper, error) {
 	client, err := kube_client.Client()
 	if err != nil {

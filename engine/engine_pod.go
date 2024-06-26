@@ -61,7 +61,7 @@ type Pod struct {
 
 	// Removed for now, because these are separate Kube resources
 	Volume map[string]struct {
-		Size      int     `cty:"size"`
+		Size      string  `cty:"size"`
 		MountPath string  `cty:"mount_path"`
 		Class     *string `cty:"class"`
 	} `cty:"volume"`
@@ -183,7 +183,7 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 			Nested: &hcldec.ObjectSpec{
 				"size": &hcldec.AttrSpec{
 					Name:     "size",
-					Type:     cty.Number,
+					Type:     cty.String,
 					Required: true,
 				},
 				"mount_path": &hcldec.AttrSpec{
@@ -289,6 +289,10 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 
 	// Add volumes to the StatefulSet
 	for k, volume := range p.Volume {
+		size, err := resource.ParseQuantity(volume.Size)
+		if err != nil {
+			return nil, nil, err
+		}
 		ssSpec.Spec.Template.Spec.Containers[0].VolumeMounts = append(ssSpec.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 			Name:      k,
 			MountPath: volume.MountPath,
@@ -312,9 +316,10 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 				//StorageClassName: func(val string) *string { return &val }("local-path"),
 				Resources: corev1.VolumeResourceRequirements{
 					Requests: corev1.ResourceList{
-						"storage": func(val string) resource.Quantity { return resource.MustParse(val) }(fmt.Sprintf("%dGi", volume.Size)),
+						"storage": size,
 					},
 				},
+				VolumeMode: func(val corev1.PersistentVolumeMode) *corev1.PersistentVolumeMode { return &val }(corev1.PersistentVolumeFilesystem),
 			},
 		}
 		newPVC.Kind = "PersistentVolumeClaim"
@@ -534,23 +539,22 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 
 		// Check if the service needs an Ingress
 		// Disable ingress for now
-		// ct, ingressChanges, err := p.GetServiceIngressChanges(ctx, name)
-		// if err != nil {
-		// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
-		// 		"error": err,
-		// 	}).Error("Error getting Ingress changes")
-		// 	return nil, nil, err
-		// }
-		// logrus.WithContext(ctx).WithFields(logrus.Fields{
-		// 	"ingress_changes": ingressChanges,
-		// 	"changeType":      changeType,
-		// 	"ingress_ct":      ct,
-		// }).Trace("Ingress changes")
-		// if ct != nil {
-		// 	changeType = *ct
-		// }
+		ct, ingressChanges, err := p.GetServiceIngressChanges(ctx, name)
+		if err != nil {
+			logrus.WithContext(ctx).WithFields(logrus.Fields{
+				"error": err,
+			}).Error("Error getting Ingress changes")
+			return nil, nil, err
+		}
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"ingress_changes": ingressChanges,
+			"changeType":      changeType,
+		}).Trace("Ingress changes")
+		if ct != nil {
+			changeType = *ct
+		}
 
-		// out = append(out, ingressChanges...)
+		out = append(out, ingressChanges...)
 
 		if rc != nil {
 			out = append(out, *rc)
@@ -570,8 +574,8 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 }
 
 func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string) (*ChangeType, []ResourceChange, error) {
-	var out []ResourceChange
-	changeType := ChangeTypeNoop
+	// var out []ResourceChange
+	// changeType := ChangeTypeNoop
 
 	if pod.Services[serviceName].Ingress == nil {
 		// No ingress needed
@@ -600,33 +604,6 @@ func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string
 		}
 		ingressRequest.IngressClass = ic
 	}
-
-	// u, err := url.ParseRequestURI(*pod.Services[serviceName].URL)
-	// if err != nil {
-	// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
-	// 		"error": err,
-	// 		"url":   *pod.Services[serviceName].URL,
-	// 	}).Error("Error parsing URL")
-	// 	return nil, nil, err
-	// }
-
-	// Allow user to specify "http://example.com" for "http://example.com/"
-	// path := u.Path
-	// if path == "" {
-	// 	path = "/"
-	// }
-
-	// Get the Kube connection and try to Get an existing ingress
-
-	// For some reason the kube client will not automatically apply the default ingressclass
-	// to objects that are updated, so we doing that manually
-	// ic, err := getDefaultIngressClass(ctx, client)
-	// if err != nil {
-	// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
-	// 		"error": err,
-	// 	}).Error("Error getting default IngressClass")
-	// 	return nil, nil, err
-	// }
 
 	ingressSpec := &networkingv1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
@@ -709,63 +686,15 @@ func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string
 
 	}
 
-	existing, err := client.NetworkingV1().Ingresses(*pod.Namespace).Get(ctx, serviceName, metav1.GetOptions{})
-	existing.Kind = KubernetesKindIngress
-	existing.APIVersion = KubernetesAPIVersionIngress
-
-	if errors.IsNotFound(err) {
-		// Resource doesn't exist, so create it
-
-		created, err := client.NetworkingV1().Ingresses(*pod.Namespace).Create(ctx, ingressSpec, metav1.CreateOptions{DryRun: []string{metav1.DryRunAll}})
-		if errors.IsNotFound(err) {
-			// We get this error when the Namespace isn't found, in that case it's okay because we can just apply the spec as is
-			created = ingressSpec
-		} else if err != nil {
-			return nil, nil, err
-		}
-		created.Kind = KubernetesKindIngress
-		created.APIVersion = KubernetesAPIVersionIngress
-		created.ObjectMeta.UID = ""
-
-		changeType = ChangeTypeCreate
-		out = append(out, ResourceChange{
-			ChangeType:      ChangeTypeCreate,
-			CurrentResource: nil,
-			DesiredResource: created,
-		})
-	} else if err != nil {
-		// Something else went wrong getting the ingress, we can't proceed
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"error":   err,
-			"pod_id":  pod.ID,
-			"service": serviceName,
-		}).Error("Error getting Ingress")
+	rc, err := GetResourceChangeForResource(ctx, ingressSpec)
+	if err != nil {
 		return nil, nil, err
-	} else {
-		// Resource exists, but needs updating
-		updated, err := client.NetworkingV1().Ingresses(*pod.Namespace).Update(ctx, ingressSpec, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
-		if err != nil {
-			return nil, nil, err
-		}
-		updated.Kind = KubernetesKindIngress
-		updated.APIVersion = KubernetesAPIVersionIngress
-
-		if !reflect.DeepEqual(updated.Spec, existing.Spec) {
-			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"existing": existing,
-				"ingress":  updated,
-			}).Debug("Ingress needs updating")
-			out = append(out, ResourceChange{
-				ChangeType:      ChangeTypeUpdate,
-				CurrentResource: existing,
-				DesiredResource: updated,
-			})
-			changeType = ChangeTypeUpdate
-		}
+	}
+	if rc == nil {
+		return nil, nil, nil
 	}
 
-	return &changeType, out, nil
-
+	return &rc.ChangeType, []ResourceChange{*rc}, nil
 }
 
 // getDefaultIngressClass gets the default IngressClass from the cluster

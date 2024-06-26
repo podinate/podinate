@@ -101,6 +101,16 @@ func (sv *SharedVolume) ToPVC(ctx context.Context) (*corev1.PersistentVolumeClai
 		return nil, err
 	}
 
+	client, err := kube_client.Client()
+	if err != nil {
+		return nil, err
+	}
+
+	existing, err := client.CoreV1().PersistentVolumeClaims(*sv.Namespace).Get(ctx, sv.ID, metav1.GetOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return nil, err
+	}
+
 	pvc := &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: sv.ID,
@@ -124,6 +134,13 @@ func (sv *SharedVolume) ToPVC(ctx context.Context) (*corev1.PersistentVolumeClai
 	pvc.Kind = KubernetesKindPersistentVolumeClaim
 	pvc.APIVersion = KubernetesAPIVersionPersistentVolumeClaim
 
+	// If the pvc already exists, we have to preserve the volume name
+	// that the pvc points to.
+	if existing != nil {
+		pvc.Spec.VolumeName = existing.Spec.VolumeName
+	}
+
+	// Handle giving the volume a storage class
 	if sv.Class == nil {
 		defaultClass, err := GetDefaultStorageClass(ctx)
 		if err != nil {

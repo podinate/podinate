@@ -2,7 +2,6 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -164,11 +163,11 @@ func (pkg *Package) Apply(ctx context.Context) error {
 		}
 	}
 
-	out, err := json.Marshal(plan)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(out))
+	// out, err := json.MarshalIndent(plan, "", "  ")
+	// if err != nil {
+	// 	return err
+	// }
+	// fmt.Println(string(out))
 
 	// Deploy shared volumes
 	// zap.S().Infow("Deploying shared volumes", "shared_volumes", p.SharedVolumes)
