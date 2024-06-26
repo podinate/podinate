@@ -1,6 +1,6 @@
 // Plan.go controls creating a Plan for changes needed to reach a new desired state on the Kubernetes cluster.
 
-package package_parser
+package engine
 
 import (
 	"bytes"
@@ -92,6 +92,22 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 	}
 	plan.Changes = append(plan.Changes, *namespaceChanges)
 
+	logrus.WithContext(ctx).WithFields(logrus.Fields{
+		"shared_volumes":      pkg.SharedVolumes,
+		"shared_volume_count": len(pkg.SharedVolumes),
+	}).Debug("Planning shared volumes")
+
+	for _, sv := range pkg.SharedVolumes {
+
+		svplan, err := sv.PlanChanges(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		plan.Changes = append(plan.Changes, *svplan)
+
+	}
+
 	// Create a plan for each Pod
 	for _, pod := range pkg.Pods {
 		podPlan, err := planPodChanges(ctx, client, pkg, pod)
@@ -154,7 +170,7 @@ func (plan *Plan) Display() error {
 				}
 
 				if c.ChangeType == ChangeTypeUpdate {
-					err := yamlDiffResources(c.CurrentResource, c.DesiredResource)
+					err := YamlDiffResources(c.CurrentResource, c.DesiredResource)
 					if err != nil {
 						logrus.WithFields(logrus.Fields{
 							"error": err,
@@ -200,7 +216,7 @@ func (plan *Plan) Display() error {
 	return nil
 }
 
-func yamlDiffResources(oldResource runtime.Object, newResource runtime.Object) error {
+func YamlDiffResources(oldResource runtime.Object, newResource runtime.Object) error {
 	y := printers.YAMLPrinter{}
 	b := new(bytes.Buffer)
 
@@ -275,7 +291,10 @@ func (plan *Plan) Apply(ctx context.Context) error {
 		return err
 	}
 
-	restConfig := kube_client.RestConfig
+	restConfig, err := kube_client.GetRestConfig()
+	if err != nil {
+		return err
+	}
 
 	for _, change := range plan.Changes {
 
@@ -335,6 +354,8 @@ func (plan *Plan) Apply(ctx context.Context) error {
 			// Do nothing
 		}
 	}
+
+	plan.Applied = true
 
 	fmt.Println("\n", tui.StyleSuccess.Render("All changes applied successfully"))
 

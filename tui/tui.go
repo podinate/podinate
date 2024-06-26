@@ -56,4 +56,9 @@ var (
 			Foreground(lipgloss.Color("#FAFAFA")).
 			Background(lipgloss.Color("#ffcc00")).
 			Padding(0, 1)
+	StyleError = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#FAFAFA")).
+			Background(lipgloss.Color("#d00000")).
+			Padding(0, 1)
 )

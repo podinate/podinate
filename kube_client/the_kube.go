@@ -73,7 +73,7 @@ func GetRestConfig() (*rest.Config, error) {
 		}).Error(err)
 		return nil, err
 	}
-	kubeConfigPath := filepath.Join(home, ".config", "podinate", ".kube", "config")
+	kubeConfigPath := filepath.Join(home, ".kube", "config")
 
 	if viper.GetString("kubeconfig") != "" {
 		logrus.WithFields(logrus.Fields{
@@ -82,7 +82,21 @@ func GetRestConfig() (*rest.Config, error) {
 		kubeConfigPath = viper.GetString("kubeconfig")
 	}
 
-	kubeconfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	configLoadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeConfigPath}
+	configOverrides := &clientcmd.ConfigOverrides{}
+
+	logrus.WithFields(logrus.Fields{
+		"kubeconfig": kubeConfigPath,
+		"context":    viper.GetString("context"),
+	}).Debug("Using kubeconfig")
+
+	if viper.GetString("context") != "" {
+		configOverrides = &clientcmd.ConfigOverrides{CurrentContext: viper.GetString("context")}
+	}
+
+	//kubeconfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(configLoadingRules, configOverrides)
+	kubeconfig, err := config.ClientConfig()
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error":            err,

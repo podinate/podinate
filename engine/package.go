@@ -1,7 +1,8 @@
-package package_parser
+package engine
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -15,11 +16,18 @@ import (
 	"github.com/zclconf/go-cty/cty/gocty"
 )
 
+// Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
+var StandardLabels = map[string]string{
+	"app.kubernetes.io/managed-by": "Podinate",
+}
+
 // Package represents a package to be installed, either the current state or the desired state
 type Package struct {
-	Namespace string
-	Pods      []Pod
-	//SharedVolumes []SharedVolume
+	Name          string
+	Namespace     string
+	Pods          []Pod
+	SharedVolumes []SharedVolume
+	Labels        map[string]string
 }
 
 // PodinateHCLSpec is the HCL spec for a Podinate block
@@ -31,15 +39,20 @@ var podinateHCLSpec = &hcldec.BlockSpec{
 			Type:     cty.String,
 			Required: true,
 		},
+		"package": &hcldec.AttrSpec{
+			Name:     "package",
+			Type:     cty.String,
+			Required: true,
+		},
 	},
 }
 
 func Parse(path string) (*Package, error) {
 	fmt.Println("Parsing file: ", path)
 	spec := hcldec.ObjectSpec{
-		"podinate": podinateHCLSpec,
-		"pods":     podHCLSpec,
-		//"shared_volumes": sharedVolumeHCLSpec,
+		"podinate":       podinateHCLSpec,
+		"pods":           podHCLSpec,
+		"shared_volumes": SharedVolumeHCLSpec,
 	}
 	parser := hclparse.NewParser()
 	f, diags := parser.ParseHCLFile(path)
@@ -63,7 +76,9 @@ func Parse(path string) (*Package, error) {
 	var thePackage Package
 
 	namespace := val.GetAttr("podinate").GetAttr("namespace").AsString()
+	packageName := val.GetAttr("podinate").GetAttr("package").AsString()
 	thePackage.Namespace = namespace
+	thePackage.Name = packageName
 
 	// Parse all the pods in the file
 	podvalues := val.GetAttr("pods").AsValueMap()
@@ -86,16 +101,23 @@ func Parse(path string) (*Package, error) {
 
 	// Commenting out - concentrating on pods for now
 
-	// sharedVolumeValues := val.GetAttr("shared_volumes").AsValueMap()
-	// for i, sharedVolumeV := range sharedVolumeValues {
-	// 	var sharedVolume SharedVolume
-	// 	sharedVolume.ID = i
-	// 	err := gocty.FromCtyValue(sharedVolumeV, &sharedVolume)
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// 	thePackage.SharedVolumes = append(thePackage.SharedVolumes, sharedVolume)
-	// }
+	sharedVolumeValues := val.GetAttr("shared_volumes").AsValueMap()
+	for i, sharedVolumeV := range sharedVolumeValues {
+		var sharedVolume SharedVolume
+		sharedVolume.ID = i
+		err := gocty.FromCtyValue(sharedVolumeV, &sharedVolume)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		if sharedVolume.Namespace == nil {
+			sharedVolume.Namespace = &thePackage.Namespace
+		}
+		thePackage.SharedVolumes = append(thePackage.SharedVolumes, sharedVolume)
+	}
+
+	thePackage.Labels = StandardLabels
+	thePackage.Labels["app.kuberneretes.io/part-of"] = thePackage.Name
 
 	return &thePackage, nil
 }
@@ -141,6 +163,12 @@ func (pkg *Package) Apply(ctx context.Context) error {
 			}
 		}
 	}
+
+	out, err := json.Marshal(plan)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(out))
 
 	// Deploy shared volumes
 	// zap.S().Infow("Deploying shared volumes", "shared_volumes", p.SharedVolumes)

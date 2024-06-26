@@ -10,7 +10,7 @@ In an on-prem / homelab environment, one option is to set up the Nginx with a No
 ```bash
 kubectl -n ingress-nginx -n ingress-nginx describe service ingress-nginx-controller
 ```
-For a homelab, forward the NodePorts indicated for the http and https ports from your router. If there's a need to get more fancy than that, have a look at [MetalLB](https://metallb.io/) for allocating IPs outside of the nodes. 
+Another option for small environment is to use Cloudflare Tunnels to handle ingress. Install the Nginx ingress controller and then set up a [Cloudflare Tunnel pod](../packages/available-packages/cloudflare-tunnel). Set the Cloudflare Tunnels to forward all traffic to `http://ingress-nginx-controller.ingress-nginx` and let Cloudflare handle SSL Certificates. 
 
 ## Cloud
 The popular clouds have their own sections in the [Nginx Ingress Controller Installation Guide](https://kubernetes.github.io/ingress-nginx/deploy/). If the cloud isn't mentioned, try doing a basic installation. Most cloud providers are configured so a *Service* of type LoadBalancer will get an actual external load balancer configured automatically, so this installation should work. 

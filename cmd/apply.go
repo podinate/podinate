@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/podinate/podinate/package_parser"
+	"github.com/podinate/podinate/engine"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var applyCmd = &cobra.Command{
 			path = args[0]
 		}
 
-		pkg, err := package_parser.Parse(path)
+		pkg, err := engine.Parse(path)
 		if err != nil {
 			return err
 		}

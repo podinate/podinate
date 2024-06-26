@@ -1,8 +1,10 @@
 // Apply contains helpers for applying resource changes
 
-package package_parser
+package engine
 
 import (
+	"errors"
+
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -79,6 +81,9 @@ func newRestClient(restConfig rest.Config, gv schema.GroupVersion) (rest.Interfa
 
 // resourceToUnstructured converts a runtime.Object to an unstructured.Unstructured
 func resourceToUnstructured(obj runtime.Object) (*unstructured.Unstructured, error) {
+	if obj == nil {
+		return nil, errors.New("object is nil")
+	}
 	innerObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
 		return nil, err

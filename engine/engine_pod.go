@@ -1,4 +1,4 @@
-package package_parser
+package engine
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	hcldec "github.com/hashicorp/hcl2/hcldec"
 	"github.com/podinate/podinate/kube_client"
+	"github.com/podinate/podinate/tui"
 	"github.com/sirupsen/logrus"
 	"github.com/zclconf/go-cty/cty"
 	appsv1 "k8s.io/api/apps/v1"
@@ -64,10 +65,9 @@ type Pod struct {
 		MountPath string  `cty:"mount_path"`
 		Class     *string `cty:"class"`
 	} `cty:"volume"`
-	// SharedVolume *[]struct {
-	// 	VolumeID string `cty:"volume_id"`
-	// 	Path     string `cty:"path"`
-	// } `cty:"shared_volume"`
+	SharedVolume map[string]struct {
+		MountPath string `cty:"mount_path"`
+	} `cty:"shared_volume"`
 }
 
 // GetHCLSpect returns the HCL spec of the pod type
@@ -75,11 +75,6 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 	TypeName:   "pod",
 	LabelNames: []string{"id"},
 	Nested: &hcldec.ObjectSpec{
-		// "name": &hcldec.AttrSpec{
-		// 	Name:     "name",
-		// 	Type:     cty.String,
-		// 	Required: true,
-		// },
 		"image": &hcldec.AttrSpec{
 			Name:     "image",
 			Type:     cty.String,
@@ -203,22 +198,17 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 				},
 			},
 		},
-		// "shared_volume": &hcldec.BlockListSpec{
-		// 	TypeName: "shared_volume",
-		// 	MinItems: 0,
-		// 	Nested: &hcldec.ObjectSpec{
-		// 		"volume_id": &hcldec.AttrSpec{
-		// 			Name:     "volume_id",
-		// 			Type:     cty.String,
-		// 			Required: true,
-		// 		},
-		// 		"path": &hcldec.AttrSpec{
-		// 			Name:     "path",
-		// 			Type:     cty.String,
-		// 			Required: true,
-		// 		},
-		// 	},
-		// },
+		"shared_volume": &hcldec.BlockMapSpec{
+			TypeName:   "shared_volume",
+			LabelNames: []string{"volume_id"},
+			Nested: &hcldec.ObjectSpec{
+				"mount_path": &hcldec.AttrSpec{
+					Name:     "mount_path",
+					Type:     cty.String,
+					Required: true,
+				},
+			},
+		},
 	},
 }
 
@@ -240,6 +230,9 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 			Namespace: pkg.Namespace,
 		},
 		Spec: appsv1.StatefulSetSpec{
+			PersistentVolumeClaimRetentionPolicy: func(val appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy) *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy {
+				return &val
+			}(appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{WhenDeleted: appsv1.RetainPersistentVolumeClaimRetentionPolicyType, WhenScaled: appsv1.RetainPersistentVolumeClaimRetentionPolicyType}),
 			Replicas: func(val int32) *int32 { return &val }(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -303,7 +296,8 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 		// Add volume claim templates
 		newPVC := corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: k,
+				Name:      k,
+				Namespace: *p.Namespace,
 				Annotations: map[string]string{
 					"volumeType": "local",
 				},
@@ -323,6 +317,8 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 				},
 			},
 		}
+		newPVC.Kind = "PersistentVolumeClaim"
+		newPVC.APIVersion = "v1"
 
 		if volume.Class != nil {
 			// TODO: Check if the SC exists
@@ -330,6 +326,25 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 		}
 
 		ssSpec.Spec.VolumeClaimTemplates = append(ssSpec.Spec.VolumeClaimTemplates, newPVC)
+	}
+
+	// Add shared volumes to the StatefulSet
+	for k, sharedVolume := range p.SharedVolume {
+		// Specify which volume we're talking about
+		ssSpec.Spec.Template.Spec.Volumes = append(ssSpec.Spec.Template.Spec.Volumes, corev1.Volume{
+			Name: k,
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: k,
+				},
+			},
+		})
+
+		// Specify where to mount it in the container
+		ssSpec.Spec.Template.Spec.Containers[0].VolumeMounts = append(ssSpec.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      k,
+			MountPath: sharedVolume.MountPath,
+		})
 	}
 
 	// Add service changes
@@ -361,9 +376,10 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 	ss.APIVersion = KubernetesAPIVersionStatefulSet
 
 	logrus.WithContext(ctx).WithFields(logrus.Fields{
-		"statefulset": ss,
-		"kind":        ss.GetObjectKind(),
-		"error":       err,
+		"statefulset_from_dry_run": ss,
+		"kind":                     ss.GetObjectKind(),
+		"statefulset_generated":    ssSpec,
+		"error":                    err,
 	}).Debug("StatefulSet")
 
 	// If the StatefulSet didn't exist when we called update, create it
@@ -371,7 +387,7 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 
 		logrus.WithContext(ctx).WithFields(logrus.Fields{
 			"statefulset": ss,
-		}).Error("Tried to get statefulset, got not found error")
+		}).Debug("StatefulSet needs to be created")
 
 		// Resource doesn't exist, so create it
 		podChangeType = ChangeTypeCreate
@@ -389,10 +405,35 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 			DesiredResource: ssSpec,
 		})
 	} else if err != nil {
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"error": err,
-		}).Error("Error getting StatefulSet")
+		if errors.IsInvalid(err) { // Kubernetes rejected our change
+			logrus.WithContext(ctx).WithFields(logrus.Fields{
+				"error": err,
+			}).Error("Podinate is unable to make this change. Sorry but this is a limitation of the Kubernetes API. Most likely you're trying to update the volumes attached directly to a Podinate Pod. If you just want to change the size, run 'kubectl -n <namespace> get pvc', then 'kubectl edit pvc <pvc-name>' and change the size there. Then, go into your pod definition and change the size there too.")
 
+			// Grab the existing spec so we can show the user what we're trying to change
+			existing, geterr := kube.AppsV1().StatefulSets(pkg.Namespace).Get(ctx, p.ID, metav1.GetOptions{})
+			if geterr != nil {
+				logrus.WithContext(ctx).WithFields(logrus.Fields{
+					"error": geterr,
+				}).Error("Error getting existing StatefulSet for comparison")
+				return nil, nil, err
+			}
+			existing.Kind = KubernetesKindStatefulSet
+			existing.APIVersion = KubernetesAPIVersionStatefulSet
+
+			fmt.Println(tui.StyleError.Render("The following change was rejected by Kubernetes:"))
+
+			err := YamlDiffResources(existing, ssSpec)
+			if err != nil {
+				logrus.WithContext(ctx).WithFields(logrus.Fields{
+					"error": err,
+				}).Error("A further error occurred when trying to display the change that was rejected by the Kubernetes API.")
+			}
+		} else {
+			logrus.WithContext(ctx).WithFields(logrus.Fields{
+				"error": err,
+			}).Error("Unknown error checking StatefulSet specification")
+		}
 		return nil, nil, err
 	} else {
 		existing, err := kube.AppsV1().StatefulSets(pkg.Namespace).Get(ctx, p.ID, metav1.GetOptions{})
@@ -479,90 +520,45 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 			"service": svcSpec,
 		}).Trace("generated service spec")
 
-		// Check if the Service already exists
-		kube, err := kube_client.Client()
-		if err != nil {
-			return nil, nil, err
-		}
-
-		//s, err := kube.CoreV1().Services(*p.Namespace).Update(ctx, svc, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
-		s, err := kube.CoreV1().Services(*p.Namespace).Get(ctx, name, metav1.GetOptions{})
-		s.Kind = KubernetesKindService
-		s.APIVersion = KubernetesAPIVersionService
-		if errors.IsNotFound(err) {
-			// Resource doesn't exist, so create it
-
-			// TODO: Try changing this Update to Create
-			svc, err := kube.CoreV1().Services(*p.Namespace).Update(ctx, svcSpec, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
-			if errors.IsNotFound(err) {
-				svc = svcSpec
-			} else if err != nil {
-				return nil, nil, err
-			}
-			svc.Kind = KubernetesKindService
-			svc.APIVersion = KubernetesAPIVersionService
-
+		rc, err := GetResourceChangeForResource(ctx, svcSpec)
+		if errors.IsInvalid(err) {
 			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"service": svc,
-				"s":       s,
-			}).Debug("create service")
-
-			changeType = ChangeTypeCreate
-			out = append(out, ResourceChange{
-				ChangeType:      ChangeTypeCreate,
-				CurrentResource: nil,
-				DesiredResource: svcSpec,
-			})
+				"resource_type": ResourceTypeService,
+				"resource_id":   name,
+				"error":         err,
+			}).Debug("Got invalid error trying to get resource change for service")
+			return nil, nil, err
 		} else if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"error": err,
-			}).Error("Error getting Service")
-
 			return nil, nil, err
-		} else {
-			// Resource exists, but needs updating
-			svc, err := kube.CoreV1().Services(*p.Namespace).Update(ctx, svcSpec, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
-			if err != nil {
-				return nil, nil, err
-			}
-			svc.Kind = KubernetesKindService
-			svc.APIVersion = KubernetesAPIVersionService
-
-			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"old service": s,
-				"service":     svc,
-			}).Debug("update service")
-			if !reflect.DeepEqual(svc.Spec, s.Spec) {
-				out = append(out, ResourceChange{
-					ChangeType:      ChangeTypeUpdate,
-					CurrentResource: s,
-					DesiredResource: svc,
-				})
-				changeType = ChangeTypeUpdate
-			} else {
-				logrus.WithContext(ctx).WithFields(logrus.Fields{
-					"service":          svc,
-					"existing_service": s,
-				}).Debug("Service is up to date")
-			}
 		}
 
 		// Check if the service needs an Ingress
-		ct, ingressChanges, err := p.GetServiceIngressChanges(ctx, name)
-		if err != nil {
-			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"error": err,
-			}).Error("Error getting Ingress changes")
-			return nil, nil, err
-		}
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"ingress_changes": ingressChanges,
-			"changeType":      changeType,
-			"ingress_ct":      ct,
-		}).Trace("Ingress changes")
+		// Disable ingress for now
+		// ct, ingressChanges, err := p.GetServiceIngressChanges(ctx, name)
+		// if err != nil {
+		// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
+		// 		"error": err,
+		// 	}).Error("Error getting Ingress changes")
+		// 	return nil, nil, err
+		// }
+		// logrus.WithContext(ctx).WithFields(logrus.Fields{
+		// 	"ingress_changes": ingressChanges,
+		// 	"changeType":      changeType,
+		// 	"ingress_ct":      ct,
+		// }).Trace("Ingress changes")
+		// if ct != nil {
+		// 	changeType = *ct
+		// }
 
-		changeType = *ct
-		out = append(out, ingressChanges...)
+		// out = append(out, ingressChanges...)
+
+		if rc != nil {
+			out = append(out, *rc)
+			if rc.ChangeType == ChangeTypeCreate || rc.ChangeType == ChangeTypeUpdate {
+				changeType = ChangeTypeUpdate
+			}
+
+		}
 	}
 
 	logrus.WithContext(ctx).WithFields(logrus.Fields{

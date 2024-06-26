@@ -21,6 +21,7 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Enable debug logging - LOTS of logs")
 	rootCmd.PersistentFlags().String("kubeconfig", "", "Path to the kubeconfig file to use for CLI requests")
+	rootCmd.PersistentFlags().StringP("context", "c", "", "The kubeconfig context to use")
 
 	// Add commnands related to autok3s
 	// kubectl := cmd.KubectlCommand()
@@ -33,6 +34,8 @@ func init() {
 
 		// Bind the kubeconfig flag
 		viper.BindPFlag("kubeconfig", rootCmd.PersistentFlags().Lookup("kubeconfig"))
+		// Bind the context flag
+		viper.BindPFlag("context", rootCmd.PersistentFlags().Lookup("context"))
 
 		// Bind the debug flag
 		viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
