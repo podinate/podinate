@@ -26,7 +26,7 @@ jobs:
           distribution: goreleaser
           # workdir: ./cli/
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.GORELEASER_HOMEBREW_TOKEN }}

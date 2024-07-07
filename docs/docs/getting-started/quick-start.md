@@ -7,29 +7,10 @@ This guide aims to get you started with Podinate and start familiarising yoursel
 
 Podinate uses Kubernetes to provide cluster services. If you just want to create a simple single-node cluster, the installer will do that for you. You can then add more nodes later. If you want to do something more custom, start with the [K3s Quickstart](https://docs.k3s.io/quick-start) documentation. If you want to install a cluster on multiple hosts we highly recommend the great [K3sup project](https://docs.k3s.io/quick-start).
 
-### Install Podinate Cluster
-The Podinate installer is designed to run on a fresh, dedicated Ubuntu 24.04 instance. This could be a virtual machine on your homelab, or a VM instance from your favourite cloud provider. The instance should have at least 2GB of ram. In the command prompt of your server instance, run:
-```bash
-curl -sfL https://raw.githubusercontent.com/podinate/podinate/main/kubernetes/install.sh | sudo bash
-```
-If Podinate detects an existing cluster, it will ask if you want to install Podinate cluster to that Kubernetes cluster.
-
-??? note "Curl not installed?"
-
-    In some environments, curl may not be installed. To install it, run:
-    ```bash
-    apt-get update
-    apt-get install -y curl
-    ```
-
-## Let's Podinate!
-<!-- You can now use Podinate as you might Docker. Most commands are the same. For example `podinate build` will run a build in the Podinate cluster and cache the file locally.  -->
-
 ### Install the CLI (Optional)
 The Podinate server installer will set up the Podinate command line client for the root user on the server. If you want to be able to control your Podinate server from your local command line, the CLI is available through Homebrew for both Mac and Linux. If you don't have Homebrew, run the command on the [Homebrew homepage](https://brew.sh/) to install it. 
 ```bash
-brew tap podinate/tap
-brew install podinate
+brew install podinate/tap/podinate
 ```
 This will install Podinate CLI from our Homebrew tap. 
 
