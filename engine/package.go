@@ -60,7 +60,7 @@ func Parse(paths []string) (*Package, error) {
 
 	val := cty.ObjectVal(make(map[string]cty.Value))
 
-	fmt.Printf("Val start: %#v\n", val)
+	//fmt.Printf("Val start: %#v\n", val)
 
 	path := paths[0]
 

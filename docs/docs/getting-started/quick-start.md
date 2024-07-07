@@ -1,14 +1,14 @@
 # Getting Started
-This guide will take you through installing Podinate and a Kubernetes cluster on your local machine. You will then spin up Uptime Kuma and an Nginx Pod to learn how to Kubernet the Podinate way. 
+This guide will take you through installing Podinate and a Kubernetes cluster on your local machine. You will run a hello world container, and learn how to look at the logs and run commands to debug it.
+
+This guide will work on Mac, and on Linux if Homebrew is installed. 
 
 ## Install the CLI
 Podinate is available through Homebrew for both Mac and Linux. If you don't have Homebrew, run the command on the [Homebrew homepage](https://brew.sh/) to install it. 
 ```bash
 brew install podinate/tap/podinate k3d
 ```
-This will install the Podinate CLI and K3d, which you will use to create a local Kubernetes cluster. 
-
-You will also need Docker installed, if you don't have it already, check [Install Docker Desktop Mac](https://docs.docker.com/desktop/install/mac-install/)
+This will install the Podinate CLI and K3d, which you will use to create a local Kubernetes cluster. You will also need Docker installed, if you don't have it already, check [Install Docker Desktop Mac](https://docs.docker.com/desktop/install/mac-install/)
 
 ## Create Local Cluster
 Before anything can be run, a Kubernetes cluster needs to be created. For this tutorial, K3d will be used. 
@@ -30,76 +30,223 @@ kube-system   helm-install-traefik-4lg85                0/1     Completed   1   
 kube-system   svclb-traefik-f4e950dc-84xzw              2/2     Running     0          9s
 kube-system   traefik-f4564c4f4-pgwgj                   0/1     Running     0          9s
 ```
+These are the Pods used to provide system services. It doesn't matter how many or what they do, just check they're all `Running` or `Completed`. This might take a few minutes. 
 
-## Run an Ubuntu Pod
+## Run a Hello World Pod
 First, let's create an Ubuntu Pod we can play with. First let's create a directory to hold this tutorial. 
 ```bash
 mkdir podinate-quick-start
 cd podinate-quick-start
 ```
 
-Now copy the following into `ubuntu.pod`.
-```hcl title="ubuntu.pod"
+Now copy the following into `hello.pf` to create a super advanced hello world application.
+```hcl title="hello.pf"
 podinate {
-    package = "ubuntu"
+    package = "hello-world"
     namespace = "default"
 }
 
-pod "ubuntu" {
+pod "hello-world" {
     image = "ubuntu"
     tag = "latest" 
     command = [ "/bin/bash", "-c", "--" ]
     arguments = [ "while true; do echo 'Hello from Podinate!'; sleep 2; done;" ]
 }
 ```
-This file creates two things. At the top, it creates a Project called Quick Start, then it creates a Pod called `ubuntu`, which runs the latest Ubuntu image, and runs a certain command in a loop. We'll learn more about Projects and Pods in the next sections. 
-
-We can now create our Ubuntu Pod by running;
+This file creates an Ubuntu pod which will log "Hello from Podinate!" every two seconds. You can create the Ubuntu Pod by running;
 ```bash
-podinate apply ubuntu.pod
+podinate apply hello.pf
 ```
-The process should only take a second, and now we have a running Ubuntu Pod. 
+Podinate will show you exactly what it will create in the Kubenetes cluster: 
+```
+namespace default is up to date
+pod hello-world will be  created :
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  creationTimestamp: null
+  name: hello-world
+  namespace: default
+spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  replicas: 1
+  selector:
+    matchLabels:
+      podinate.com/pod: hello-world
+  serviceName: ""
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        podinate.com/pod: hello-world
+      name: hello-world
+    spec:
+      containers:
+      - args:
+        - while true; do echo 'Hello from Podinate!'; sleep 2; done;
+        command:
+        - /bin/bash
+        - -c
+        - --
+        image: ubuntu:latest
+        name: hello-world
+        resources: {}
+  updateStrategy: {}
+status:
+  availableReplicas: 0
+  replicas: 0
+Summary: 1 created, 0 updated, 0 deleted, 1 unchanged
+Are you sure you want to apply these changes? (Y/n)
+```
+Podinate is showing that it will create a Kubernetes *StatefulSet*, which will in turn run the Pod we want. Podinate will create various Kubernetes *Objects* for you when you apply a PodFile, and will confirm exactly what changes will be made whenever you run `apply`. This lets you see at a glance exactly what Podinate is changing. 
 
-## Introducing Projects
-Podinate divides your pods and other resources into Projects. This means you can keep resources organised logically by what they are a part of. Let's take a look at all our Projects now. 
+Apply the `hello.pf` PodFile by pressing Y and enter, or just pressing enter. 
+
+### List Pods
+To list pods on Kubernetes, use the `kubectl` tool. It should have been installed with k3d by Brew. 
 ```bash
-podinate get projects
+kubectl get pods 
 ```
-This will show a table of your projects with only one entry: `Quick Start`. Let's set that as the default for your project.
+Because our Ubuntu pod is the only thing running in the default namespace, the output should look like the following: 
 
-```bash
-echo "project: quick-start" > podinate.yaml
 ```
-Now while you are in this directory, Podinate will look at the Project with the ID `quick-start` by default.
-
-## Introducing Pods
-A Podinate Pod is a container running in your cluster. You may be familiar with the concept of a Pod from other container managers like Kubernetes and Podman. 
-```bash
-podinate get pods 
+NAME            READY   STATUS    RESTARTS   AGE
+hello-world-0   1/1     Running   0          38s
 ```
-This will show a table of your pods, you should see only one called `Quick Start Ubuntu`, running the `ubuntu:latest` image. 
-
 ### Check Pod Logs 
-The Pod logs will contain the output of the program running inside the container. In this case, we didn't specify one so the default Entrypoint from the Dockerfile is used. 
+The Pod logs will contain the output of the program running inside the container. In this case, it's our super advanced "hello world" system. 
 ```bash
-podinate logs -f ubuntu
+kubectl logs -f hello-world-0
 ```
 You'll now be seeing "Hello from Podinate!" logged every two seconds. This is a very useful tool to see what is going on in the Pod. The `-f` means to keep following the log and show any new lines that come up. You can omit it if you just want to see the current contents of the log. 
 
 ### Run Command in Pod
-Podinate can run any command inside of our pod. This command will let us list the contents of the `/var` directory, for example. 
+Kubectl can run any command inside of our pod. This command will start a Bash shell inside of the Pod: 
 ```bash
-podinate exec ubuntu -- ls /var
+kubectl exec -it hello-world-0 -- bash
 ```
+*hacker voice* you're in. Try running some Linux commands. 
 
-### (Coming Soon) Get Ubuntu Shell
-We can now get a shell on the ubuntu pod by running the following command; 
+You can also try running commands directly (very useful for scripting), such as:
 ```bash
-podinate shell ubuntu
+kubectl exec hello-world-0 -- ls /var
+kubectl exec hello-world-0 -- echo "Hello world"
 ```
-The `podinate shell` command is a convenient way to get inside of a container and debug. We can now run commands like we would on any Ubuntu system:
+### Change the Image to Fedora
+Let's say we meant to run our super advanced hello world system on a Fedora Pod. Update the `hello.pf` PodFile as follows: 
+```hcl title="hello.pf"
+podinate {
+    package = "hello-world"
+    namespace = "default"
+}
+
+pod "hello-world" {
+    image = "fedora"
+    tag = "latest" 
+    command = [ "/bin/bash", "-c", "--" ]
+    arguments = [ "while true; do echo 'Hello from Fedora!'; sleep 2; done;" ]
+}
+```
+Now run the following command to update the Pod: 
 ```bash
-echo "Hello"
-ping podinate.com -c 5
-curl https://api64.ipify.org
-``` 
+podinate apply ubuntu.pf
+```
+Podinate will show you exactly what needs to be updated:
+```
+namespace default is up to date
+pod hello-world will be  updated 
+  apiVersion: "apps/v1"
+  kind: "StatefulSet"
+  metadata:
+    creationTimestamp: "2024-07-07T02:11:26Z"
+-   generation: 1
++   generation: 2
+    name: "hello-world"
+    namespace: "default"
+    resourceVersion: "1676"
+    uid: "e6c60e53-136a-44a7-9f83-7998b88d5fa1"
+  spec:
+    persistentVolumeClaimRetentionPolicy:
+      whenDeleted: "Retain"
+      whenScaled: "Retain"
+    podManagementPolicy: "OrderedReady"
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        podinate.com/pod: "hello-world"
+    serviceName: ""
+    template:
+      metadata:
+        creationTimestamp:
+        labels:
+          podinate.com/pod: "hello-world"
+        name: "hello-world"
+      spec:
+        containers:
+          -
+            args:
+-             - "while true; do echo 'Hello from Podinate!'; sleep 2; done;"
++             - "while true; do echo 'Hello from Fedora!'; sleep 2; done;"
+            command:
+              - "/bin/bash"
+              - "-c"
+              - "--"
+-           image: "ubuntu:latest"
++           image: "fedora:latest"
+            imagePullPolicy: "Always"
+            name: "hello-world"
+            resources:
+            terminationMessagePath: "/dev/termination-log"
+            terminationMessagePolicy: "File"
+        dnsPolicy: "ClusterFirst"
+        restartPolicy: "Always"
+        schedulerName: "default-scheduler"
+        securityContext:
+        terminationGracePeriodSeconds: 30
+    updateStrategy:
+      rollingUpdate:
+        partition: 0
+      type: "RollingUpdate"
+  status:
+    availableReplicas: 1
+    collisionCount: 0
+    currentReplicas: 1
+    currentRevision: "hello-world-79ff6c6b6c"
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updateRevision: "hello-world-79ff6c6b6c"
+    updatedReplicas: 1
+
+Summary: 0 created, 1 updated, 0 deleted, 1 unchanged
+Are you sure you want to apply these changes? (Y/n)
+```
+With a quick glance, you can check that Podinate will only change what you changed in the PodFile. Apply the configuration by pressing Y and enter, or just enter.
+
+Now watch the changes be applied: 
+```bash
+kubectl get pods -w
+```
+The `-w` means `watch`, and will show the Ubuntu Pod being replaced by a Fedora Pod. This may take a minute or two. 
+```
+NAME            READY   STATUS        RESTARTS   AGE
+hello-world-0   1/1     Terminating   0          4m9s
+hello-world-0   0/1     Terminating   0          4m32s
+hello-world-0   0/1     Terminating   0          4m33s
+hello-world-0   0/1     Terminating   0          4m33s
+hello-world-0   0/1     Terminating   0          4m33s
+hello-world-0   0/1     Pending       0          0s
+hello-world-0   0/1     Pending       0          0s
+hello-world-0   0/1     ContainerCreating   0          0s
+hello-world-0   1/1     Running             0          11s
+```
+Try running `kubectl logs -f hello-world-0` again to see how the Pod's log output has changed, or running some commands in the Pod to see how the environment has changed. 
+
+## Next Steps
+This tutorial should have demonstrated how easy it is to control Kubernetes with Podinate. Here's some ideas for what to do next:
+
+- Try changing the Pod to log the time with each "Hello from Fedora!" 
+- [Set up First App](first-app.md) is part two of this tutorial, and will take you through setting up Uptime Kuma, which you can use to monitor every other app you run on your Kubernetes cluster.
