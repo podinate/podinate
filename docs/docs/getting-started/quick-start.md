@@ -1,28 +1,37 @@
 # Getting Started
+This guide will take you through installing Podinate and a Kubernetes cluster on your local machine. You will then spin up Uptime Kuma and an Nginx Pod to learn how to Kubernet the Podinate way. 
 
-This guide aims to get you started with Podinate and start familiarising yourself with the platform. We will install the Podinate CLI on your local machine, set up a server, and run an example workload. 
-
-
-## Create a Cluster
-
-Podinate uses Kubernetes to provide cluster services. If you just want to create a simple single-node cluster, the installer will do that for you. You can then add more nodes later. If you want to do something more custom, start with the [K3s Quickstart](https://docs.k3s.io/quick-start) documentation. If you want to install a cluster on multiple hosts we highly recommend the great [K3sup project](https://docs.k3s.io/quick-start).
-
-### Install the CLI (Optional)
-The Podinate server installer will set up the Podinate command line client for the root user on the server. If you want to be able to control your Podinate server from your local command line, the CLI is available through Homebrew for both Mac and Linux. If you don't have Homebrew, run the command on the [Homebrew homepage](https://brew.sh/) to install it. 
+## Install the CLI
+Podinate is available through Homebrew for both Mac and Linux. If you don't have Homebrew, run the command on the [Homebrew homepage](https://brew.sh/) to install it. 
 ```bash
-brew install podinate/tap/podinate
+brew install podinate/tap/podinate k3d
 ```
-This will install Podinate CLI from our Homebrew tap. 
+This will install the Podinate CLI and K3d, which you will use to create a local Kubernetes cluster. 
 
-### Login to Podinate
-The server installer will set up the Podinate credentials for the root user, and print out the credentials file at the end of the installation process. If you want to use Podinate as another user, or from your local machine, you can add the server by running: 
+You will also need Docker installed, if you don't have it already, check [Install Docker Desktop Mac](https://docs.docker.com/desktop/install/mac-install/)
+
+## Create Local Cluster
+Before anything can be run, a Kubernetes cluster needs to be created. For this tutorial, K3d will be used. 
 ```bash
-podinate login
+k3d cluster create local
 ```
-Paste the credentials file, then press `control + s` to save the new profile.
+Now check the cluster has installed correctly:
+```bash
+kubectl get pods -A
+```
+The output should look like: 
+```
+NAMESPACE     NAME                                      READY   STATUS      RESTARTS   AGE
+kube-system   coredns-6799fbcd5-9474v                   1/1     Running     0          26s
+kube-system   local-path-provisioner-6c86858495-kkbdd   1/1     Running     0          26s
+kube-system   metrics-server-54fd9b65b-9rqwd            0/1     Running     0          26s
+kube-system   helm-install-traefik-crd-np6qg            0/1     Completed   0          26s
+kube-system   helm-install-traefik-4lg85                0/1     Completed   1          26s
+kube-system   svclb-traefik-f4e950dc-84xzw              2/2     Running     0          9s
+kube-system   traefik-f4564c4f4-pgwgj                   0/1     Running     0          9s
+```
 
-### Run an Ubuntu Pod
-
+## Run an Ubuntu Pod
 First, let's create an Ubuntu Pod we can play with. First let's create a directory to hold this tutorial. 
 ```bash
 mkdir podinate-quick-start
@@ -31,18 +40,16 @@ cd podinate-quick-start
 
 Now copy the following into `ubuntu.pod`.
 ```hcl title="ubuntu.pod"
-project "quick-start" {
-    name = "Quick Start"
-    account_id = "default"
+podinate {
+    package = "ubuntu"
+    namespace = "default"
 }
 
 pod "ubuntu" {
-    name = "Quick Start Ubuntu"
     image = "ubuntu"
     tag = "latest" 
     command = [ "/bin/bash", "-c", "--" ]
     arguments = [ "while true; do echo 'Hello from Podinate!'; sleep 2; done;" ]
-    project_id = "quick-start"
 }
 ```
 This file creates two things. At the top, it creates a Project called Quick Start, then it creates a Pod called `ubuntu`, which runs the latest Ubuntu image, and runs a certain command in a loop. We'll learn more about Projects and Pods in the next sections. 
