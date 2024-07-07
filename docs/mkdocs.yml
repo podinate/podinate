@@ -1,46 +1,46 @@
 site_name: Podinate Documentation
 site_url: https://docs.podinate.com
 
-nav:
-  - Home: index.md
-  - Getting Started: 
-    - getting-started/index.md
-    - Overview: getting-started/overview.md
-    - Concepts: getting-started/concepts.md
-    - Quick Start: getting-started/quick-start.md
-    - Installation: getting-started/installation.md
-    - Run Your App: getting-started/your-app.md
-    - Add The Team: getting-started/collaborate.md
-  - Podinate:
-    - podinate/index.md
-    - Configuration Language: podinate/pcl.md
-    - Projects: podinate/project.md
-    - Pods: podinate/pods.md
-    - SharedVolumes: podinate/shared-volumes.md
-  - Packages:
-    - Overview: packages/packages-overview.md
-    - Package Structure: packages/package-structure.md
-    - Publishing: packages/publishing.md
-    - Packages Reference:
-      - packages/available-packages/index.md
-      - Cloudflare Tunnel: packages/available-packages/cloudflare-tunnel.md
-      - WordPress: packages/available-packages/WordPress.md
-      - MariaDB: packages/available-packages/MariaDB.md
-  - Reference:
-    - Hardware: 
-      - reference/hardware/index.md
-      - Raspberry Pi: reference/hardware/raspberry-pi.md
-      - Mini PC / NUC: reference/hardware/mini-pc.md
-      - Homelab: reference/hardware/homelab.md
-    - Software:
-      - Cert Manager: reference/software/cert-manager.md
-      - Dropbear: reference/software/dropbear.md
-      - Incus: reference/software/incus.md
-    - Storage: 
-      - reference/storage/index.md
-      - LVM: reference/storage/lvm.md
-      - ZFS: reference/storage/zfs.md
-      - Cloud Storage: reference/storage/cloud-storage.md
+# nav:
+#   - Home: index.md
+#   - Getting Started: 
+#     - getting-started/index.md
+#     - Overview: getting-started/overview.md
+#     - Concepts: getting-started/concepts.md
+#     - Quick Start: getting-started/quick-start.md
+#     - Installation: getting-started/installation.md
+#     - Run Your App: getting-started/your-app.md
+#     - Add The Team: getting-started/collaborate.md
+#   - Podinate:
+#     - podinate/index.md
+#     - Configuration Language: podinate/pcl.md
+#     - Projects: podinate/project.md
+#     - Pods: podinate/pods.md
+#     - SharedVolumes: podinate/shared-volumes.md
+#   - Packages:
+#     - Overview: packages/packages-overview.md
+#     - Package Structure: packages/package-structure.md
+#     - Publishing: packages/publishing.md
+#     - Packages Reference:
+#       - packages/available-packages/index.md
+#       - Cloudflare Tunnel: packages/available-packages/cloudflare-tunnel.md
+#       - WordPress: packages/available-packages/WordPress.md
+#       - MariaDB: packages/available-packages/MariaDB.md
+#   - Reference:
+#     - Hardware: 
+#       - reference/hardware/index.md
+#       - Raspberry Pi: reference/hardware/raspberry-pi.md
+#       - Mini PC / NUC: reference/hardware/mini-pc.md
+#       - Homelab: reference/hardware/homelab.md
+#     - Software:
+#       - Cert Manager: reference/software/cert-manager.md
+#       - Dropbear: reference/software/dropbear.md
+#       - Incus: reference/software/incus.md
+#     - Storage: 
+#       - reference/storage/index.md
+#       - LVM: reference/storage/lvm.md
+#       - ZFS: reference/storage/zfs.md
+#       - Cloud Storage: reference/storage/cloud-storage.md
 
 plugins:
   - search

@@ -18,12 +18,12 @@ var applyCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		// I haven't figured out how to apply *.pod yet
-		path := "*.pod"
-		if len(args) > 0 {
-			path = args[0]
-		}
+		// path := "*.pod"
+		// if len(args) > 0 {
+		// 	path = args[0]
+		// }
 
-		pkg, err := engine.Parse(path)
+		pkg, err := engine.Parse(args)
 		if err != nil {
 			return err
 		}

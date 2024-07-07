@@ -46,14 +46,25 @@ var podinateHCLSpec = &hcldec.BlockSpec{
 	},
 }
 
-func Parse(path string) (*Package, error) {
-	fmt.Println("Parsing file: ", path)
+func Parse(paths []string) (*Package, error) {
+	// fmt.Println("Parsing file: ", path)
 	spec := hcldec.ObjectSpec{
 		"podinate":       podinateHCLSpec,
 		"pods":           podHCLSpec,
 		"shared_volumes": SharedVolumeHCLSpec,
 	}
 	parser := hclparse.NewParser()
+
+	//var val cty.Value
+	var diags hcl.Diagnostics
+
+	val := cty.ObjectVal(make(map[string]cty.Value))
+
+	fmt.Printf("Val start: %#v\n", val)
+
+	path := paths[0]
+
+	//for _, path := range paths {
 	f, diags := parser.ParseHCLFile(path)
 	if diags.HasErrors() {
 		WriteDiagnostics(diags, parser)
@@ -66,6 +77,17 @@ func Parse(path string) (*Package, error) {
 
 	val, moreDiags := hcldec.Decode(f.Body, spec, nil)
 	diags = append(diags, moreDiags...)
+	fmt.Printf("NEWVAL: %#v\n", val)
+
+	//var err error
+
+	// val, err = stdlib.Merge(val, newval)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	//val.Add(newval)
+
+	//}
 	if diags.HasErrors() {
 		WriteDiagnostics(diags, parser)
 		return nil, errors.New("Error decoding file")
@@ -73,6 +95,9 @@ func Parse(path string) (*Package, error) {
 
 	// Create a new package
 	var thePackage Package
+
+	fmt.Printf("WHAT IS THE FUCKING TYPE %#v\n", val.Type())
+	fmt.Printf("Podinate is %#v\n", val.GetAttr("podinate").AsValueMap())
 
 	namespace := val.GetAttr("podinate").GetAttr("namespace").AsString()
 	packageName := val.GetAttr("podinate").GetAttr("package").AsString()

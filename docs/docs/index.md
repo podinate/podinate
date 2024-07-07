@@ -1,6 +1,6 @@
 # Welcome to Podinate
 
-Welcome to the Podinate documentation. Podinate is an easy to use development platform powered by Kubernetes. It lets developers mitigate the complexity of Kubernetes configuration by including its own CLI that is designed to mimic Docker as much as possible, making it instantly familiar to most developers. 
+Welcome to the Podinate documentation. Podinate is an open source CLI and package manager for Kubernetes that makes it easy to do simple tasks like spinning up a container and connecting them to the world. 
 
 ## Getting Started
 Our getting started guides allow you to hit the ground running. 
