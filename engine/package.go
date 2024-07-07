@@ -77,7 +77,7 @@ func Parse(paths []string) (*Package, error) {
 
 	val, moreDiags := hcldec.Decode(f.Body, spec, nil)
 	diags = append(diags, moreDiags...)
-	fmt.Printf("NEWVAL: %#v\n", val)
+	//fmt.Printf("NEWVAL: %#v\n", val)
 
 	//var err error
 
@@ -96,8 +96,8 @@ func Parse(paths []string) (*Package, error) {
 	// Create a new package
 	var thePackage Package
 
-	fmt.Printf("WHAT IS THE FUCKING TYPE %#v\n", val.Type())
-	fmt.Printf("Podinate is %#v\n", val.GetAttr("podinate").AsValueMap())
+	//fmt.Printf("WHAT IS THE FUCKING TYPE %#v\n", val.Type())
+	//fmt.Printf("Podinate is %#v\n", val.GetAttr("podinate").AsValueMap())
 
 	namespace := val.GetAttr("podinate").GetAttr("namespace").AsString()
 	packageName := val.GetAttr("podinate").GetAttr("package").AsString()
