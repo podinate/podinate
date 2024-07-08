@@ -1,5 +1,11 @@
 site_name: Podinate Documentation
 site_url: https://docs.podinate.com
+site_author: John Cave
+site_description: Podinate is declarative Kubernetes for busy developers. Deploy your apps to your own Kubernetes cluster with a simple configuration language.
+
+repo_name: podinate/podinate
+repo_url: https://github.com/podinate/podinate
+edit_uri: edit/main/docs/docs/
 
 # nav:
 #   - Home: index.md
@@ -69,6 +75,8 @@ theme:
     - search.highlight
     - search.term
     - content.code.copy
+    - content.action.edit
+    - content.action.view
 
 markdown_extensions:
   # Code blocks 
