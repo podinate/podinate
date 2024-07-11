@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -22,7 +23,7 @@ func TestGenerateResourceChange(t *testing.T) {
 	cm.Kind = "ConfigMap"
 	cm.APIVersion = "v1"
 
-	rc, err := GetResourceChangeForResource(&cm)
+	rc, err := GetResourceChangeForResource(context.Background(), &cm)
 	if err != nil {
 		t.Errorf("Error getting resource change: %v", err)
 	}

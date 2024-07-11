@@ -3,20 +3,17 @@
 package engine
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"os"
 
+	helpers "github.com/podinate/podinate/engine/helpers"
 	"github.com/podinate/podinate/kube_client"
 	"github.com/podinate/podinate/tui"
 	"github.com/sirupsen/logrus"
-	"github.com/sters/yaml-diff/yamldiff"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -46,10 +43,12 @@ const (
 	ResourceTypeService      ResourceType = "service"
 	ResourceTypeVolume       ResourceType = "volume"
 	ResourceTypeSharedVolume ResourceType = "shared_volume"
+	ResourceTypeManifest     ResourceType = "manifest"
 )
 
 // Change represents a change to an overall resource,
-// such as a Pod, Namespace, or SharedVolume
+// such as a Pod, Namespace, or SharedVolume. Resources are
+// internal to Podinate, and represent a collection of Kubernetes objects
 type Change struct {
 	ResourceType ResourceType
 	ResourceID   string
@@ -80,17 +79,78 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 		Applied: true,
 	}
 
-	// Create a plan for the Namespace
-	namespaceChanges, err := planNamespaceChanges(ctx, client, pkg.Namespace)
-	logrus.WithContext(ctx).WithFields(logrus.Fields{
-		"namespace": pkg.Namespace,
-		"changes":   namespaceChanges,
-		"error":     err,
-	}).Trace("Planned namespace changes")
-	if err != nil {
-		return nil, err
+	// Create a plan for the Namespace defined in the Podinate block
+	if pkg.Namespace != "default" {
+		namespaceChanges, err := planNamespaceChanges(ctx, client, pkg.Namespace)
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"namespace": pkg.Namespace,
+			"changes":   namespaceChanges,
+			"error":     err,
+		}).Trace("Planned namespace changes")
+		if err != nil {
+			return nil, err
+		}
+		plan.Changes = append(plan.Changes, *namespaceChanges)
 	}
-	plan.Changes = append(plan.Changes, *namespaceChanges)
+
+	for _, resource := range pkg.Resources {
+		var resourceChanges *[]ResourceChange
+		objects, err := resource.GetObjects()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, object := range objects {
+			resourceChange, err := GetResourceChangeForResource(ctx, object)
+
+			logrus.WithContext(ctx).WithFields(logrus.Fields{
+				"object": object,
+				"change": resourceChange,
+				"error":  err,
+			}).Trace("Planned resource change")
+
+			if err != nil || resourceChange == nil {
+				return nil, err
+			}
+
+			if resourceChanges == nil {
+				resourceChanges = new([]ResourceChange)
+			}
+
+			*resourceChanges = append(*resourceChanges, *resourceChange)
+		}
+
+		// Determine the overall change type
+		// Start assuming noop
+		changeType := ChangeTypeNoop
+		var created int
+		for _, rc := range *resourceChanges {
+			// If any are updates, the overall change is an update
+			if rc.ChangeType == ChangeTypeUpdate {
+				changeType = ChangeTypeUpdate
+				break
+			} else if rc.ChangeType == ChangeTypeCreate {
+				// Count the number of create changes
+				created++
+			}
+		}
+
+		// If all changes are create, the overall change is a create
+		if created == len(*resourceChanges) {
+			changeType = ChangeTypeCreate
+		}
+
+		change := Change{
+			ResourceType: resource.GetType(),
+			ResourceID:   resource.GetName(),
+			ChangeType:   changeType,
+			Changes:      resourceChanges,
+		}
+
+		plan.Changes = append(plan.Changes, change)
+	}
+
+	// EVERYTHING FROM HERE DOWN WILL BE DELETED
 
 	logrus.WithContext(ctx).WithFields(logrus.Fields{
 		"shared_volumes":      pkg.SharedVolumes,
@@ -122,6 +182,8 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 		plan.Changes = append(plan.Changes, *podPlan)
 	}
 
+	// EVERYTHING FROM HERE UP WILL BE DELETED
+
 	// We got this far, the plan must be valid
 	plan.Valid = true
 
@@ -136,36 +198,36 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 }
 
 // Display shows the plan to the user
-func (plan *Plan) Display() error {
+func (plan *Plan) Display(ctx context.Context) error {
 	var created, updated, deleted, noop int
 
-	y := printers.YAMLPrinter{}
+	//y := printers.YAMLPrinter{}
 
 	for _, change := range plan.Changes {
 		switch change.ChangeType {
 		case ChangeTypeCreate:
-			fmt.Printf("%s "+tui.StyleItalic.Render("%s")+" will be "+tui.StyleSuccess.Render("created")+":\n", change.ResourceType, change.ResourceID)
+			fmt.Printf("> %s "+tui.StyleItalic.Render("%s")+" will be "+tui.StyleSuccess.Render("created")+":\n", change.ResourceType, change.ResourceID)
 			created++
 		case ChangeTypeUpdate:
-			fmt.Printf("%s %s will be "+tui.StyleUpdated.Render("updated")+"\n", change.ResourceType, change.ResourceID)
+			fmt.Printf("> %s %s will be "+tui.StyleUpdated.Render("updated")+"\n", change.ResourceType, change.ResourceID)
 
 			updated++
 		case ChangeTypeDelete:
-			fmt.Printf("%s %s will be deleted\n", change.ResourceType, change.ResourceID)
+			fmt.Printf("> %s %s will be deleted\n", change.ResourceType, change.ResourceID)
 			deleted++
 		case ChangeTypeNoop:
-			fmt.Printf("%s %s is up to date\n", change.ResourceType, change.ResourceID)
+			fmt.Printf("> %s %s is up to date\n", change.ResourceType, change.ResourceID)
 			noop++
 		}
 		if change.Changes != nil {
-			for i, c := range *change.Changes {
+			for _, c := range *change.Changes {
 
-				if i > 0 {
-					fmt.Println(tui.StyleSuccess.Render("---"))
-				}
+				// if i > 0 {
+				// 	fmt.Println(tui.StyleSuccess.Render("---"))
+				// }
 
 				if c.ChangeType == ChangeTypeUpdate {
-					err := YamlDiffResources(c.CurrentResource, c.DesiredResource)
+					err := helpers.YamlDiffObjects(ctx, c.CurrentResource, c.DesiredResource)
 					if err != nil {
 						logrus.WithFields(logrus.Fields{
 							"error": err,
@@ -177,12 +239,7 @@ func (plan *Plan) Display() error {
 						"kind": c.DesiredResource.GetObjectKind().GroupVersionKind().Kind,
 					}).Debug("creating object")
 
-					err := stripManagedFields(c.DesiredResource)
-					if err != nil {
-						return err
-					}
-
-					err = y.PrintObj(c.DesiredResource, os.Stdout)
+					err := helpers.PrintObject(c.DesiredResource)
 					if err != nil {
 						logrus.WithFields(logrus.Fields{
 							"error": err,
@@ -194,86 +251,11 @@ func (plan *Plan) Display() error {
 		}
 	}
 
-	fmt.Printf("Summary: %d created, %d updated, %d deleted, %d unchanged\n", created, updated, deleted, noop)
+	fmt.Printf("\nSummary: %d created, %d updated, %d deleted, %d unchanged\n", created, updated, deleted, noop)
 
 	if created == 0 && updated == 0 && deleted == 0 {
 		fmt.Println("\n" + tui.StyleSuccess.Render("Everything up to date. Nothing to do."))
 
-	}
-
-	return nil
-}
-
-func YamlDiffResources(oldResource runtime.Object, newResource runtime.Object) error {
-	y := printers.YAMLPrinter{}
-	b := new(bytes.Buffer)
-
-	// Strip the ManagedFields from the old resource
-	// as they're not suitable for comparison
-	err := stripManagedFields(oldResource)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error":        err,
-			"old_resource": oldResource,
-			"new_resource": newResource,
-		}).Error("Error stripping managed fields from oldResource")
-		return err
-	}
-
-	err = y.PrintObj(oldResource, b)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error":        err,
-			"old_resource": oldResource,
-			"new_resource": newResource,
-		}).Error("Error printing old object")
-		return err
-	}
-	oldstr := b.String()
-	b.Truncate(0)
-
-	yamldiff.Load(oldstr)
-
-	// Strip managed fields to make comparison easier
-	err = stripManagedFields(newResource)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error":        err,
-			"old_resource": oldResource,
-			"new_resource": newResource,
-		}).Error("Error stripping managed fields from newResource")
-		return err
-	}
-
-	err = y.PrintObj(newResource, b)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error":        err,
-			"old_resource": oldResource,
-			"new_resource": newResource,
-		}).Error("Error printing new object")
-		return err
-	}
-	newstr := b.String()
-
-	oldYaml, err := yamldiff.Load(oldstr)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Error("Error loading old YAML")
-		return err
-	}
-
-	newYaml, err := yamldiff.Load(newstr)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Error("Error loading new YAML")
-		return err
-	}
-
-	for _, diff := range yamldiff.Do(oldYaml, newYaml) {
-		fmt.Println(diff.Dump())
 	}
 
 	return nil

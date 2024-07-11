@@ -10,6 +10,7 @@ import (
 
 	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	hcldec "github.com/hashicorp/hcl2/hcldec"
+	helpers "github.com/podinate/podinate/engine/helpers"
 	"github.com/podinate/podinate/kube_client"
 	"github.com/podinate/podinate/tui"
 	"github.com/sirupsen/logrus"
@@ -428,7 +429,7 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 
 			fmt.Println(tui.StyleError.Render("The following change was rejected by Kubernetes:"))
 
-			err := YamlDiffResources(existing, ssSpec)
+			err := helpers.YamlDiffObjects(ctx, existing, ssSpec)
 			if err != nil {
 				logrus.WithContext(ctx).WithFields(logrus.Fields{
 					"error": err,

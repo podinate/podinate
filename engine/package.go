@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/hcl2/hcl"
@@ -13,6 +16,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
@@ -20,10 +26,21 @@ var StandardLabels = map[string]string{
 	"app.kubernetes.io/managed-by": "Podinate",
 }
 
+// Resource represents a group of related Kubernetes Objects, for example a Pod, or the contents of a YAML manifest
+type Resource interface {
+	// Get the array of Kubernetes objects that is the desired state of the resource
+	GetObjects() ([]runtime.Object, error)
+	// Get the display name type of the resource
+	GetType() ResourceType
+	// GetName returns the name of the resource
+	GetName() string
+}
+
 // Package represents a package to be installed, either the current state or the desired state
 type Package struct {
 	Name          string
 	Namespace     string
+	Resources     []Resource
 	Pods          []Pod
 	SharedVolumes []SharedVolume
 	Labels        map[string]string
@@ -47,6 +64,68 @@ var podinateHCLSpec = &hcldec.BlockSpec{
 }
 
 func Parse(paths []string) (*Package, error) {
+	// TODO: Make this support multiple files
+
+	extension := strings.ToLower(filepath.Ext(paths[0])[1:])
+
+	// If the file extension shows it is a Kubernetes yaml or json, parse it as such
+	if slices.Contains([]string{"yaml", "yml", "json"}, extension) {
+		return ParseYaml(paths[0])
+	}
+
+	// Assume a PodFile and parse as such
+	return ParsePodfile(paths[0])
+}
+
+func ParseYaml(path string) (*Package, error) {
+
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	//fmt.Println("Content: ", string(content))
+
+	var objects []runtime.Object
+	var mf Manifest
+	mf.SetName(path)
+	mf.SetPath(path)
+
+	decoder := yaml.NewYAMLOrJSONDecoder(f, 1000)
+	for {
+		var us unstructured.Unstructured
+		// yamldec := yaml.NewYAMLReader(f)
+		err = decoder.Decode(&us)
+		if errors.Is(err, io.EOF) {
+			break
+			//return nil, err
+		}
+		if err != nil {
+			return nil, err
+		}
+		//fmt.Println("Object: ", us)
+
+		//var object *runtime.Object
+		var object = us.DeepCopyObject()
+
+		objects = append(objects, object)
+	}
+
+	mf.SetObjects(objects)
+
+	//fmt.Println("Objects: ", objects)
+
+	// Create a new package
+	thePackage := Package{
+		Name:      path,
+		Namespace: "default",
+		Resources: []Resource{&mf},
+	}
+
+	return &thePackage, nil
+}
+
+func ParsePodfile(path string) (*Package, error) {
 	// fmt.Println("Parsing file: ", path)
 	spec := hcldec.ObjectSpec{
 		"podinate":       podinateHCLSpec,
@@ -62,7 +141,7 @@ func Parse(paths []string) (*Package, error) {
 
 	//fmt.Printf("Val start: %#v\n", val)
 
-	path := paths[0]
+	//path := paths[0]
 
 	//for _, path := range paths {
 	f, diags := parser.ParseHCLFile(path)
@@ -152,7 +231,9 @@ func (pkg *Package) Apply(ctx context.Context) error {
 	plan, err := pkg.Plan(ctx)
 	if err != nil {
 		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"error": err,
+			"error":     err,
+			"package":   pkg,
+			"resources": pkg.Resources,
 		}).Fatal("Failed to plan changes")
 		os.Exit(1)
 	}
@@ -163,7 +244,7 @@ func (pkg *Package) Apply(ctx context.Context) error {
 	// If the user confirms, apply the plan
 	// If the user cancels, exit
 
-	err = plan.Display()
+	err = plan.Display(ctx)
 	if err != nil {
 		logrus.WithContext(ctx).WithFields(logrus.Fields{
 			"error": err,

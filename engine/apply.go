@@ -90,14 +90,3 @@ func resourceToUnstructured(obj runtime.Object) (*unstructured.Unstructured, err
 	}
 	return &unstructured.Unstructured{Object: innerObj}, nil
 }
-
-// stripManagedFields removes the "managedFields" field from the object
-func stripManagedFields(resource runtime.Object) error {
-	// Strip ManagedFields from the old resource
-	o, err := resourceToUnstructured(resource)
-	if err != nil {
-		return err
-	}
-	o.SetManagedFields(nil)
-	return runtime.DefaultUnstructuredConverter.FromUnstructured(o.Object, resource)
-}

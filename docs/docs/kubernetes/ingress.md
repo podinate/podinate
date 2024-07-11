@@ -4,6 +4,35 @@ Kubernetes Ingress is used to expose services running on the cluster to the outs
 
 The recommended way to do ingress with Podinate is using the [Nginx Ingress Controller](https://kubernetes.github.io/ingress-nginx/). Note that there are several different implementations of an "Nginx Ingress Controller". Podinate recommends the one published by the Kubernetes team unless a business wants to get official support from Nginx for the Ingress Controller published by F5. 
 
+## PodFile
+Once Nginx is installed, all that is needed to add ingress to a Pod is to add a service and ingress block to the Pod's specification:
+```hcl
+service {
+    port = 80
+    target_port = 8080 // Optional
+    ingress {
+        hostname = "tunnel.example.com
+    }
+}
+```
+For example, the following PodFile will run a container hosting a clone of the 1024 game, and send any requests for `ingress.example.com` to the Pod:
+```hcl 
+podinate {
+    package = "2048"
+    namespace = "2048"
+}
+
+pod "game" {
+    image = "alexwhen/docker-2048"
+    service "game" {
+        port = 80
+        ingress {
+            hostname = "ingress.example.com"
+        }
+    }
+}
+```
+
 ## Installation 
 Follow the [official installation instructions](https://kubernetes.github.io/ingress-nginx/deploy/) to get started. They have a variety of installation guides for various platforms and clouds. For most other cases, the default installation will work. 
 
