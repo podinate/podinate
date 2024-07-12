@@ -17,13 +17,13 @@ var client *kubernetes.Clientset
 var RestConfig *rest.Config
 
 func init() {
-	rc, err := GetRestConfig()
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Fatal("Error getting kubeconfig")
-	}
-	RestConfig = rc
+	// rc, err := GetRestConfig()
+	// if err != nil {
+	// 	logrus.WithFields(logrus.Fields{
+	// 		"error": err,
+	// 	}).Fatal("Error getting kubeconfig")
+	// }
+	// RestConfig = rc
 
 	// c, err := kubernetes.NewForConfig(RestConfig)
 	// if err != nil {
