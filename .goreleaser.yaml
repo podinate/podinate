@@ -97,11 +97,11 @@ nfpms:
         file_info:
           mode: 0644
 
-# announce:
-#   discord:
-#     enabled: true
-#     message_template: "Podinate {{ .Tag }} has been released! Check it out at {{ .ReleaseURL }}"
-#     author: podinate-bot
+announce:
+  discord:
+    enabled: true
+    message_template: "Podinate {{ .Tag }} has been released! Check it out at {{ .ReleaseURL }}"
+    author: PodBot
     
 
 changelog:

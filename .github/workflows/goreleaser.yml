@@ -30,3 +30,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.GORELEASER_HOMEBREW_TOKEN }}
+          DISCORD_WEBHOOK_ID: ${{ secrets.DISCORD_WEBHOOK_ID }}
+          DISCORD_WEBHOOK_TOKEN: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+      - uses: morph027/apt-repo-action@v2
+        id: create-apt-repo
+        with:
+          repo-name: podinate
+          signing-key: ${{ secrets.REPO_SIGNING_KEY }}
+          codename: stable
+          components: main
+          architectures: i386 amd64 arm64

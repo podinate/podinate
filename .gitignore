@@ -26,4 +26,6 @@ docs/.cache
 ## Node
 dashboard/node_modules
 ts-template
+
+dist
 completions
