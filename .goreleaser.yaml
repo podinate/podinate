@@ -23,7 +23,7 @@ builds:
       - windows
       - darwin
     ldflags: 
-      - -s -w -X github.com/johncave/podinate/cli/cmd.Version={{.Version}} -X github.com/johncave/podinate/cli/cmd.Commit={{.Commit}} -X github.com/johncave/podinate/cli/cmd.Date={{.Date}}
+      - -s -w -X github.com/podinate/podinate/cmd.Version={{.Version}} -X github.com/podinate/podinate/cmd.Commit={{.Commit}} -X github.com/podinate/podinate/cmd.Date={{.Date}}
 
 archives:
   - format: tar.gz
@@ -48,6 +48,18 @@ brews:
       owner: podinate
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+
+chocolateys:
+  - name: podinate
+    description: Podinate - Declarative Kubernetes for developers
+    tags: "kubectl kubernetes k8s foss "
+    package_source_url: https://github.com/podinate/podinate
+    project_url: https://www.podinate.com
+    authors: John Cave
+    license_url: https://github.com/podinate/podinate/blob/main/LICENSE
+    docs_url: https://docs.podinate.com
+    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+
 
 
 changelog:
