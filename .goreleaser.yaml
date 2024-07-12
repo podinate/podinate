@@ -60,16 +60,16 @@ brews:
       fish_completion.install "completions/podinate.fish"      
 
 
-chocolateys:
-  - name: podinate
-    description: Podinate - Declarative Kubernetes for developers
-    tags: "kubectl kubernetes k8s foss "
-    package_source_url: https://github.com/podinate/podinate
-    project_url: https://www.podinate.com
-    authors: John Cave
-    license_url: https://github.com/podinate/podinate/blob/main/LICENSE
-    docs_url: https://docs.podinate.com
-    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+# chocolateys:
+#   - name: podinate
+#     description: Podinate - Declarative Kubernetes for developers
+#     tags: "kubectl kubernetes k8s foss "
+#     package_source_url: https://github.com/podinate/podinate
+#     project_url: https://www.podinate.com
+#     authors: John Cave
+#     license_url: https://github.com/podinate/podinate/blob/main/LICENSE
+#     docs_url: https://docs.podinate.com
+#     api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
 
 nfpms:
   - id: podinate
