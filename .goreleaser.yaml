@@ -24,7 +24,7 @@ builds:
       - windows
       - darwin
     ldflags: 
-      - -s -w -X github.com/podinate/podinate/cmd.Version={{.Version}} -X github.com/podinate/podinate/cmd.Commit={{.Commit}} -X github.com/podinate/podinate/cmd.Date={{.Date}}
+      - -s -w -X github.com/podinate/podinate/cmd.Version={{.Version}} -X github.com/podinate/podinate/cmd.Commit={{.ShortCommit}} -X github.com/podinate/podinate/cmd.Date={{.Date}}
 
 archives:
   - format: tar.gz
@@ -101,7 +101,7 @@ announce:
   discord:
     enabled: true
     message_template: "Podinate {{ .Tag }} has been released! Check it out at {{ .ReleaseURL }}"
-    author: PodBot
+    author: PodBot  
     
 
 changelog:

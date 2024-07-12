@@ -1,14 +1,48 @@
 # Getting Started
 This guide will take you through installing Podinate and a Kubernetes cluster on your local machine. You will run a hello world container, and learn how to look at the logs and run commands to debug it.
 
-This guide will work on Mac, and on Linux if Homebrew is installed. 
-
 ## Install the CLI
-Podinate is available through Homebrew for both Mac and Linux. If you don't have Homebrew, run the command on the [Homebrew homepage](https://brew.sh/) to install it. 
-```bash
-brew install podinate/tap/podinate k3d
-```
-This will install the Podinate CLI and K3d, which you will use to create a local Kubernetes cluster. You will also need Docker installed, if you don't have it already, check [Install Docker Desktop Mac](https://docs.docker.com/desktop/install/mac-install/)
+Podinate is available for Windows through WSL, Mac through HomeBrew, or for Debian and Arch based Linux distros. 
+
+=== "Windows"
+    Podinate is available for Windows through Windows Subsystem for Linux. 
+    
+    If you haven't already, install WSL and Ubuntu by opening PowerShell and running the following command: 
+    ```powershell
+    wsl --install
+    ```
+    You will be asked to create a username and password for the new Linux subsystem, then it will automatically be started.
+
+    With WSL installed, open the Ubuntu application and run the following commands to install Podinate. 
+    ```bash
+    wget --quiet -O - https://get.podinate.com/deb/gpg.key | sudo tee /etc/apt/keyrings/podinate.asc
+    echo "deb [signed-by=/etc/apt/keyrings/podinate.asc] https://get.podinate.com/deb stable main" | sudo tee /etc/apt/sources.list.d/podinate.list
+    sudo apt-get update
+    sudo apt-get install podinate
+    podinate version
+    ```
+=== "Mac (Homebrew)"
+    Podinate is available through Homebrew for both Mac and Linux. If you don't have Homebrew, run the command on the [Homebrew homepage](https://brew.sh/) to install it. 
+    ```bash
+    brew install podinate/tap/podinate k3d
+    ```
+    This will install the Podinate CLI and K3d, which you will use to create a local Kubernetes cluster. You will also need Docker installed, if you don't have it already, check [Install Docker Desktop Mac](https://docs.docker.com/desktop/install/mac-install/)
+=== "Linux (Debian)"
+    Podinate can be installed from our Debian package repo. Podinate has no dependencies so should install on any Debian-based distro.
+    Use the following commands to install Poinate cli:
+    ```bash
+    wget --quiet -O - https://get.podinate.com/deb/gpg.key | sudo tee /etc/apt/keyrings/podinate.asc
+    echo "deb [signed-by=/etc/apt/keyrings/podinate.asc] https://get.podinate.com/deb stable main" | sudo tee /etc/apt/sources.list.d/podinate.list
+    sudo apt-get update
+    sudo apt-get install podinate
+    podinate version
+    ```
+=== "Linux (Arch)"
+    Podinate can be installed from the Arch User Repository using your favourite AUR helper.
+    ```bash
+    yay -S podinate
+    podinate version
+    ```
 
 ## Create Local Cluster
 Before anything can be run, a Kubernetes cluster needs to be created. For this tutorial, K3d will be used. 
