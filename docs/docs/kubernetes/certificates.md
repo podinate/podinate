@@ -43,7 +43,7 @@ helm upgrade \
     --namespace cert-manager \
     --create-namespace \
     --version v1.15.0 \
-    --set crds.enabled=true --set ingressShim.defaultIssuerName=letsencrypt-issuer --set ingressShim.defaultIssuerKind=letsencrypt-issuer
+    --set crds.enabled=true --set ingressShim.defaultIssuerName=letsencrypt-issuer --set ingressShim.defaultIssuerKind=ClusterIssuer
 ```
 
 
