@@ -1,6 +1,10 @@
 package engine
 
-import "k8s.io/apimachinery/pkg/runtime"
+import (
+	"context"
+
+	"k8s.io/apimachinery/pkg/runtime"
+)
 
 type Manifest struct {
 	// Name is the name of the manifest
@@ -31,7 +35,7 @@ func (m *Manifest) GetType() ResourceType {
 	return ResourceTypeManifest
 }
 
-func (m *Manifest) GetObjects() ([]runtime.Object, error) {
+func (m *Manifest) GetObjects(ctx context.Context) ([]runtime.Object, error) {
 	return m.objects, nil
 }
 

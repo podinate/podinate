@@ -2,17 +2,13 @@ package engine
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 	"strings"
 
 	stderrors "errors"
 
 	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
-	hcldec "github.com/hashicorp/hcl2/hcldec"
-	helpers "github.com/podinate/podinate/engine/helpers"
+	hcldec "github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/podinate/podinate/kube_client"
-	"github.com/podinate/podinate/tui"
 	"github.com/sirupsen/logrus"
 	"github.com/zclconf/go-cty/cty"
 	appsv1 "k8s.io/api/apps/v1"
@@ -21,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 )
@@ -213,11 +210,18 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 	},
 }
 
-// GetResources returns the resources needed for the Pod
-// This function deals with the StatefulSet, then calls other functions to add services, shared volumes, etc.
-func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []ResourceChange, error) {
-	var out []ResourceChange
-	podChangeType := ChangeTypeNoop
+// Implementing the Resource interface
+func (p Pod) GetName() string {
+	return p.ID
+}
+
+func (p Pod) GetType() ResourceType {
+	return ResourceTypePod
+}
+
+// GetObjects returns the Kubernetes objects needed for the Pod
+func (p Pod) GetObjects(ctx context.Context) ([]runtime.Object, error) {
+	var out []runtime.Object
 
 	var imageID = p.Image
 	if p.Tag != nil {
@@ -228,7 +232,7 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      p.ID,
-			Namespace: pkg.Namespace,
+			Namespace: *p.Namespace,
 		},
 		Spec: appsv1.StatefulSetSpec{
 			PersistentVolumeClaimRetentionPolicy: func(val appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy) *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy {
@@ -292,7 +296,7 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 	for k, volume := range p.Volume {
 		size, err := resource.ParseQuantity(volume.Size)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		ssSpec.Spec.Template.Spec.Containers[0].VolumeMounts = append(ssSpec.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 			Name:      k,
@@ -353,145 +357,14 @@ func (p *Pod) GetResources(ctx context.Context, pkg *Package) (*ChangeType, []Re
 		})
 	}
 
-	// Add service changes
-	serviceChangeType, svcChanges, err := p.GetServiceResourceChanges(ctx)
-	if err != nil {
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"error":           err,
-			"service_changes": svcChanges,
-			"service_ct":      serviceChangeType,
-		}).Error("Error getting service changes")
-		return nil, nil, err
-	}
-	logrus.WithContext(ctx).WithFields(logrus.Fields{
-		"service_changes": svcChanges,
-		"service_ct":      serviceChangeType,
-	}).Trace("Service changes")
+	out = append(out, ssSpec)
 
-	//changeType = *ct
-	out = append(out, svcChanges...)
-
-	// Check if the StatefulSet already exists
-	kube, err := kube_client.Client()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ss, err := kube.AppsV1().StatefulSets(pkg.Namespace).Update(ctx, ssSpec, metav1.UpdateOptions{DryRun: []string{metav1.DryRunAll}})
-	ss.Kind = KubernetesKindStatefulSet
-	ss.APIVersion = KubernetesAPIVersionStatefulSet
-
-	logrus.WithContext(ctx).WithFields(logrus.Fields{
-		"statefulset_from_dry_run": ss,
-		"kind":                     ss.GetObjectKind(),
-		"statefulset_generated":    ssSpec,
-		"error":                    err,
-	}).Debug("StatefulSet")
-
-	// If the StatefulSet didn't exist when we called update, create it
-	if errors.IsNotFound(err) {
-
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"statefulset": ss,
-		}).Debug("StatefulSet needs to be created")
-
-		// Resource doesn't exist, so create it
-		podChangeType = ChangeTypeCreate
-
-		// Dry Run creation to fill out default fields
-		// Disabled for now, fails if the Namespace isn't already created
-		// ss, err := kube.AppsV1().StatefulSets(pkg.Namespace).Create(ctx, ssSpec, metav1.CreateOptions{DryRun: []string{metav1.DryRunAll}})
-		// if err != nil {
-		// 	return nil, nil, err
-		// }
-
-		out = append(out, ResourceChange{
-			ChangeType:      ChangeTypeCreate,
-			CurrentResource: nil,
-			DesiredResource: ssSpec,
-		})
-	} else if err != nil {
-		if errors.IsInvalid(err) { // Kubernetes rejected our change
-			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"error": err,
-			}).Error("Podinate is unable to make this change. Sorry but this is a limitation of the Kubernetes API. Most likely you're trying to update the volumes attached directly to a Podinate Pod. If you just want to change the size, run 'kubectl -n <namespace> get pvc', then 'kubectl edit pvc <pvc-name>' and change the size there. Then, go into your pod definition and change the size there too.")
-
-			// Grab the existing spec so we can show the user what we're trying to change
-			existing, geterr := kube.AppsV1().StatefulSets(pkg.Namespace).Get(ctx, p.ID, metav1.GetOptions{})
-			if geterr != nil {
-				logrus.WithContext(ctx).WithFields(logrus.Fields{
-					"error": geterr,
-				}).Error("Error getting existing StatefulSet for comparison")
-				return nil, nil, err
-			}
-			existing.Kind = KubernetesKindStatefulSet
-			existing.APIVersion = KubernetesAPIVersionStatefulSet
-
-			fmt.Println(tui.StyleError.Render("The following change was rejected by Kubernetes:"))
-
-			err := helpers.YamlDiffObjects(ctx, existing, ssSpec)
-			if err != nil {
-				logrus.WithContext(ctx).WithFields(logrus.Fields{
-					"error": err,
-				}).Error("A further error occurred when trying to display the change that was rejected by the Kubernetes API.")
-			}
-		} else {
-			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"error": err,
-			}).Error("Unknown error checking StatefulSet specification")
-		}
-		return nil, nil, err
-	} else {
-		existing, err := kube.AppsV1().StatefulSets(pkg.Namespace).Get(ctx, p.ID, metav1.GetOptions{})
-		if err != nil {
-			return nil, nil, err
-		}
-		existing.Kind = KubernetesKindStatefulSet
-		existing.APIVersion = KubernetesAPIVersionStatefulSet
-
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"statefulset": ss,
-		}).Debug("StatefulSet exists, deep comparing")
-		// Deep compare the object to see if it needs updating
-		if reflect.DeepEqual(ss.Spec, existing.Spec) {
-			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"statefulset": ss.Spec,
-				"existing":    existing.Spec,
-			}).Debug("StatefulSet is up to date")
-			//changeType = ChangeTypeNoop
-		} else {
-			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"statefulset": ss,
-				"new-kind":    ss.GetObjectKind(),
-				"old-kind":    existing.GetObjectKind(),
-				"existing":    existing,
-			}).Debug("StatefulSet needs updating")
-
-			// Resource exists, but needs updating
-			out = append(out, ResourceChange{
-				ChangeType:      ChangeTypeUpdate,
-				CurrentResource: existing,
-				DesiredResource: ss,
-			})
-			podChangeType = ChangeTypeUpdate
-		}
-	}
-
-	// Decide the overall change type
-	changeType := ChangeTypeNoop
-	if podChangeType == ChangeTypeCreate || podChangeType == ChangeTypeUpdate {
-		changeType = podChangeType
-	} else if (*serviceChangeType == ChangeTypeCreate || *serviceChangeType == ChangeTypeUpdate) && podChangeType == ChangeTypeNoop {
-		changeType = ChangeTypeUpdate
-	}
-
-	return &changeType, out, nil
+	return out, nil
 }
 
-func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []ResourceChange, error) {
-	var out []ResourceChange
-	changeType := ChangeTypeNoop
-
+// GetServiceObjects returns the Kubernetes objects needed for the services
+func (p *Pod) GetServiceObjects(ctx context.Context) ([]runtime.Object, error) {
+	var out []runtime.Object
 	for name, service := range p.Services {
 		svcSpec := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -526,66 +399,36 @@ func (p *Pod) GetServiceResourceChanges(ctx context.Context) (*ChangeType, []Res
 			"service": svcSpec,
 		}).Trace("generated service spec")
 
-		rc, err := GetResourceChangeForResource(ctx, svcSpec)
-		if errors.IsInvalid(err) {
-			logrus.WithContext(ctx).WithFields(logrus.Fields{
-				"resource_type": ResourceTypeService,
-				"resource_id":   name,
-				"error":         err,
-			}).Debug("Got invalid error trying to get resource change for service")
-			return nil, nil, err
-		} else if err != nil {
-			return nil, nil, err
-		}
-
 		// Check if the service needs an Ingress
 		// Disable ingress for now
-		ct, ingressChanges, err := p.GetServiceIngressChanges(ctx, name)
+		ingressObjects, err := p.GetServiceIngressObjects(ctx, name)
 		if err != nil {
 			logrus.WithContext(ctx).WithFields(logrus.Fields{
 				"error": err,
 			}).Error("Error getting Ingress changes")
-			return nil, nil, err
+			return nil, err
 		}
 		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"ingress_changes": ingressChanges,
-			"changeType":      changeType,
+			"ingress_changes": ingressObjects,
 		}).Trace("Ingress changes")
-		if ct != nil {
-			changeType = *ct
-		}
 
-		out = append(out, ingressChanges...)
+		out = append(out, svcSpec)
+		out = append(out, ingressObjects...)
 
-		if rc != nil {
-			out = append(out, *rc)
-			if rc.ChangeType == ChangeTypeCreate || rc.ChangeType == ChangeTypeUpdate {
-				changeType = ChangeTypeUpdate
-			}
-
-		}
 	}
-
-	logrus.WithContext(ctx).WithFields(logrus.Fields{
-		"changeType":       changeType,
-		"resource_changes": out,
-	}).Debug("GetServiceResourceChanges")
-
-	return &changeType, out, nil
+	return out, nil
 }
 
-func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string) (*ChangeType, []ResourceChange, error) {
-	// var out []ResourceChange
-	// changeType := ChangeTypeNoop
-
+// GetServiceIngressObjects returns the Kubernetes objects needed for the Ingresses of the services
+func (pod *Pod) GetServiceIngressObjects(ctx context.Context, serviceName string) ([]runtime.Object, error) {
 	if pod.Services[serviceName].Ingress == nil {
 		// No ingress needed
-		return nil, nil, nil
+		return nil, nil
 	}
 
 	client, err := kube_client.Client()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	ingressRequest := pod.Services[serviceName].Ingress
@@ -601,7 +444,7 @@ func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string
 			logrus.WithContext(ctx).WithFields(logrus.Fields{
 				"error": err,
 			}).Error("Error getting default IngressClass")
-			return nil, nil, err
+			return nil, err
 		}
 		ingressRequest.IngressClass = ic
 	}
@@ -666,7 +509,7 @@ func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string
 				logrus.WithContext(ctx).WithFields(logrus.Fields{
 					"error": err,
 				}).Error("Could not find a default ClusterIssuer. Either specify a ClusterIssuer in the Pod > Service > Ingress definition or create a default ClusterIssuer in the cluster by adding the annotation '" + PodinateDefaultClusterIssuerAnnotation + ": true' to a ClusterIssuer. See https://cert-manager.io/docs/concepts/issuer/ and https://docs.podinate.com/kubernetes/certificates/ for more information.")
-				return nil, nil, err
+				return nil, err
 			}
 
 			ingressSpec.Annotations["cert-manager.io/cluster-issuer"] = *ci
@@ -674,28 +517,19 @@ func (pod *Pod) GetServiceIngressChanges(ctx context.Context, serviceName string
 		} else {
 			ok, err := checkClusterIssuer(ctx, client, *ingressRequest.ClusterIssuer)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 			if !ok {
 				logrus.WithContext(ctx).WithFields(logrus.Fields{
 					"cluster_issuer": *ingressRequest.ClusterIssuer,
 				}).Error("ClusterIssuer not found. To list all available ClusterIssuers, run 'kubectl get clusterissuers'. If you can't list ClusterIssuers, you may need to install Cert-Manager. See https://cert-manager.io/docs/concepts/issuer/ and https://docs.podinate.com/kubernetes/certificates/ for more information.")
-				return nil, nil, stderrors.New("ClusterIssuer not found")
+				return nil, stderrors.New("ClusterIssuer not found")
 			}
 			ingressSpec.Annotations["cert-manager.io/cluster-issuer"] = *ingressRequest.ClusterIssuer
 		}
 
 	}
-
-	rc, err := GetResourceChangeForResource(ctx, ingressSpec)
-	if err != nil {
-		return nil, nil, err
-	}
-	if rc == nil {
-		return nil, nil, nil
-	}
-
-	return &rc.ChangeType, []ResourceChange{*rc}, nil
+	return []runtime.Object{ingressSpec}, nil
 }
 
 // getDefaultIngressClass gets the default IngressClass from the cluster

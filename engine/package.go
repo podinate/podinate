@@ -10,9 +10,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/hashicorp/hcl2/hcl"
-	"github.com/hashicorp/hcl2/hcldec"
-	"github.com/hashicorp/hcl2/hclparse"
+	hcl "github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/sirupsen/logrus"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
@@ -29,7 +29,7 @@ var StandardLabels = map[string]string{
 // Resource represents a group of related Kubernetes Objects, for example a Pod, or the contents of a YAML manifest
 type Resource interface {
 	// Get the array of Kubernetes objects that is the desired state of the resource
-	GetObjects() ([]runtime.Object, error)
+	GetObjects(context.Context) ([]runtime.Object, error)
 	// Get the display name type of the resource
 	GetType() ResourceType
 	// GetName returns the name of the resource
@@ -38,12 +38,10 @@ type Resource interface {
 
 // Package represents a package to be installed, either the current state or the desired state
 type Package struct {
-	Name          string
-	Namespace     string
-	Resources     []Resource
-	Pods          []Pod
-	SharedVolumes []SharedVolume
-	Labels        map[string]string
+	Name      string
+	Namespace string
+	Resources []Resource
+	Labels    map[string]string
 }
 
 // PodinateHCLSpec is the HCL spec for a Podinate block
@@ -183,6 +181,20 @@ func ParsePodfile(path string) (*Package, error) {
 	thePackage.Namespace = namespace
 	thePackage.Name = packageName
 
+	sharedVolumeValues := val.GetAttr("shared_volumes").AsValueMap()
+	for i, sharedVolumeV := range sharedVolumeValues {
+		var sharedVolume SharedVolume
+		sharedVolume.ID = i
+		err := gocty.FromCtyValue(sharedVolumeV, &sharedVolume)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		if sharedVolume.Namespace == nil {
+			sharedVolume.Namespace = &thePackage.Namespace
+		}
+		thePackage.Resources = append(thePackage.Resources, sharedVolume)
+	}
 	// Parse all the pods in the file
 	podvalues := val.GetAttr("pods").AsValueMap()
 	//var pods []Pod
@@ -197,27 +209,13 @@ func ParsePodfile(path string) (*Package, error) {
 		if pod.Namespace == nil {
 			pod.Namespace = &thePackage.Namespace
 		}
-		thePackage.Pods = append(thePackage.Pods, pod)
+		//thePackage.Pods = append(thePackage.Pods, pod)
+		thePackage.Resources = append(thePackage.Resources, pod)
 	}
 
 	// Parse all the shared volumes in the file
 
 	// Commenting out - concentrating on pods for now
-
-	sharedVolumeValues := val.GetAttr("shared_volumes").AsValueMap()
-	for i, sharedVolumeV := range sharedVolumeValues {
-		var sharedVolume SharedVolume
-		sharedVolume.ID = i
-		err := gocty.FromCtyValue(sharedVolumeV, &sharedVolume)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		if sharedVolume.Namespace == nil {
-			sharedVolume.Namespace = &thePackage.Namespace
-		}
-		thePackage.SharedVolumes = append(thePackage.SharedVolumes, sharedVolume)
-	}
 
 	thePackage.Labels = StandardLabels
 	thePackage.Labels["app.kuberneretes.io/part-of"] = thePackage.Name

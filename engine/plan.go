@@ -54,12 +54,12 @@ type Change struct {
 	ResourceID   string
 	ChangeType   ChangeType
 	// Changes are applied in the order they appear in the slice
-	Changes *[]ResourceChange
+	Changes *[]ObjectChange
 }
 
 // ResourceChange represents a change to a Kubernetes resource
 // For example, a change to a Pod's image or a Service's port
-type ResourceChange struct {
+type ObjectChange struct {
 	ChangeType      ChangeType
 	CurrentResource runtime.Object
 	DesiredResource runtime.Object
@@ -94,14 +94,14 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 	}
 
 	for _, resource := range pkg.Resources {
-		var resourceChanges *[]ResourceChange
-		objects, err := resource.GetObjects()
+		var resourceChanges *[]ObjectChange
+		objects, err := resource.GetObjects(ctx)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, object := range objects {
-			resourceChange, err := GetResourceChangeForResource(ctx, object)
+			resourceChange, err := GetObjectChangeForObject(ctx, object)
 
 			logrus.WithContext(ctx).WithFields(logrus.Fields{
 				"object": object,
@@ -114,7 +114,7 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 			}
 
 			if resourceChanges == nil {
-				resourceChanges = new([]ResourceChange)
+				resourceChanges = new([]ObjectChange)
 			}
 
 			*resourceChanges = append(*resourceChanges, *resourceChange)
@@ -152,35 +152,35 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 
 	// EVERYTHING FROM HERE DOWN WILL BE DELETED
 
-	logrus.WithContext(ctx).WithFields(logrus.Fields{
-		"shared_volumes":      pkg.SharedVolumes,
-		"shared_volume_count": len(pkg.SharedVolumes),
-	}).Debug("Planning shared volumes")
+	// logrus.WithContext(ctx).WithFields(logrus.Fields{
+	// 	"shared_volumes":      pkg.SharedVolumes,
+	// 	"shared_volume_count": len(pkg.SharedVolumes),
+	// }).Debug("Planning shared volumes")
 
-	for _, sv := range pkg.SharedVolumes {
+	// for _, sv := range pkg.SharedVolumes {
 
-		svplan, err := sv.PlanChanges(ctx)
-		if err != nil {
-			return nil, err
-		}
+	// 	svplan, err := sv.PlanChanges(ctx)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
-		plan.Changes = append(plan.Changes, *svplan)
+	// 	plan.Changes = append(plan.Changes, *svplan)
 
-	}
+	// }
 
 	// Create a plan for each Pod
-	for _, pod := range pkg.Pods {
-		podPlan, err := planPodChanges(ctx, client, pkg, pod)
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"pod":     pod.ID,
-			"changes": podPlan,
-			"error":   err,
-		}).Trace("Planned pod changes")
-		if err != nil {
-			return nil, err
-		}
-		plan.Changes = append(plan.Changes, *podPlan)
-	}
+	// for _, pod := range pkg.Pods {
+	// 	podPlan, err := planPodChanges(ctx, client, pkg, pod)
+	// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
+	// 		"pod":     pod.ID,
+	// 		"changes": podPlan,
+	// 		"error":   err,
+	// 	}).Trace("Planned pod changes")
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	plan.Changes = append(plan.Changes, *podPlan)
+	// }
 
 	// EVERYTHING FROM HERE UP WILL BE DELETED
 
@@ -351,7 +351,7 @@ func planNamespaceChanges(ctx context.Context, client *kubernetes.Clientset, nam
 			ResourceType: ResourceTypeNamespace,
 			ResourceID:   namespace,
 			ChangeType:   ChangeTypeCreate,
-			Changes: &[]ResourceChange{
+			Changes: &[]ObjectChange{
 				{
 					ChangeType:      ChangeTypeCreate,
 					CurrentResource: nil,
@@ -376,26 +376,26 @@ func planNamespaceChanges(ctx context.Context, client *kubernetes.Clientset, nam
 	}, nil
 }
 
-func planPodChanges(ctx context.Context, client *kubernetes.Clientset, pkg *Package, pod Pod) (*Change, error) {
-	// Get the resources for the pod
-	ct, resourceChanges, err := pod.GetResources(ctx, pkg)
-	if err != nil {
-		return nil, err
-	}
+// func planPodChanges(ctx context.Context, client *kubernetes.Clientset, pkg *Package, pod Pod) (*Change, error) {
+// 	// Get the resources for the pod
+// 	ct, resourceChanges, err := pod.GetResources(ctx, pkg)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	logrus.WithContext(ctx).WithFields(logrus.Fields{
-		"pod": pod.ID,
-	}).Debug("Appending changes")
+// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
+// 		"pod": pod.ID,
+// 	}).Debug("Appending changes")
 
-	var change = &Change{
-		ResourceType: ResourceTypePod,
-		ResourceID:   pod.ID,
-		ChangeType:   *ct,
-	}
+// 	var change = &Change{
+// 		ResourceType: ResourceTypePod,
+// 		ResourceID:   pod.ID,
+// 		ChangeType:   *ct,
+// 	}
 
-	change.Changes = new([]ResourceChange)
-	*change.Changes = append(*change.Changes, resourceChanges...)
+// 	change.Changes = new([]ObjectChange)
+// 	*change.Changes = append(*change.Changes, resourceChanges...)
 
-	return change, nil
+// 	return change, nil
 
-}
+// }

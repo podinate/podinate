@@ -29,7 +29,7 @@ const (
 
 // GetResourceChangeForResource takes a runtime.Object and determines what needs to be done to make it match the desired state.
 // If nothing needs to be done, returns nil, nil
-func GetResourceChangeForResource(ctx context.Context, object runtime.Object) (*ResourceChange, error) {
+func GetObjectChangeForObject(ctx context.Context, object runtime.Object) (*ObjectChange, error) {
 
 	// Alright this method does most of the work
 
@@ -89,7 +89,7 @@ func GetResourceChangeForResource(ctx context.Context, object runtime.Object) (*
 			return nil, dryRunErr
 
 		} else if errors.IsNotFound(dryRunErr) || dryRunErr == nil {
-			rc := ResourceChange{
+			rc := ObjectChange{
 				ChangeType:      ChangeTypeCreate,
 				CurrentResource: nil,
 				DesiredResource: object,
@@ -177,7 +177,7 @@ func GetResourceChangeForResource(ctx context.Context, object runtime.Object) (*
 			"currentObject": currentObject,
 		}).Trace("Object is the same, no change needed")
 
-		rc := ResourceChange{
+		rc := ObjectChange{
 			ChangeType:      ChangeTypeNoop,
 			CurrentResource: currentObject,
 			DesiredResource: object,
@@ -192,7 +192,7 @@ func GetResourceChangeForResource(ctx context.Context, object runtime.Object) (*
 		"current_object": currentObject,
 		"dry_run_result": dryRunResult,
 	}).Trace("Object is different, needs to be updated")
-	var resourceChange = ResourceChange{
+	var resourceChange = ObjectChange{
 		ChangeType:      ChangeTypeUpdate,
 		CurrentResource: currentObject,
 		DesiredResource: dryRunResult,

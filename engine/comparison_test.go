@@ -23,7 +23,7 @@ func TestGenerateResourceChange(t *testing.T) {
 	cm.Kind = "ConfigMap"
 	cm.APIVersion = "v1"
 
-	rc, err := GetResourceChangeForResource(context.Background(), &cm)
+	rc, err := getRestHelperForObject(context.Background(), &cm)
 	if err != nil {
 		t.Errorf("Error getting resource change: %v", err)
 	}

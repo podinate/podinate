@@ -8,7 +8,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/cnrancher/autok3s v0.9.2
 	github.com/docker/docker v24.0.9+incompatible
-	github.com/hashicorp/hcl2 v0.0.0-20191002203319-fb75b3253c80
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mritd/bubbles v0.0.0-20210825105013-cb7a572fb831
 	github.com/sirupsen/logrus v1.9.3
@@ -24,6 +23,7 @@ require (
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/goccy/go-yaml v1.11.3 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
+	github.com/hashicorp/hcl/v2 v2.21.0 // indirect
 	github.com/onsi/ginkgo/v2 v2.19.0 // indirect
 	github.com/onsi/gomega v1.33.1 // indirect
 	github.com/opencontainers/runc v1.1.12 // indirect

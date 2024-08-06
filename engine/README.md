@@ -1,5 +1,5 @@
 # Engine
-The engine is the beating heart of Podinate. It can take a .pf (hopefully soon a .yaml) file and make the Kubernetes state match that state. 
+The engine is the beating heart of Podinate. It can take a .pf or Kubernetes manifest file and make the Kubernetes state match that state. 
 
 ## Podfile
 A Podfile is an HCL file with a bunch of resources declared in it. Those resources are: 

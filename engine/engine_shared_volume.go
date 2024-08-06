@@ -3,14 +3,14 @@ package engine
 import (
 	"context"
 
-	"github.com/hashicorp/hcl2/hcldec"
+	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/podinate/podinate/kube_client"
-	"github.com/sirupsen/logrus"
 	"github.com/zclconf/go-cty/cty"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
@@ -52,46 +52,21 @@ var SharedVolumeHCLSpec = &hcldec.BlockMapSpec{
 	},
 }
 
-// PlanSharedVolumeChanges takes a SharedVolume from a plan and determines what needs to be done to make it match the desired state.
-// If nothing needs to be done, returns nil, nil
-func (sv *SharedVolume) PlanChanges(ctx context.Context) (*Change, error) {
-	pvcSpec, err := sv.ToPVC(ctx)
+// Implement the Resource interface for SharedVolume
+func (sv SharedVolume) GetName() string {
+	return sv.ID
+}
+func (sv SharedVolume) GetType() ResourceType {
+	return ResourceTypeSharedVolume
+}
+
+// GetObjects returns the Kubernetes objects needed to make the SharedVolume
+func (sv SharedVolume) GetObjects(ctx context.Context) ([]runtime.Object, error) {
+	out, err := sv.ToPVC(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	rc, err := GetResourceChangeForResource(ctx, pvcSpec)
-	if errors.IsInvalid(err) {
-		logrus.WithContext(ctx).WithFields(logrus.Fields{
-			"resource_type": ResourceTypeSharedVolume,
-			"resource_id":   sv.ID,
-			"error":         err,
-		}).Trace("Cannot update a SharedVolume after creation. To resize the volume, edit the PersistentVolume that backs it.")
-		return nil, nil
-	} else if err != nil {
-		return nil, err
-	}
-
-	logrus.WithContext(ctx).WithFields(logrus.Fields{
-		"resource_type": ResourceTypeSharedVolume,
-		"resource_id":   sv.ID,
-	}).Debug("Planned change for SharedVolume")
-
-	if rc == nil {
-		return &Change{
-			ChangeType:   ChangeTypeNoop,
-			ResourceType: ResourceTypeSharedVolume,
-			ResourceID:   sv.ID,
-		}, nil
-	}
-
-	return &Change{
-		ChangeType:   rc.ChangeType,
-		ResourceType: ResourceTypeSharedVolume,
-		ResourceID:   sv.ID,
-		Changes:      &[]ResourceChange{*rc},
-	}, nil
-
+	return []runtime.Object{out}, nil
 }
 
 // ToPVC converts a SharedVolume to a PVC
