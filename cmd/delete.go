@@ -6,13 +6,13 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(applyCmd)
+	rootCmd.AddCommand(deleteCmd)
 }
 
-var applyCmd = &cobra.Command{
-	Use:          "apply",
-	Short:        "Apply a podinate definition",
-	Long:         `Apply a PodFile or Kubernetes YAML file. For example "podinate apply my-app.pf" or "podinate apply my-pod.yaml".`,
+var deleteCmd = &cobra.Command{
+	Use:          "delete",
+	Short:        "Delete a podinate package",
+	Long:         `Delete all the Kubernetes objects from a PodFile or Kubernetes YAML file. For example "podinate delete my-app.pf" or "podinate delete my-pod.yaml".`,
 	Args:         cobra.MinimumNArgs(1),
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -28,7 +28,7 @@ var applyCmd = &cobra.Command{
 			return err
 		}
 
-		err = pkg.Apply(cmd.Context(), false)
+		err = pkg.Apply(cmd.Context(), true)
 		if err != nil {
 			return err
 		}

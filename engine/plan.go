@@ -150,43 +150,10 @@ func (pkg *Package) Plan(ctx context.Context) (*Plan, error) {
 		plan.Changes = append(plan.Changes, change)
 	}
 
-	// EVERYTHING FROM HERE DOWN WILL BE DELETED
-
-	// logrus.WithContext(ctx).WithFields(logrus.Fields{
-	// 	"shared_volumes":      pkg.SharedVolumes,
-	// 	"shared_volume_count": len(pkg.SharedVolumes),
-	// }).Debug("Planning shared volumes")
-
-	// for _, sv := range pkg.SharedVolumes {
-
-	// 	svplan, err := sv.PlanChanges(ctx)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// 	plan.Changes = append(plan.Changes, *svplan)
-
-	// }
-
-	// Create a plan for each Pod
-	// for _, pod := range pkg.Pods {
-	// 	podPlan, err := planPodChanges(ctx, client, pkg, pod)
-	// 	logrus.WithContext(ctx).WithFields(logrus.Fields{
-	// 		"pod":     pod.ID,
-	// 		"changes": podPlan,
-	// 		"error":   err,
-	// 	}).Trace("Planned pod changes")
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	plan.Changes = append(plan.Changes, *podPlan)
-	// }
-
-	// EVERYTHING FROM HERE UP WILL BE DELETED
-
 	// We got this far, the plan must be valid
 	plan.Valid = true
 
+	// If any changes are not noops, the plan has not been applied
 	for _, change := range plan.Changes {
 		if change.ChangeType != ChangeTypeNoop {
 			plan.Applied = false
@@ -206,28 +173,36 @@ func (plan *Plan) Display(ctx context.Context) error {
 	for _, change := range plan.Changes {
 		switch change.ChangeType {
 		case ChangeTypeCreate:
-			fmt.Printf("> %s "+tui.StyleItalic.Render("%s")+" will be "+tui.StyleSuccess.Render("created")+":\n", change.ResourceType, change.ResourceID)
+			fmt.Printf("%s "+tui.StyleItalic.Render("%s")+" will be "+tui.StyleSuccess.Render("created")+":\n", change.ResourceType, change.ResourceID)
 			created++
 		case ChangeTypeUpdate:
-			fmt.Printf("> %s %s will be "+tui.StyleUpdated.Render("updated")+"\n", change.ResourceType, change.ResourceID)
+			fmt.Printf("%s "+tui.StyleItalic.Render("%s")+" will be "+tui.StyleSuccess.Render("updated")+":\n", change.ResourceType, change.ResourceID)
 
 			updated++
 		case ChangeTypeDelete:
-			fmt.Printf("> %s %s will be deleted\n", change.ResourceType, change.ResourceID)
+			fmt.Printf("%s "+tui.StyleItalic.Render("%s")+" will be "+tui.StyleUpdated.Render("deleted")+":\n", change.ResourceType, change.ResourceID)
 			deleted++
 		case ChangeTypeNoop:
-			fmt.Printf("> %s %s is up to date\n", change.ResourceType, change.ResourceID)
+			fmt.Printf("%s %s is up to date\n", change.ResourceType, change.ResourceID)
 			noop++
 		}
 		if change.Changes != nil {
-			for _, c := range *change.Changes {
+			for i, c := range *change.Changes {
 
-				// if i > 0 {
-				// 	fmt.Println(tui.StyleSuccess.Render("---"))
-				// }
+				if i > 0 {
+					fmt.Println(tui.StyleSuccess.Render("---"))
+				}
 
 				if c.ChangeType == ChangeTypeUpdate {
-					err := helpers.YamlDiffObjects(ctx, c.CurrentResource, c.DesiredResource)
+					u, err := helpers.ObjectToUnstructured(c.DesiredResource)
+					if err != nil {
+						logrus.WithContext(ctx).WithFields(logrus.Fields{
+							"error": err,
+						}).Error("Error converting object to unstructured")
+						return err
+					}
+					fmt.Printf("> update %s %s\n", c.DesiredResource.GetObjectKind().GroupVersionKind().Kind, u.GetName())
+					err = helpers.YamlDiffObjects(ctx, c.CurrentResource, c.DesiredResource)
 					if err != nil {
 						logrus.WithFields(logrus.Fields{
 							"error": err,
@@ -239,13 +214,31 @@ func (plan *Plan) Display(ctx context.Context) error {
 						"kind": c.DesiredResource.GetObjectKind().GroupVersionKind().Kind,
 					}).Debug("creating object")
 
-					err := helpers.PrintObject(c.DesiredResource)
+					u, err := helpers.ObjectToUnstructured(c.DesiredResource)
 					if err != nil {
-						logrus.WithFields(logrus.Fields{
+						logrus.WithContext(ctx).WithFields(logrus.Fields{
 							"error": err,
-						}).Error("Error printing object")
+						}).Error("Error converting object to unstructured")
 						return err
 					}
+					fmt.Printf("> create %s %s\n", c.DesiredResource.GetObjectKind().GroupVersionKind().Kind, u.GetName())
+					//err := helpers.PrintObject(c.DesiredResource)
+					// if err != nil {
+					// 	logrus.WithFields(logrus.Fields{
+					// 		"error": err,
+					// 	}).Error("Error printing object")
+					// 	return err
+					// }
+				} else if c.ChangeType == ChangeTypeDelete {
+					u, err := helpers.ObjectToUnstructured(c.CurrentResource)
+					if err != nil {
+						logrus.WithContext(ctx).WithFields(logrus.Fields{
+							"error": err,
+						}).Error("Error converting object to unstructured")
+						return err
+					}
+					fmt.Printf("> "+tui.StyleUpdated.Render("delete")+" %s %s\n", u.GetKind(), u.GetName())
+
 				}
 			}
 		}
@@ -295,10 +288,12 @@ func (plan *Plan) Apply(ctx context.Context) error {
 					if err != nil {
 						return err
 					}
+					u, _ := helpers.ObjectToUnstructured(resourceChange.DesiredResource)
 					logrus.WithContext(ctx).WithFields(logrus.Fields{
-						"objectType": change.ResourceType,
-						"objectID":   change.ResourceID,
-						"object":     resourceChange.DesiredResource,
+						"resourceType": change.ResourceType,
+						"resourceID":   change.ResourceID,
+						"objectKind":   resourceChange.DesiredResource.GetObjectKind().GroupVersionKind().Kind,
+						"objectName":   u.GetName(),
 					}).Info("Created object")
 
 				case ChangeTypeUpdate:
@@ -313,7 +308,17 @@ func (plan *Plan) Apply(ctx context.Context) error {
 					}).Info("Updated object")
 
 				case ChangeTypeDelete:
-					fmt.Print("Delete not implemented\n")
+					_, err := deleteObject(client, *restConfig, resourceChange.CurrentResource)
+					if err != nil {
+						return err
+					}
+					u, _ := helpers.ObjectToUnstructured(resourceChange.CurrentResource)
+					logrus.WithContext(ctx).WithFields(logrus.Fields{
+						"resourceType": change.ResourceType,
+						"resourceID":   change.ResourceID,
+						"objectKind":   resourceChange.CurrentResource.GetObjectKind().GroupVersionKind().Kind,
+						"objectName":   u.GetName(),
+					}).Info("Deleted object")
 				case ChangeTypeNoop:
 					// Do nothing
 					continue

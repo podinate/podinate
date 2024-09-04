@@ -75,14 +75,8 @@ cd podinate-quick-start
 
 Now copy the following into `hello.pf` to create a super advanced hello world application.
 ```hcl title="hello.pf"
-podinate {
-    package = "hello-world"
-    namespace = "default"
-}
-
 pod "hello-world" {
     image = "ubuntu"
-    tag = "latest" 
     command = [ "/bin/bash", "-c", "--" ]
     arguments = [ "while true; do echo 'Hello from Podinate!'; sleep 2; done;" ]
 }
@@ -136,7 +130,7 @@ Are you sure you want to apply these changes? (Y/n)
 ```
 Podinate is showing that it will create a Kubernetes *StatefulSet*, which will in turn run the Pod we want. Podinate will create various Kubernetes *Objects* for you when you apply a PodFile, and will confirm exactly what changes will be made whenever you run `apply`. This lets you see at a glance exactly what Podinate is changing. 
 
-Apply the `hello.pf` PodFile by pressing Y and enter, or just pressing enter. 
+Apply the `hello.pf` PodFile by pressing Y and enter. 
 
 ### List Pods
 To list pods on Kubernetes, use the `kubectl` tool. It should have been installed with k3d by Brew. 
@@ -171,21 +165,15 @@ kubectl exec hello-world-0 -- echo "Hello world"
 ### Change the Image to Fedora
 Let's say we meant to run our super advanced hello world system on a Fedora Pod. Update the `hello.pf` PodFile as follows: 
 ```hcl title="hello.pf"
-podinate {
-    package = "hello-world"
-    namespace = "default"
-}
-
 pod "hello-world" {
     image = "fedora"
-    tag = "latest" 
     command = [ "/bin/bash", "-c", "--" ]
     arguments = [ "while true; do echo 'Hello from Fedora!'; sleep 2; done;" ]
 }
 ```
 Now run the following command to update the Pod: 
 ```bash
-podinate apply ubuntu.pf
+podinate apply hello.pf
 ```
 Podinate will show you exactly what needs to be updated:
 ```
@@ -258,7 +246,7 @@ pod hello-world will be  updated
 Summary: 0 created, 1 updated, 0 deleted, 1 unchanged
 Are you sure you want to apply these changes? (Y/n)
 ```
-With a quick glance, you can check that Podinate will only change what you changed in the PodFile. Apply the configuration by pressing Y and enter, or just enter.
+With a quick glance, you can check that Podinate will only change what you changed in the PodFile. Apply the configuration by pressing Y and enter.
 
 Now watch the changes be applied: 
 ```bash

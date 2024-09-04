@@ -13,6 +13,8 @@ import (
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclparse"
+	"github.com/podinate/podinate/kube_client"
+	"github.com/podinate/podinate/tui"
 	"github.com/sirupsen/logrus"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
@@ -135,10 +137,6 @@ func ParsePodfile(path string) (*Package, error) {
 	//var val cty.Value
 	var diags hcl.Diagnostics
 
-	val := cty.ObjectVal(make(map[string]cty.Value))
-
-	//fmt.Printf("Val start: %#v\n", val)
-
 	//path := paths[0]
 
 	//for _, path := range paths {
@@ -175,11 +173,34 @@ func ParsePodfile(path string) (*Package, error) {
 
 	//fmt.Printf("WHAT IS THE FUCKING TYPE %#v\n", val.Type())
 	//fmt.Printf("Podinate is %#v\n", val.GetAttr("podinate").AsValueMap())
+	// key, err := gocty.ToCtyValue("podinate", cty.String)
+	// if err != nil {
+	// 	logrus.Error(err)
+	// }
+	// valmap := val.AsValueMap()
+	// _, ok := valmap["podinate"]
 
-	namespace := val.GetAttr("podinate").GetAttr("namespace").AsString()
-	packageName := val.GetAttr("podinate").GetAttr("package").AsString()
-	thePackage.Namespace = namespace
-	thePackage.Name = packageName
+	pBlock := val.GetAttr("podinate")
+	ok := !val.GetAttr("podinate").IsNull()
+	if ok {
+		logrus.Trace("Podinate block found")
+		namespace := pBlock.GetAttr("namespace").AsString()
+		packageName := pBlock.GetAttr("package").AsString()
+
+		thePackage.Namespace = namespace
+		thePackage.Name = packageName
+	} else {
+		thePackage.Name = path
+		ns, err := kube_client.GetDefaultNamespace()
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"package": thePackage,
+				"error":   err,
+			})
+		}
+		thePackage.Namespace = ns
+		logrus.Trace("No Podinate block found")
+	}
 
 	sharedVolumeValues := val.GetAttr("shared_volumes").AsValueMap()
 	for i, sharedVolumeV := range sharedVolumeValues {
@@ -224,9 +245,15 @@ func ParsePodfile(path string) (*Package, error) {
 }
 
 // Apply takes a Package and makes it the current state of Podinate
-func (pkg *Package) Apply(ctx context.Context) error {
+func (pkg *Package) Apply(ctx context.Context, delete bool) error {
 
-	plan, err := pkg.Plan(ctx)
+	var plan *Plan
+	var err error
+	if delete {
+		plan, err = pkg.PlanDelete(ctx)
+	} else {
+		plan, err = pkg.Plan(ctx)
+	}
 	if err != nil {
 		logrus.WithContext(ctx).WithFields(logrus.Fields{
 			"error":     err,
@@ -252,10 +279,10 @@ func (pkg *Package) Apply(ctx context.Context) error {
 
 	if !plan.Applied {
 
-		fmt.Print("Are you sure you want to apply these changes? (Y/n)")
+		fmt.Print("Are you sure you want to apply these changes? (y/N)")
 		var response string
 		fmt.Scanln(&response)
-		if strings.ToLower(response) == "y" || response == "" {
+		if strings.ToLower(response) == "y" || strings.ToLower(response) == "yes" {
 			// Apply the plan
 			err = plan.Apply(ctx)
 			if err != nil {
@@ -264,6 +291,10 @@ func (pkg *Package) Apply(ctx context.Context) error {
 				}).Fatal("Failed to apply changes")
 				return err
 			}
+		} else {
+			fmt.Println()
+			fmt.Println(tui.StyleSuccess.Render("Changes not applied"))
+			fmt.Println()
 		}
 	}
 
@@ -350,71 +381,6 @@ func (pkg *Package) Apply(ctx context.Context) error {
 	// }
 
 	//fmt.Println("Not implemented!")
-	return nil
-
-}
-
-// Delete takes a Package and deletes it from Podinate
-func (p *Package) Delete() error {
-	// fmt.Printf("Pods: %+v\n", pods)
-
-	fmt.Println("Deleting pods...")
-
-	// for _, pod := range p.Pods {
-	// 	fmt.Printf("Deleting pod: %s\n", pod.Name)
-	// 	theProject, err := sdk.GetProjectByID(pod.ProjectID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	thePod, err := pod.ToSDK()
-	// 	zap.S().Debugw("Got pod to SDK", "pod", thePod, "err", err)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// Check if pod exists, update if so
-	// 	existing, sdkerr := theProject.GetPodByID(thePod.ID)
-	// 	zap.S().Debugw("Got pod", "pod", thePod, "existing", existing, "sdkerr", sdkerr)
-	// 	if sdkerr == nil {
-	// 		// Pod exists - try update it
-	// 		err := existing.Delete()
-	// 		zap.S().Debugw("Deleted pod", "pod", thePod, "err", err)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		continue
-	// 	}
-
-	// }
-
-	// Delete shared volumes
-	fmt.Println("Deleting shared volumes...")
-	// for _, sharedVolume := range p.SharedVolumes {
-	// 	fmt.Printf("Deleting shared volume: %s\n", sharedVolume.ID)
-	// 	theProject, err := sdk.GetProjectByID(sharedVolume.ProjectID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	theSharedVolume, err := sharedVolume.ToSDK()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// Check if shared volume exists, and delete
-	// 	existing, sdkerr := theProject.GetSharedVolumeByID(theSharedVolume.ID)
-	// 	zap.S().Debugw("Got shared volume", "shared_volume", theSharedVolume, "existing", existing, "sdkerr", sdkerr)
-	// 	if sdkerr == nil {
-	// 		// Shared volume exists - try update it
-	// 		err := existing.Delete()
-	// 		zap.S().Debugw("Deleted shared volume", "shared_volume", theSharedVolume, "err", err)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		continue
-	// 	}
-	// }
-
-	fmt.Println("Not implemented!")
 	return nil
 
 }

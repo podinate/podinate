@@ -6,7 +6,6 @@ package engine
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"slices"
 
@@ -141,9 +140,9 @@ func GetObjectChangeForObject(ctx context.Context, object runtime.Object) (*Obje
 	}
 
 	// At this point, the resource exists and we need to determine if it needs to be updated
-	fmt.Println("Doing dry run")
+	//fmt.Println("Doing dry run")
 	dryRunResult, dryRunErr := helper.DryRun(true).Replace(unstructuredObject.GetNamespace(), unstructuredObject.GetName(), true, object)
-	fmt.Println("Dry run done")
+	//fmt.Println("Dry run done")
 	if errors.IsInvalid(dryRunErr) || errors.IsBadRequest(dryRunErr) { // The object is invalid, user will need to change something
 		logrus.WithFields(logrus.Fields{
 			"desired_object": object,
@@ -199,6 +198,72 @@ func GetObjectChangeForObject(ctx context.Context, object runtime.Object) (*Obje
 	}
 
 	return &resourceChange, nil
+}
+
+// GetDeleteChangeForObject takes a runtime.Object and determines what needs to be done to delete it
+func GetDeleteChangeForObject(ctx context.Context, object runtime.Object) (*ObjectChange, error) {
+	// Get a REST helper for the object. This allows us to work with the object whatever it is
+	helper, err := getRestHelperForObject(object)
+	if err != nil {
+		return nil, err
+	}
+
+	// Make the Object into an unstructured object
+	// This allows us to tell some information about the object
+	unstructuredObject, err := resourceToUnstructured(object)
+	if err != nil {
+		logrus.WithContext(ctx).WithFields(logrus.Fields{
+			"error":  err,
+			"object": object,
+		}).Error("Error converting object to unstructured")
+		return nil, err
+	}
+
+	// Get the current state of the object
+	currentObject, err := helper.Get(unstructuredObject.GetNamespace(), unstructuredObject.GetName())
+	logrus.WithContext(ctx).WithFields(logrus.Fields{
+		"object":        object,
+		"currentObject": currentObject,
+		"error":         err,
+		"is_not_found":  errors.IsNotFound(err),
+	}).Trace("Getting the current state of the object")
+	if errors.IsNotFound(err) { // Resource does not exist and needs to be created
+		logrus.WithFields(logrus.Fields{
+			"object":        object,
+			"error":         err,
+			"currentObject": currentObject,
+		}).Trace("Object not found, no change needed")
+
+		rc := ObjectChange{
+			ChangeType:      ChangeTypeNoop,
+			CurrentResource: nil,
+			DesiredResource: object,
+		}
+
+		return &rc, nil
+
+	} else if err != nil { // Handle any other error
+		logrus.WithFields(logrus.Fields{
+			"object":        object,
+			"error":         err,
+			"currentObject": currentObject,
+		}).Error("Error getting the resource ")
+		return nil, err
+	}
+
+	// If we reach here, the object exists and we need to delete it
+	logrus.WithFields(logrus.Fields{
+		"object":        object,
+		"currentObject": currentObject,
+	}).Trace("Object exists, needs to be deleted")
+
+	rc := ObjectChange{
+		ChangeType:      ChangeTypeDelete,
+		CurrentResource: currentObject,
+		DesiredResource: nil,
+	}
+
+	return &rc, nil
 }
 
 // transferMetadata transfers labels, annotations etc from the current object to the desired object

@@ -5,7 +5,6 @@ package engine
 import (
 	"errors"
 
-	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -48,11 +47,11 @@ func createObject(kubeClientset kubernetes.Interface, restConfig rest.Config, ob
 	// Use the REST helper to create the object in the "default" namespace.
 	restHelper := resource.NewHelper(restClient, mapping)
 
-	logrus.WithFields(logrus.Fields{
-		"namespace": namespace,
-		"update":    update,
-		"obj":       obj,
-	}).Info("Creating object")
+	// logrus.WithFields(logrus.Fields{
+	// 	"namespace": namespace,
+	// 	"update":    update,
+	// 	"obj":       obj,
+	// }).Info("Creating object")
 
 	if update {
 		// Get the name out of the runtime.Object
@@ -65,6 +64,50 @@ func createObject(kubeClientset kubernetes.Interface, restConfig rest.Config, ob
 	}
 
 	return restHelper.Create(namespace, update, obj)
+}
+
+// deleteObject deletes an object from the cluster
+func deleteObject(kubeClientset kubernetes.Interface, restConfig rest.Config, obj runtime.Object) (runtime.Object, error) {
+	// Create a REST mapper that tracks information about the available resources in the cluster.
+	groupResources, err := restmapper.GetAPIGroupResources(kubeClientset.Discovery())
+	if err != nil {
+		return nil, err
+	}
+	rm := restmapper.NewDiscoveryRESTMapper(groupResources)
+
+	// Get some metadata needed to make the REST request.
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	gk := schema.GroupKind{Group: gvk.Group, Kind: gvk.Kind}
+	mapping, err := rm.RESTMapping(gk, gvk.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	namespace, err := meta.NewAccessor().Namespace(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a client specifically for creating the object.
+	restClient, err := newRestClient(restConfig, mapping.GroupVersionKind.GroupVersion())
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the REST helper to create the object in the "default" namespace.
+	restHelper := resource.NewHelper(restClient, mapping)
+
+	// logrus.WithFields(logrus.Fields{
+	// 	"namespace": namespace,
+	// 	"obj":       obj,
+	// }).Info("Deleting object")
+
+	u, err := resourceToUnstructured(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return restHelper.Delete(namespace, u.GetName())
 }
 
 func newRestClient(restConfig rest.Config, gv schema.GroupVersion) (rest.Interface, error) {

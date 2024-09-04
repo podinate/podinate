@@ -35,19 +35,17 @@ const (
 type Pod struct {
 	ID string
 	// Name        string   `cty:"name"`
-	Namespace   *string  `cty:"namespace"`
-	Image       string   `cty:"image"`
-	Tag         *string  `cty:"tag"`
-	Command     []string `cty:"command"`
-	Arguments   []string `cty:"arguments"`
-	Environment map[string]struct {
-		Value  string `cty:"value"`
-		Secret *bool  `cty:"secret"`
-	} `cty:"environment"`
-	Services map[string]struct {
+	Namespace   *string           `cty:"namespace"`
+	Image       string            `cty:"image"`
+	Tag         *string           `cty:"tag"`
+	Command     []string          `cty:"command"`
+	Arguments   []string          `cty:"arguments"`
+	Environment map[string]string `cty:"environment"`
+	Services    map[string]struct {
 		Port       int     `cty:"port"`
 		TargetPort *int    `cty:"target_port"`
 		Protocol   *string `cty:"protocol"`
+		Type       *string `cty:"type"`
 		Ingress    *struct {
 			HostName      string  `cty:"hostname"`
 			Path          *string `cty:"path"`
@@ -98,21 +96,10 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 			Type:     cty.String,
 			Required: false,
 		},
-		"environment": &hcldec.BlockMapSpec{
-			TypeName:   "environment",
-			LabelNames: []string{"key"},
-			Nested: &hcldec.ObjectSpec{
-				"value": &hcldec.AttrSpec{
-					Name:     "value",
-					Type:     cty.String,
-					Required: true,
-				},
-				"secret": &hcldec.AttrSpec{
-					Name:     "secret",
-					Type:     cty.Bool,
-					Required: false,
-				},
-			},
+		"environment": &hcldec.BlockAttrsSpec{
+			TypeName:    "environment",
+			ElementType: cty.String,
+			Required:    false,
 		},
 		"service": &hcldec.BlockMapSpec{
 			TypeName:   "service",
@@ -136,6 +123,13 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 				// Can be set to UDP
 				"protocol": &hcldec.AttrSpec{
 					Name:     "protocol",
+					Type:     cty.String,
+					Required: false,
+				},
+				// The Service type. Defaults to ClusterIP
+				// Can be set to NodePort, LoadBalancer, or ExternalName
+				"type": &hcldec.AttrSpec{
+					Name:     "type",
 					Type:     cty.String,
 					Required: false,
 				},
@@ -272,7 +266,7 @@ func (p Pod) GetObjects(ctx context.Context) ([]runtime.Object, error) {
 	for k, v := range p.Environment {
 		ssSpec.Spec.Template.Spec.Containers[0].Env = append(ssSpec.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 			Name:  k,
-			Value: v.Value,
+			Value: v,
 		})
 	}
 
@@ -359,6 +353,13 @@ func (p Pod) GetObjects(ctx context.Context) ([]runtime.Object, error) {
 
 	out = append(out, ssSpec)
 
+	// Add services
+	svcObjects, err := p.GetServiceObjects(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, svcObjects...)
+
 	return out, nil
 }
 
@@ -386,6 +387,13 @@ func (p *Pod) GetServiceObjects(ctx context.Context) ([]runtime.Object, error) {
 
 		svcSpec.Kind = KubernetesKindService
 		svcSpec.APIVersion = KubernetesAPIVersionService
+
+		// Set the service type
+		if service.Type != nil {
+			svcSpec.Spec.Type = corev1.ServiceType(*service.Type)
+		} else {
+			svcSpec.Spec.Type = corev1.ServiceTypeClusterIP
+		}
 
 		if service.Protocol != nil && strings.ToLower(*service.Protocol) == "udp" {
 			svcSpec.Spec.Ports[0].Protocol = corev1.ProtocolUDP

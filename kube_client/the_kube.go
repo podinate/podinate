@@ -13,6 +13,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+const (
+	// DefaultNamespace is the default namespace to use
+	DefaultNamespace = "default"
+)
+
 var client *kubernetes.Clientset
 var RestConfig *rest.Config
 
@@ -63,9 +68,8 @@ func Client() (*kubernetes.Clientset, error) {
 	return client, nil
 }
 
-func GetRestConfig() (*rest.Config, error) {
-	// Connect to the Kubernetes cluster
-	// and return a client
+func GetClientConfig() (clientcmd.ClientConfig, error) {
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -96,14 +100,51 @@ func GetRestConfig() (*rest.Config, error) {
 
 	//kubeconfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(configLoadingRules, configOverrides)
+	return config, nil
+}
+
+func GetRestConfig() (*rest.Config, error) {
+	// Connect to the Kubernetes cluster
+	// and return a client
+
+	//kubeconfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	config, err := GetClientConfig()
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error(err)
+		return nil, err
+	}
+
 	kubeconfig, err := config.ClientConfig()
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
-			"error":            err,
-			"kube config path": kubeConfigPath,
+			"error": err,
 		}).Error(err)
 		return nil, err
 	}
 
 	return kubeconfig, nil
+}
+
+func GetDefaultNamespace() (string, error) {
+	// Get the default namespace
+	// from the kubeconfig
+	kubeconfig, err := GetClientConfig()
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Error getting kubeconfig")
+		return "", err
+	}
+
+	out, _, err := kubeconfig.Namespace()
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Error getting namespace")
+		return DefaultNamespace, err
+	}
+
+	return out, nil
 }
