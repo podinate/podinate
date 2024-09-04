@@ -1,5 +1,5 @@
 # podinate
-Podinate is a simple package manager and PaaS for Kubernetes. It helps manage resources using a simple HCL-based syntax.
+Podinate is a management tool for your Kubernetes cluster, inspired by IaC tools. It works with a simple HCL-based language or using your existing YAML. It will tell you exactly what it will do before it does it. Perfect if you're just learning the Kube!
 
 ## Features
 - **Simple Deployment** - if you're just trying to deploy a basic app you've written, Podinate can get it running in just a few minutes.
@@ -14,9 +14,7 @@ To get started with Podinate, follow these simple steps:
 3. **Deploy Anywhere** Podinate can be used to deploy your configuration anywhere Kubernetes can run (hint: that's anywhere). You can start with developing on your laptop, deploy to a simple cloud virtual machine, and scale to an entire EKS setup. 
 
 ## Installing
-Podinate is available on Homebrew for Mac or Linux users.
-
-
+Check out the [Quick Start](https://docs.podinate.com/getting-started/quick-start/) for installation instructions.
 
 ## Get Involved 
 Podinate is currently in early alpha stage. If you're keen to give something new a try, we'd love to have you. 
