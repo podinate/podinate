@@ -119,7 +119,7 @@ Once we have a Dataset to use for Podinate, the next step is to set up the ZFS v
         fstype: "zfs"
         poolname: "vault/podinate"
         shared: "yes"
-        thinprovision: "true" 
+        thinprovision: "yes" 
     provisioner: zfs.csi.openebs.io
     volumeBindingMode: WaitForFirstConsumer
     ```
