@@ -1,0 +1,40 @@
+# An example test
+pod "jellyfin" {
+    # container "jellyfin"{
+        image = "jellyfin/jellyfin:latest"
+
+        environment {
+            PORT = "8096"
+            TZ = "Pacific/Auckland"
+        }
+
+        # Add a service to the pod and make it available on a hostname
+        service "jellyfin" {
+            port = 80
+            target_port = 8096
+            ingress {
+                hostname = "media.example.com"
+                # Enable certbot (https://docs.podinate.com/kubernetes/certificates/)
+                #tls = true
+            }
+        }
+
+        volume "config" {
+            size = "5Gi"
+            mount_path = "/config"
+        }
+
+        volume "cache" {
+            size = "5Gi"
+            mount_path = "/cache"
+        }
+
+        shared_volume "media" {
+            mount_path = "/media"
+        }
+    #}
+}
+
+shared_volume "media" {
+	size = "1000Gi"
+}

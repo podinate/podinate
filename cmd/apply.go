@@ -28,10 +28,7 @@ var applyCmd = &cobra.Command{
 			return err
 		}
 
-		err = pkg.Apply(cmd.Context(), false)
-		if err != nil {
-			return err
-		}
-		return nil
+		return pkg.Apply(cmd.Context(), false)
+
 	},
 }

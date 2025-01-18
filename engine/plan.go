@@ -187,11 +187,12 @@ func (plan *Plan) Display(ctx context.Context) error {
 			noop++
 		}
 		if change.Changes != nil {
-			for i, c := range *change.Changes {
 
-				if i > 0 {
-					fmt.Println(tui.StyleSuccess.Render("---"))
-				}
+			for _, c := range *change.Changes {
+
+				// if i > 0 {
+				// 	fmt.Println(tui.StyleSuccess.Render("---"))
+				// }
 
 				if c.ChangeType == ChangeTypeUpdate {
 					u, err := helpers.ObjectToUnstructured(c.DesiredResource)

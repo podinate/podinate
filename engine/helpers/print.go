@@ -135,6 +135,7 @@ func PrintObject(object runtime.Object) error {
 		return err
 	}
 	err = y.PrintObj(object, os.Stdout)
+	fmt.Println("Print", err)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error": err,
@@ -142,4 +143,21 @@ func PrintObject(object runtime.Object) error {
 		return err
 	}
 	return nil
+}
+
+func ObjectToYAML(object runtime.Object) (string, error) {
+	y := printers.YAMLPrinter{}
+	err := stripManagedFields(object)
+	if err != nil {
+		return "", err
+	}
+	var b bytes.Buffer
+	err = y.PrintObj(object, &b)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Error printing object")
+		return "", err
+	}
+	return b.String(), nil
 }

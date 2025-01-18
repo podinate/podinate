@@ -13,9 +13,11 @@ import (
 	hcl "github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/hcl/v2/hclparse"
+	"github.com/podinate/podinate/engine/helpers"
 	"github.com/podinate/podinate/kube_client"
 	"github.com/podinate/podinate/tui"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/gocty"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -298,96 +300,54 @@ func (pkg *Package) Apply(ctx context.Context, delete bool) error {
 		}
 	}
 
-	// out, err := json.MarshalIndent(plan, "", "  ")
-	// if err != nil {
-	// 	return err
-	// }
-	// fmt.Println(string(out))
-
-	// Deploy shared volumes
-	// zap.S().Infow("Deploying shared volumes", "shared_volumes", p.SharedVolumes)
-	// for _, sharedVolume := range p.SharedVolumes {
-	// 	zap.S().Infow("Deploying shared volume", "shared_volume", sharedVolume)
-	// 	theProject, err := sdk.GetProjectByID(sharedVolume.ProjectID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	theSharedVolume, err := sharedVolume.ToSDK()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	zap.S().Infow("Getting shared volume", "shared_volume", theSharedVolume)
-	// 	existing, sdkerr := theProject.GetSharedVolumeByID(theSharedVolume.ID)
-	// 	zap.S().Infow("Got shared volume", "shared_volume", theSharedVolume, "existing", existing, "sdkerr", sdkerr)
-	// 	if sdkerr == nil {
-	// 		// Shared volume exists - try update it
-	// 		zap.S().Infow("Shared volume exists - updating", "shared_volume", theSharedVolume)
-	// 		err := existing.Update(theSharedVolume)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		continue
-	// 	} else if sdkerr.Code == 404 {
-	// 		_, err = theProject.CreateSharedVolume(*theSharedVolume)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		fmt.Println("Created shared volume: ", theSharedVolume.ID)
-	// 	} else {
-	// 		return sdkerr
-	// 	}
-	// }
-
-	// for _, pod := range p.Pods {
-	// 	//fmt.Printf("Deploying pod: %s\n", pod.Name)
-	// 	theProject, err := sdk.GetProjectByID(pod.ProjectID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	thePod, err := pod.ToSDK()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	// Check if pod exists, update if so
-	// 	existing, sdkerr := theProject.GetPodByID(thePod.ID)
-	// 	if sdkerr == nil {
-	// 		// Pod exists - try update it
-
-	// 		//fmt.Println("pod exists - updating", sdkerr, sdkerr == nil, existing)
-	// 		//os.Exit(2)
-	// 		fmt.Println("Updated pod: ", thePod.Name)
-
-	// 		err := existing.Update(thePod)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		continue
-	// 		//	}
-	// 		//fmt.Printf("Creating pod: %+v %s\n", thePod, sdkerr.Error())
-	// 	} else if sdkerr.Error() == "404: Pod not found" {
-	// 		//fmt.Println("Error getting pod", sdkerr, sdkerr == nil, existing)
-	// 		//fmt.Printf("Created pod: %+v\n", thePod)
-	// 		_, err = theProject.CreatePod(*thePod)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		fmt.Println("Created pod: ", thePod.Name)
-	// 	} else {
-	// 		return sdkerr
-	// 	}
-
-	// }
-
-	//fmt.Println("Not implemented!")
 	return nil
 
 }
 
+// Export takes a Package and exports it to Kubernetes YAML
+func (pkg *Package) Export(ctx context.Context) (*string, error) {
+	var out string
+	count := 0
+
+	for _, resource := range pkg.Resources {
+
+		if viper.GetBool("debug") {
+			logrus.WithContext(ctx).WithFields(logrus.Fields{
+				"resource": resource,
+				"type":     resource.GetType(),
+				"name":     resource.GetName(),
+			}).Trace("Exporting resource")
+		}
+
+		objects, err := resource.GetObjects(ctx)
+		if err != nil {
+			logrus.WithContext(ctx).WithFields(logrus.Fields{
+				"error": err,
+			}).Fatal("Failed to get objects")
+			return nil, err
+		}
+
+		for _, object := range objects {
+			if count > 0 {
+				out += "---\n"
+			}
+			printing, err := helpers.ObjectToYAML(object)
+			if err != nil {
+				return nil, err
+			}
+			out += printing
+			count++
+
+		}
+
+	}
+
+	return &out, nil
+}
+
 // WriteDiagnostic writes the diagnostics to stdout
 func WriteDiagnostics(diags hcl.Diagnostics, parser *hclparse.Parser) {
-	wr := hcl.NewDiagnosticTextWriter(os.Stdout, parser.Files(), 80, true)
+	wr := hcl.NewDiagnosticTextWriter(os.Stderr, parser.Files(), 80, true)
 	// Handle errors
 	wr.WriteDiagnostics(diags)
 }
