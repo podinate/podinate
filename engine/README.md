@@ -5,9 +5,12 @@ The engine is the beating heart of Podinate. It can take a .pf or Kubernetes man
 A Podfile is an HCL file with a bunch of resources declared in it. Those resources are: 
 - Pod
     - Service
-    - Ingress
+        - Ingress
+            - Annotations
     - Volume
     - Shared Volume 
+    - Environment
+    - Resources
 - Shared Volume
 - Podinate 
     - Contains information about the package and the namespace

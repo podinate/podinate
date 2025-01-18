@@ -41,12 +41,19 @@ type Pod struct {
 	Command     []string          `cty:"command"`
 	Arguments   []string          `cty:"arguments"`
 	Environment map[string]string `cty:"environment"`
-	Services    map[string]struct {
+	Resource    map[string]struct {
+		Limits   *string `cty:"limits"`
+		Requests *string `cty:"requests"`
+	} `cty:"resource"`
+	Services map[string]struct {
 		Port       int     `cty:"port"`
 		TargetPort *int    `cty:"target_port"`
 		Protocol   *string `cty:"protocol"`
 		Type       *string `cty:"type"`
 		Ingress    *struct {
+			Annotation map[string]struct {
+				Value string `cty:"value"`
+			} `cty:"annotation"`
 			HostName      string  `cty:"hostname"`
 			Path          *string `cty:"path"`
 			IngressClass  *string `cty:"ingress_class"`
@@ -101,6 +108,22 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 			ElementType: cty.String,
 			Required:    false,
 		},
+		"resource": &hcldec.BlockMapSpec{
+			TypeName:   "resource",
+			LabelNames: []string{"key"},
+			Nested: &hcldec.ObjectSpec{
+				"limits": &hcldec.AttrSpec{
+					Name:     "limits",
+					Type:     cty.String,
+					Required: false,
+				},
+				"requests": &hcldec.AttrSpec{
+					Name:     "requests",
+					Type:     cty.String,
+					Required: false,
+				},
+			},
+		},
 		"service": &hcldec.BlockMapSpec{
 			TypeName:   "service",
 			LabelNames: []string{"name"},
@@ -140,6 +163,17 @@ var podHCLSpec = &hcldec.BlockMapSpec{
 					TypeName: "ingress",
 					Required: false,
 					Nested: &hcldec.ObjectSpec{
+						"annotation": &hcldec.BlockMapSpec{
+							TypeName:   "annotation",
+							LabelNames: []string{"key"},
+							Nested: &hcldec.ObjectSpec{
+								"value": &hcldec.AttrSpec{
+									Name:     "value",
+									Type:     cty.String,
+									Required: false,
+								},
+							},
+						},
 						"hostname": &hcldec.AttrSpec{
 							Name:     "hostname",
 							Type:     cty.String,
@@ -252,6 +286,10 @@ func (p Pod) GetObjects(ctx context.Context) ([]runtime.Object, error) {
 							Image:   imageID,
 							Command: p.Command,
 							Args:    p.Arguments,
+							Resources: corev1.ResourceRequirements{
+								Limits:   corev1.ResourceList{},
+								Requests: corev1.ResourceList{},
+							},
 						},
 					},
 				},
@@ -268,6 +306,24 @@ func (p Pod) GetObjects(ctx context.Context) ([]runtime.Object, error) {
 			Name:  k,
 			Value: v,
 		})
+	}
+
+	for k, v := range p.Resource {
+		if v.Limits != nil {
+			limitsQuantity, err := resource.ParseQuantity(*v.Limits)
+			if err != nil {
+				return nil, err
+			}
+			ssSpec.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceName(k)] = limitsQuantity
+		}
+		if v.Requests != nil {
+			requestsQuantity, err := resource.ParseQuantity(*v.Requests)
+			if err != nil {
+				return nil, err
+			}
+			ssSpec.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceName(k)] = requestsQuantity
+		}
+
 	}
 
 	// Add service ports to the StatefulSet
@@ -536,6 +592,10 @@ func (pod *Pod) GetServiceIngressObjects(ctx context.Context, serviceName string
 			ingressSpec.Annotations["cert-manager.io/cluster-issuer"] = *ingressRequest.ClusterIssuer
 		}
 
+	}
+
+	for k, v := range ingressRequest.Annotation {
+		ingressSpec.Annotations[k] = v.Value
 	}
 	return []runtime.Object{ingressSpec}, nil
 }
