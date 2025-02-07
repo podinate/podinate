@@ -423,6 +423,9 @@ func (p Pod) GetObjects(ctx context.Context) ([]runtime.Object, error) {
 func (p *Pod) GetServiceObjects(ctx context.Context) ([]runtime.Object, error) {
 	var out []runtime.Object
 	for name, service := range p.Services {
+		if len(name) > 15 {
+			return nil, stderrors.New("service names must be no more than 15 characters")
+		}
 		svcSpec := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
@@ -449,6 +452,10 @@ func (p *Pod) GetServiceObjects(ctx context.Context) ([]runtime.Object, error) {
 			svcSpec.Spec.Type = corev1.ServiceType(*service.Type)
 		} else {
 			svcSpec.Spec.Type = corev1.ServiceTypeClusterIP
+		}
+
+		if svcSpec.Spec.Type == corev1.ServiceTypeNodePort {
+			svcSpec.Spec.Ports[0].NodePort = int32(service.Port)
 		}
 
 		if service.Protocol != nil && strings.ToLower(*service.Protocol) == "udp" {
